@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+  AUDITOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  LOCKED
+}
+
+enum RequestVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum StepType {
+  DIRECT
+  PARALLEL
+  REFERENCE
+}
+
+enum StepStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+enum GrantStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum GranterRole {
+  OWNER
+  DIRECT_APPROVER
+  SUPER_ADMIN
+}
+
+enum DelegationStatus {
+  ACTIVE
+  INACTIVE
+  REVOKED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Tenant {
+  id                   String   @id @default(uuid())
+  name                 String
+  subdomain            String   @unique
+  custom_domain        String?  @unique
+  plan                 String   @default("core")
+  region               String   @default("ap-south-1")
+  theme_tokens         Json?
+  email_sending_domain String?
+  dkim_verified        Boolean  @default(false)
+  created_at           DateTime @default(now())
+
+  users                User[]
+  org_nodes            OrgNode[]
+  categories           Category[]
+  requests             ApprovalRequest[]
+  delegations          Delegation[]
+  hrms_sync_logs       HrmsSyncLog[]
+  webhook_endpoints    WebhookEndpoint[]
+  audit_logs           AuditLog[]
+}
+
+model User {
+  id               String     @id @default(uuid())
+  tenant_id        String
+  email            String
+  name             String
+  role             Role       @default(MEMBER)
+  status           UserStatus @default(ACTIVE)
+  hrms_employee_id String?
+  emailVerified    DateTime?
+  image            String?
+  accounts         Account[]
+  sessions         Session[]
+
+  tenant           Tenant     @relation(fields: [tenant_id], references: [id])
+
+  org_nodes        OrgNode[]
+  owned_requests   ApprovalRequest[]
+  steps_to_approve ApprovalStep[]    @relation("StepApprover")
+  steps_acted      ApprovalStep[]    @relation("StepActor")
+
+  view_grants_received ViewGrant[]   @relation("Grantee")
+  view_grants_given    ViewGrant[]   @relation("Granter")
+
+  delegations_given    Delegation[]  @relation("Delegator")
+  delegations_received Delegation[]  @relation("Delegate")
+
+  @@unique([tenant_id, email])
+}
+
+model OrgNode {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  parent_id  String?
+  user_id    String?
+  title      String
+
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+  parent     OrgNode? @relation("OrgTree", fields: [parent_id], references: [id])
+  children   OrgNode[] @relation("OrgTree")
+  user       User?    @relation(fields: [user_id], references: [id])
+}
+
+model Category {
+  id                   String   @id @default(uuid())
+  tenant_id            String
+  name                 String
+  default_chain        Json
+  default_sla_hours    Int?
+  default_visibility   RequestVisibility @default(PRIVATE)
+  default_webhook_id   String?
+
+  tenant               Tenant   @relation(fields: [tenant_id], references: [id])
+  requests             ApprovalRequest[]
+  webhooks             WebhookEndpoint[]
+}
+
+model ApprovalRequest {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  owner_id        String
+  category_id     String
+  subject         String
+  body_json       Json
+  status          RequestStatus @default(DRAFT)
+  visibility      RequestVisibility @default(PRIVATE)
+  version         Int      @default(1)
+  parent_id       String?
+  checksum_sha256 String?
+  created_at      DateTime @default(now())
+  finalized_at    DateTime?
+  conditions      Json?
+
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id])
+  owner           User     @relation(fields: [owner_id], references: [id])
+  category        Category @relation(fields: [category_id], references: [id])
+
+  parent          ApprovalRequest?  @relation("Amendments", fields: [parent_id], references: [id])
+  amendments      ApprovalRequest[] @relation("Amendments")
+
+  steps           ApprovalStep[]
+  view_grants     ViewGrant[]
+  attachments     Attachment[]
+  webhook_deliveries WebhookDelivery[]
+}
+
+model ApprovalStep {
+  id             String   @id @default(uuid())
+  request_id     String
+  approver_id    String
+  type           StepType
+  order_index    Int
+  status         StepStatus @default(PENDING)
+  acted_at       DateTime?
+  comment        String?
+  acted_by_id    String?
+  delegation_id  String?
+  action_source  String?  
+
+  request        ApprovalRequest @relation(fields: [request_id], references: [id])
+  approver       User            @relation("StepApprover", fields: [approver_id], references: [id])
+  acted_by       User?           @relation("StepActor", fields: [acted_by_id], references: [id])
+  delegation     Delegation?     @relation(fields: [delegation_id], references: [id])
+}
+
+model ViewGrant {
+  id             String   @id @default(uuid())
+  request_id     String
+  grantee_id     String
+  granted_by_id  String
+  status         GrantStatus @default(PENDING)
+  granter_role   GranterRole
+
+  request        ApprovalRequest @relation(fields: [request_id], references: [id])
+  grantee        User            @relation("Grantee", fields: [grantee_id], references: [id])
+  granted_by     User            @relation("Granter", fields: [granted_by_id], references: [id])
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  request_id  String
+  filename    String
+  s3_key      String
+  size_bytes  Int
+  uploaded_by String
+
+  request     ApprovalRequest @relation(fields: [request_id], references: [id])
+}
+
+model Delegation {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  delegator_id     String
+  delegate_id      String
+  scope_categories Json?    
+  amount_threshold Int?     
+  starts_at        DateTime @default(now())
+  ends_at          DateTime? 
+  status           DelegationStatus @default(ACTIVE)
+  created_by       String
+
+  tenant           Tenant   @relation(fields: [tenant_id], references: [id])
+  delegator        User     @relation("Delegator", fields: [delegator_id], references: [id])
+  delegate         User     @relation("Delegate", fields: [delegate_id], references: [id])
+
+  approval_steps   ApprovalStep[]
+}
+
+model HrmsSyncLog {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  source       String   
+  changes_json Json
+  applied_at   DateTime @default(now())
+  applied_by   String
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model WebhookEndpoint {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  category_id  String?  
+  url          String
+  hmac_secret  String
+  retry_policy String   @default("exponential")
+  last_status  String?
+
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
+  category     Category? @relation(fields: [category_id], references: [id])
+
+  deliveries   WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id              String   @id @default(uuid())
+  endpoint_id     String
+  request_id      String
+  payload_hash    String
+  attempts        Int      @default(0)
+  status          DeliveryStatus @default(PENDING)
+  last_attempt_at DateTime?
+  response_code   Int?
+
+  endpoint        WebhookEndpoint @relation(fields: [endpoint_id], references: [id])
+  request         ApprovalRequest @relation(fields: [request_id], references: [id])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  request_id    String?
+  actor_id      String
+  action_type   String
+  metadata_json Json?
+  ip            String?
+  user_agent    String?
+  dkim_verified Boolean?
+  message_id    String?
+  created_at    DateTime @default(now())
+
+  tenant        Tenant   @relation(fields: [tenant_id], references: [id])
+}
+
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+

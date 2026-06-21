@@ -1,0 +1,429 @@
+"use client";
+
+import { useState, useEffect, useRef } from 'react';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import { submitNewRequest } from './actions';
+import Link from 'next/link';
+import { Plus, Trash2, Users, ArrowUp, ArrowDown, Search } from 'lucide-react';
+
+interface ActiveUser {
+  id: string;
+  name: string;
+  designation: string | null;
+  career_level: string | null;
+  employee_id: string | null;
+}
+
+interface RequestFormProps {
+  tenant: string;
+  categories: { id: string; name: string }[];
+  activeUsers: ActiveUser[];
+}
+
+interface ApprovalPathItem {
+  userId: string;
+  role: 'GENERAL' | 'PARALLEL' | 'REFERENCE';
+}
+
+function TypeaheadPicker({
+  activeUsers,
+  selectedUserId,
+  selectedUserIds,
+  onChange
+}: {
+  activeUsers: ActiveUser[];
+  selectedUserId: string;
+  selectedUserIds: string[];
+  onChange: (userId: string) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync selectedUserId to search input text
+  useEffect(() => {
+    const selectedUser = activeUsers.find(u => u.id === selectedUserId);
+    if (selectedUser) {
+      setSearch(`${selectedUser.name} — ${selectedUser.designation || 'Staff'} (Emp ID: ${selectedUser.employee_id || 'N/A'})`);
+    } else if (!selectedUserId) {
+      setSearch('');
+    }
+  }, [selectedUserId, activeUsers]);
+
+  // Handle outside clicks to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        // Reset search to original if no selection made
+        const selectedUser = activeUsers.find(u => u.id === selectedUserId);
+        if (selectedUser) {
+          setSearch(`${selectedUser.name} — ${selectedUser.designation || 'Staff'} (Emp ID: ${selectedUser.employee_id || 'N/A'})`);
+        } else {
+          setSearch('');
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [selectedUserId, activeUsers]);
+
+  const suggestions = activeUsers.filter(u => {
+    const isSelectedElsewhere = selectedUserIds.includes(u.id) && u.id !== selectedUserId;
+    if (isSelectedElsewhere) return false;
+
+    const query = search.toLowerCase().trim();
+    if (!query) return true;
+
+    // Matches if it's already selected (to show it in list) or if query matches name/employee_id
+    if (u.id === selectedUserId) return true;
+
+    return (
+      (u.name || '').toLowerCase().includes(query) ||
+      (u.employee_id || '').toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <div className="relative rounded-xl shadow-sm">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            onChange(''); // Reset selection until user explicitly clicks a suggestion
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          className="block w-full rounded-xl border border-gray-200 py-2 pl-3 pr-10 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-medium"
+          placeholder="Search name or Employee ID..."
+          required
+        />
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+          <Search className="w-4 h-4" />
+        </div>
+      </div>
+
+      {isOpen && suggestions.length > 0 && (
+        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
+          {suggestions.map(u => (
+            <li
+              key={u.id}
+              onMouseDown={() => {
+                onChange(u.id);
+                setSearch(`${u.name} — ${u.designation || 'Staff'} (Emp ID: ${u.employee_id || 'N/A'})`);
+                setIsOpen(false);
+              }}
+              className="cursor-pointer select-none relative py-2.5 pl-3 pr-9 hover:bg-accent/10 hover:text-accent font-semibold text-xs text-ink transition"
+            >
+              {u.name} — {u.designation || 'Staff'} (Emp ID: {u.employee_id || 'N/A'})
+            </li>
+          ))}
+        </ul>
+      )}
+      {isOpen && suggestions.length === 0 && (
+        <div className="absolute z-50 mt-1 w-full rounded-xl bg-white py-3 px-4 shadow-lg border border-gray-100 text-xs font-semibold text-gray-400">
+          No matches found
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function RequestForm({ tenant, categories, activeUsers }: RequestFormProps) {
+  const [content, setContent] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Flat list approval path state
+  const [approvalPath, setApprovalPath] = useState<ApprovalPathItem[]>([
+    { userId: '', role: 'GENERAL' }
+  ]);
+
+  const addPathRow = () => {
+    setApprovalPath([...approvalPath, { userId: '', role: 'GENERAL' }]);
+  };
+
+  const removePathRow = (index: number) => {
+    setApprovalPath(approvalPath.filter((_, idx) => idx !== index));
+  };
+
+  const moveRowUp = (idx: number) => {
+    if (idx === 0) return;
+    const updated = [...approvalPath];
+    const temp = updated[idx];
+    updated[idx] = updated[idx - 1];
+    updated[idx - 1] = temp;
+    setApprovalPath(updated);
+  };
+
+  const moveRowDown = (idx: number) => {
+    if (idx === approvalPath.length - 1) return;
+    const updated = [...approvalPath];
+    const temp = updated[idx];
+    updated[idx] = updated[idx + 1];
+    updated[idx + 1] = temp;
+    setApprovalPath(updated);
+  };
+
+  const updatePathRow = (index: number, key: keyof ApprovalPathItem, value: any) => {
+    const updated = [...approvalPath];
+    if (key === 'role') {
+      updated[index].role = value;
+    } else {
+      updated[index].userId = value;
+    }
+    setApprovalPath(updated);
+  };
+
+  const validatePath = (path: ApprovalPathItem[]) => {
+    const filledRows = path.filter(item => item.userId);
+    if (filledRows.length === 0) {
+      return "At least one approval step is required.";
+    }
+
+    const hasDirect = filledRows.some(item => item.role === 'GENERAL');
+    if (!hasDirect) {
+      return "At least one Direct Approver is required.";
+    }
+
+    const firstDirectIndex = filledRows.findIndex(item => item.role === 'GENERAL');
+    const firstParallelIndex = filledRows.findIndex(item => item.role === 'PARALLEL');
+    if (firstParallelIndex !== -1 && (firstDirectIndex === -1 || firstParallelIndex < firstDirectIndex)) {
+      return "A Parallel Approver cannot be placed before the first Direct Approver.";
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    const validationError = validatePath(approvalPath);
+    if (validationError) {
+      setErrorMsg(validationError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      // Filter out unfilled rows before submission
+      const cleanPath = approvalPath.filter(x => x.userId);
+      await submitNewRequest(formData, content, tenant, cleanPath);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Failed to submit request.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const selectedUserIds = approvalPath.map(x => x.userId).filter(Boolean);
+
+  return (
+    <div className="space-y-6 font-body max-w-4xl mx-auto py-6">
+      <div className="md:flex md:items-center md:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+            Create Approval Request
+          </h1>
+          <p className="mt-2 text-sm text-gray-500 font-medium">
+            Define a custom approval path with Direct approvals, Parallel reviews, and FYI Reference notifications.
+          </p>
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-sm font-semibold text-red-700">
+          {errorMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-sm border border-gray-100 rounded-2xl p-6 sm:p-8">
+        
+        {/* Subject and Category */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2">
+            <label htmlFor="subject" className="block text-sm font-bold text-ink">
+              Subject
+            </label>
+            <div className="mt-2">
+              <input
+                type="text"
+                name="subject"
+                id="subject"
+                required
+                className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                placeholder="e.g. Q3 Marketing Budget Increase"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="category" className="block text-sm font-bold text-ink">
+              Category
+            </label>
+            <div className="mt-2 relative">
+              <select
+                id="category"
+                name="category"
+                required
+                className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm appearance-none bg-white font-medium"
+              >
+                <option value="">Select a category...</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Flat Approval Path Builder */}
+        <div className="space-y-6">
+          <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-ink font-display flex items-center gap-2">
+                <Users className="w-5 h-5 text-accent" />
+                Approval Path Definition
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-1">
+                Sequence is derived from row position. Direct gates must approve first, followed by Parallels in the same order level. Reference paths are FYI only.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addPathRow}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-dashed border-accent/40 rounded-xl text-xs font-bold text-accent hover:bg-accent/5 hover:border-accent transition"
+            >
+              <Plus className="w-4 h-4" />
+              Add Approver
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {/* Headers for larger viewports */}
+            <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-xs font-bold text-ink uppercase tracking-wider">
+              <div className="col-span-6">Person</div>
+              <div className="col-span-4">Role</div>
+              <div className="col-span-2 text-center">Actions</div>
+            </div>
+
+            <div className="space-y-3">
+              {approvalPath.map((row, idx) => (
+                <div 
+                  key={idx} 
+                  className="p-4 rounded-xl border border-gray-100 bg-gray-50/10 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-gray-200 transition duration-150"
+                >
+                  {/* Person Picker */}
+                  <div className="col-span-1 md:col-span-6">
+                    <label className="block md:hidden text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Person
+                    </label>
+                    <TypeaheadPicker
+                      activeUsers={activeUsers}
+                      selectedUserId={row.userId}
+                      selectedUserIds={selectedUserIds}
+                      onChange={(val) => updatePathRow(idx, 'userId', val)}
+                    />
+                  </div>
+
+                  {/* Role Selector */}
+                  <div className="col-span-1 md:col-span-4">
+                    <label className="block md:hidden text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Role
+                    </label>
+                    <select
+                      value={row.role}
+                      onChange={(e) => updatePathRow(idx, 'role', e.target.value)}
+                      required
+                      className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
+                    >
+                      <option value="GENERAL">Direct Approver</option>
+                      <option value="PARALLEL">Parallel Approver</option>
+                      <option value="REFERENCE">FYI / Reference</option>
+                    </select>
+                  </div>
+
+                  {/* Remove & Reorder Actions */}
+                  <div className="col-span-1 md:col-span-2 flex items-center justify-center gap-1.5 pt-2 md:pt-0">
+                    <button
+                      type="button"
+                      onClick={() => moveRowUp(idx)}
+                      disabled={idx === 0}
+                      className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                      title="Move Up"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveRowDown(idx)}
+                      disabled={idx === approvalPath.length - 1}
+                      className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                      title="Move Down"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removePathRow(idx)}
+                      disabled={approvalPath.length <= 1}
+                      className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                      title="Remove Row"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Content rich text editor */}
+        <div className="space-y-2 border-t border-gray-100 pt-6">
+          <label className="block text-sm font-bold text-ink">
+            Details & Justification
+          </label>
+          <div className="prose max-w-none">
+            <RichTextEditor content={content} onChange={setContent} />
+          </div>
+        </div>
+
+        {/* Submit Actions */}
+        <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
+          <Link
+            href={`/${tenant}`}
+            className="inline-flex items-center justify-center px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 bg-white hover:bg-gray-50 hover:text-ink focus:outline-none transition shadow-sm"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Submitting...
+              </>
+            ) : 'Submit for Approval'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
