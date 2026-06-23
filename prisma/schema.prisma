@@ -90,6 +90,7 @@ model Tenant {
   hrms_sync_logs       HrmsSyncLog[]
   webhook_endpoints    WebhookEndpoint[]
   audit_logs           AuditLog[]
+  workflows            Workflow[]
 }
 
 model User {
@@ -146,6 +147,7 @@ model Category {
   tenant               Tenant   @relation(fields: [tenant_id], references: [id])
   requests             ApprovalRequest[]
   webhooks             WebhookEndpoint[]
+  workflows            Workflow[]
 }
 
 model ApprovalRequest {
@@ -330,3 +332,17 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+
+
+model Workflow {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  category_id String?
+  name        String
+  is_locked   Boolean  @default(false)
+  steps       Json
+  created_at  DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category    Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+}

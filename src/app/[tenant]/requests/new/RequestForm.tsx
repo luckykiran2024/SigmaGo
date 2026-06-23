@@ -18,6 +18,7 @@ interface RequestFormProps {
   tenant: string;
   categories: { id: string; name: string }[];
   activeUsers: ActiveUser[];
+  workflows?: any[];
 }
 
 interface ApprovalPathItem {
@@ -29,12 +30,14 @@ function TypeaheadPicker({
   activeUsers,
   selectedUserId,
   selectedUserIds,
-  onChange
+  onChange,
+  disabled
 }: {
   activeUsers: ActiveUser[];
   selectedUserId: string;
   selectedUserIds: string[];
   onChange: (userId: string) => void;
+  disabled?: boolean;
 }) {
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -91,12 +94,16 @@ function TypeaheadPicker({
           type="text"
           value={search}
           onChange={(e) => {
+            if (disabled) return;
             setSearch(e.target.value);
             onChange(''); // Reset selection until user explicitly clicks a suggestion
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
-          className="block w-full rounded-xl border border-gray-200 py-2 pl-3 pr-10 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-medium"
+          onFocus={() => {
+            if (!disabled) setIsOpen(true);
+          }}
+          disabled={disabled}
+          className="block w-full rounded-xl border border-gray-200 py-2 pl-3 pr-10 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
           placeholder="Search name or Employee ID..."
           required
         />
@@ -105,7 +112,7 @@ function TypeaheadPicker({
         </div>
       </div>
 
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && suggestions.length > 0 && !disabled && (
         <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
           {suggestions.map(u => (
             <li
@@ -122,7 +129,7 @@ function TypeaheadPicker({
           ))}
         </ul>
       )}
-      {isOpen && suggestions.length === 0 && (
+      {isOpen && suggestions.length === 0 && !disabled && (
         <div className="absolute z-50 mt-1 w-full rounded-xl bg-white py-3 px-4 shadow-lg border border-gray-100 text-xs font-semibold text-gray-400">
           No matches found
         </div>
@@ -131,7 +138,7 @@ function TypeaheadPicker({
   );
 }
 
-export default function RequestForm({ tenant, categories, activeUsers }: RequestFormProps) {
+export default function RequestForm({ tenant, categories, activeUsers, workflows = [] }: RequestFormProps) {
   const [content, setContent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -140,6 +147,34 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
   const [approvalPath, setApprovalPath] = useState<ApprovalPathItem[]>([
     { userId: '', role: 'GENERAL' }
   ]);
+
+  const [isPathLocked, setIsPathLocked] = useState(false);
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCatId = e.target.value;
+    if (!selectedCatId) {
+      setApprovalPath([{ userId: '', role: 'GENERAL' }]);
+      setIsPathLocked(false);
+      return;
+    }
+
+    const linkedWorkflow = workflows.find(wf => wf.category_id === selectedCatId);
+    if (linkedWorkflow) {
+      if (linkedWorkflow.steps && linkedWorkflow.steps.length > 0) {
+        const mappedSteps = linkedWorkflow.steps.map((s: any) => ({
+          userId: s.userId || '',
+          role: s.role || 'GENERAL'
+        }));
+        setApprovalPath(mappedSteps);
+      } else {
+        setApprovalPath([{ userId: '', role: 'GENERAL' }]);
+      }
+      setIsPathLocked(!!linkedWorkflow.is_locked);
+    } else {
+      setApprovalPath([{ userId: '', role: 'GENERAL' }]);
+      setIsPathLocked(false);
+    }
+  };
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -305,6 +340,7 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                 id="category"
                 name="category"
                 required
+                onChange={handleCategoryChange}
                 className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm appearance-none bg-white font-medium"
               >
                 <option value="">Select a category...</option>
@@ -333,22 +369,24 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                 Sequence is derived from row position. Direct gates must approve first, followed by Parallels in the same order level. Reference paths are FYI only.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={addPathRow}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-dashed border-accent/40 rounded-xl text-xs font-bold text-accent hover:bg-accent/5 hover:border-accent transition"
-            >
-              <Plus className="w-4 h-4" />
-              Add Approver
-            </button>
+            {!isPathLocked && (
+              <button
+                type="button"
+                onClick={addPathRow}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-dashed border-accent/40 rounded-xl text-xs font-bold text-accent hover:bg-accent/5 hover:border-accent transition"
+              >
+                <Plus className="w-4 h-4" />
+                Add Approver
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">
             {/* Headers for larger viewports */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-xs font-bold text-ink uppercase tracking-wider">
-              <div className="col-span-6">Person</div>
+              <div className={isPathLocked ? "col-span-8" : "col-span-6"}>Person</div>
               <div className="col-span-4">Role</div>
-              <div className="col-span-2 text-center">Actions</div>
+              {!isPathLocked && <div className="col-span-2 text-center">Actions</div>}
             </div>
 
             <div className="space-y-3">
@@ -358,7 +396,7 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                   className="p-4 rounded-xl border border-gray-100 bg-gray-50/10 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-gray-200 transition duration-150"
                 >
                   {/* Person Picker */}
-                  <div className="col-span-1 md:col-span-6">
+                  <div className={isPathLocked ? "col-span-1 md:col-span-8" : "col-span-1 md:col-span-6"}>
                     <label className="block md:hidden text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                       Person
                     </label>
@@ -367,6 +405,7 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                       selectedUserId={row.userId}
                       selectedUserIds={selectedUserIds}
                       onChange={(val) => updatePathRow(idx, 'userId', val)}
+                      disabled={isPathLocked}
                     />
                   </div>
 
@@ -379,7 +418,8 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                       value={row.role}
                       onChange={(e) => updatePathRow(idx, 'role', e.target.value)}
                       required
-                      className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
+                      disabled={isPathLocked}
+                      className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold disabled:bg-gray-50 disabled:text-gray-400"
                     >
                       <option value="GENERAL">Direct Approver</option>
                       <option value="PARALLEL">Parallel Approver</option>
@@ -388,35 +428,37 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
                   </div>
 
                   {/* Remove & Reorder Actions */}
-                  <div className="col-span-1 md:col-span-2 flex items-center justify-center gap-1.5 pt-2 md:pt-0">
-                    <button
-                      type="button"
-                      onClick={() => moveRowUp(idx)}
-                      disabled={idx === 0}
-                      className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
-                      title="Move Up"
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveRowDown(idx)}
-                      disabled={idx === approvalPath.length - 1}
-                      className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
-                      title="Move Down"
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removePathRow(idx)}
-                      disabled={approvalPath.length <= 1}
-                      className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
-                      title="Remove Row"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {!isPathLocked && (
+                    <div className="col-span-1 md:col-span-2 flex items-center justify-center gap-1.5 pt-2 md:pt-0">
+                      <button
+                        type="button"
+                        onClick={() => moveRowUp(idx)}
+                        disabled={idx === 0}
+                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveRowDown(idx)}
+                        disabled={idx === approvalPath.length - 1}
+                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        title="Move Down"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removePathRow(idx)}
+                        disabled={approvalPath.length <= 1}
+                        className="text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        title="Remove Row"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

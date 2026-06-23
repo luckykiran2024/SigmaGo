@@ -3,6 +3,7 @@ import RequestForm from './RequestForm';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getProfileForAuthUser } from '@/lib/db/users';
+import { getWorkflows } from '@/lib/db/workflows';
 
 export default async function NewRequestPage({ params }: { params: Promise<{ tenant: string }> }) {
   const resolvedParams = await params;
@@ -26,6 +27,7 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
 
   let categories: { id: string; name: string }[] = [];
   let activeUsers: { id: string; name: string; designation: string | null; career_level: string | null; employee_id: string | null }[] = [];
+  let workflows: any[] = [];
 
   if (tenantData) {
     const { data: cats } = await adminClient
@@ -83,6 +85,12 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
       // Exclude logged-in user from the active users list to prevent self-approvals
       activeUsers = mergedUsers.filter((u: any) => u.id !== loggedInPublicUserId);
     }
+
+    // Load workflows for tenant
+    const tenantWorkflows = await getWorkflows(tenantData.id);
+    if (tenantWorkflows) {
+      workflows = tenantWorkflows;
+    }
   }
 
   // Sort activeUsers by name ascending
@@ -90,7 +98,12 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
 
   return (
     <div className="max-w-4xl mx-auto py-4">
-      <RequestForm tenant={resolvedParams.tenant} categories={categories} activeUsers={activeUsers} />
+      <RequestForm
+        tenant={resolvedParams.tenant}
+        categories={categories}
+        activeUsers={activeUsers}
+        workflows={workflows}
+      />
     </div>
   );
 }

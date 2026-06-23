@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { getProfileForAuthUser } from '@/lib/db/users';
 
 export default async function TenantLayout({
   children,
@@ -17,6 +18,14 @@ export default async function TenantLayout({
   if (!user) {
     redirect('/login');
   }
+
+  const profile = await getProfileForAuthUser(user.id, user.email || '');
+  const isAdmin = profile && (
+    profile.role === 'admin' ||
+    profile.role === 'super_admin' ||
+    profile.role === 'ADMIN' ||
+    profile.role === 'SUPER_ADMIN'
+  );
 
   const signOut = async () => {
     'use server';
@@ -62,6 +71,22 @@ export default async function TenantLayout({
                 >
                   New Request
                 </Link>
+                {isAdmin && (
+                  <>
+                    <Link
+                      href={`/${resolvedParams.tenant}/admin/workflows`}
+                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
+                    >
+                      Workflows
+                    </Link>
+                    <Link
+                      href={`/${resolvedParams.tenant}/admin/org`}
+                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
+                    >
+                      Org Admin
+                    </Link>
+                  </>
+                )}
               </nav>
             </div>
 
