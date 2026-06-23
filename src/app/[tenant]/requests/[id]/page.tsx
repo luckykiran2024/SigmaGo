@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { AlertTriangle, Users } from 'lucide-react';
 import { getProfileForAuthUser } from '@/lib/db/users';
+import TimelineEditor from './TimelineEditor';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -56,7 +57,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     getProfileForAuthUser(user?.id || '', user?.email || ''),
     supabase
       .from('users')
-      .select('id, name, status, designation, career_level')
+      .select('id, name, email, status, designation, career_level, employee_id')
       .eq('tenant_id', tenantId)
   ]);
 
@@ -100,6 +101,14 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   const activeStep = request.approval_steps?.find(
     (s: any) => s.status === 'pending' && s.approver_id === loggedInPublicUser?.id
   );
+
+  let activeDirectApproverId = null;
+  const activeDirectStep = request.approval_steps?.find(
+    (s: any) => s.status === 'pending' && s.type === 'GENERAL'
+  );
+  if (activeDirectStep) {
+    activeDirectApproverId = activeDirectStep.approver_id;
+  }
 
 
 
@@ -187,22 +196,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     revalidatePath(`/${resolvedParams.tenant}/requests/${resolvedParams.id}`);
   }
 
-  // Group steps for timeline
-  const referenceSteps = (request.approval_steps || []).filter((s: any) => s.type === 'REFERENCE');
-  const stageSteps = (request.approval_steps || []).filter((s: any) => s.type !== 'REFERENCE');
 
-  const stageGroups: { [key: number]: any[] } = {};
-  stageSteps.forEach((s: any) => {
-    const stageIdx = s.stage_index ?? 0;
-    if (!stageGroups[stageIdx]) {
-      stageGroups[stageIdx] = [];
-    }
-    stageGroups[stageIdx].push(s);
-  });
-
-  const sortedStageIndices = Object.keys(stageGroups)
-    .map(Number)
-    .sort((a, b) => a - b);
 
   return (
     <div className="space-y-6 py-4 font-body">
@@ -401,183 +395,22 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
           </div>
         </div>
 
-        {/* Right column: Routing Slip */}
+        {/* Right column: Timeline Editor */}
         <div className="space-y-8">
-
-          {/* Routing Slip (Timeline) */}
-          <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6">
-            <h3 className="text-lg font-display font-extrabold text-ink mb-6">Routing Slip</h3>
-            <div className="space-y-6">
-              {sortedStageIndices.map((stageIdx) => {
-                const steps = stageGroups[stageIdx] || [];
-                // Sort steps: GENERAL first (order_index=0), then PARALLELs (order_index=1)
-                steps.sort((a: any, b: any) => a.order_index - b.order_index);
-
-                return (
-                  <div key={stageIdx} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/20">
-                    <div className="flex items-center gap-2 mb-4 bg-accent/5 px-2.5 py-1 rounded-lg border border-accent/10 w-fit">
-                      <span className="text-[10px] font-extrabold tracking-wider uppercase text-accent">
-                        Stage {stageIdx + 1}
-                      </span>
-                    </div>
-                    <div className="flow-root">
-                      <ul className="-mb-8">
-                        {steps.map((step: any, stepIdx: number) => {
-                          const isLast = stepIdx === steps.length - 1;
-                          const isApproved = step.status === 'approved';
-                          const isRejected = step.status === 'rejected';
-                          const isPending = step.status === 'pending';
-                          
-                          const stepApproverUser = tenantUsers?.find((tu: any) => tu.id === step.approver_id);
-                          const isApproverInactive = stepApproverUser?.status === 'inactive' || stepApproverUser?.status === 'INACTIVE';
-
-                          return (
-                            <li key={step.id}>
-                              <div className="relative pb-8">
-                                {!isLast && (
-                                  <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-100" aria-hidden="true"></span>
-                                )}
-                                <div className="relative flex space-x-3 items-start">
-                                  {/* Icon sphere */}
-                                  <div>
-                                    <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-white transition
-                                      ${isApproved ? 'bg-green-500 text-white' : 
-                                        isRejected ? 'bg-red-500 text-white' : 
-                                        isPending ? (isApproverInactive ? 'bg-red-600 text-white' : 'bg-yellow-400 text-white') : 'bg-gray-100 text-gray-400'}`}
-                                    >
-                                      {isApproved ? (
-                                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                      ) : isRejected ? (
-                                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                        </svg>
-                                      ) : (
-                                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                        </svg>
-                                      )}
-                                    </span>
-                                  </div>
-                                  
-                                  {/* Step details */}
-                                  <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1">
-                                    <div className="space-y-1 w-full">
-                                      <p className="text-sm font-bold text-ink">
-                                        {step.users?.name || 'Unknown Approver'}
-                                        {isApproverInactive && (
-                                          <span className="ml-2 text-2xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 font-bold uppercase">
-                                            Inactive
-                                          </span>
-                                        )}
-                                      </p>
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="inline-flex text-[10px] leading-4 font-bold rounded-md bg-gray-100 text-gray-500 uppercase tracking-wider px-1.5">
-                                          {step.type}
-                                        </span>
-                                        {isPending && (
-                                          <span className={`inline-flex text-[10px] leading-4 font-bold rounded-md uppercase tracking-wider px-1.5 ${
-                                            isApproverInactive ? 'bg-red-50 text-red-700' : 'bg-yellow-50 text-yellow-600'
-                                          }`}>
-                                            {isApproverInactive ? 'Blocked' : 'Pending'}
-                                          </span>
-                                        )}
-                                      </div>
-                                      {step.comment && (
-                                        <div className="mt-2 text-xs italic text-gray-600 bg-gray-50 border border-gray-100 p-2.5 rounded-xl">
-                                          "{step.comment}"
-                                        </div>
-                                      )}
-
-                                      {/* Blocked step reassignment interface */}
-                                      {isPending && isApproverInactive && (isOwner || isAdmin) && (
-                                        <form action={reassignAction} className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-xl space-y-2">
-                                          <input type="hidden" name="stepId" value={step.id} />
-                                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                            Reassign Approver
-                                          </label>
-                                          <div className="flex gap-2">
-                                            <select 
-                                              name="newApproverId" 
-                                              required
-                                              className="block flex-1 rounded-lg border border-gray-200 py-1.5 px-3 text-xs text-ink bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                                            >
-                                              <option value="">Select active staff...</option>
-                                              {activeTenantUsers.map(u => (
-                                                <option key={u.id} value={u.id}>
-                                                  {u.name} - {u.designation || 'Staff'} ({u.career_level || 'L1'})
-                                                </option>
-                                              ))}
-                                            </select>
-                                            <button 
-                                              type="submit" 
-                                              className="inline-flex items-center justify-center px-3 py-1.5 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-lg transition"
-                                            >
-                                              Reassign
-                                            </button>
-                                          </div>
-                                        </form>
-                                      )}
-                                    </div>
-                                    <div className="whitespace-nowrap text-right text-xs text-gray-400 font-semibold">
-                                      {step.acted_at ? formatDate(step.acted_at) : isPending ? 'Active' : 'Waiting'}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Reference Steps Section */}
-              {referenceSteps.length > 0 && (
-                <div className="border-t border-gray-100 pt-6 mt-4">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    FYI / References
-                  </h4>
-                  <ul className="space-y-4">
-                    {referenceSteps.map((step: any) => {
-                      const isApproved = step.status === 'approved';
-                      const isRejected = step.status === 'rejected';
-                      const isPending = step.status === 'pending';
-                      const stepApproverUser = tenantUsers?.find((tu: any) => tu.id === step.approver_id);
-                      const isApproverInactive = stepApproverUser?.status === 'inactive' || stepApproverUser?.status === 'INACTIVE';
-
-                      return (
-                        <li key={step.id} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${
-                              isApproved ? 'bg-green-500' :
-                              isRejected ? 'bg-red-500' :
-                              isPending ? (isApproverInactive ? 'bg-red-500' : 'bg-yellow-400') :
-                              'bg-gray-300'
-                            }`} />
-                            <span className="font-semibold text-ink">{step.users?.name || 'Unknown User'}</span>
-                            {isApproverInactive && (
-                              <span className="text-[10px] text-red-600 bg-red-50 px-1 rounded uppercase font-bold">
-                                Inactive
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-400 font-semibold">
-                            {step.acted_at ? formatDate(step.acted_at) : isPending ? 'Active' : 'Waiting'}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-
+          <TimelineEditor
+            tenantSubdomain={resolvedParams.tenant}
+            requestId={resolvedParams.id}
+            initialSteps={request.approval_steps as any || []}
+            tenantUsers={tenantUsers || []}
+            activeTenantUsers={activeTenantUsers || []}
+            loggedInPublicUserId={loggedInPublicUser?.id || ''}
+            isAdmin={isAdmin}
+            activeDirectApproverId={activeDirectApproverId}
+            reassignAction={reassignAction}
+            isRequestBlocked={request.status === 'blocked'}
+            isOwner={isOwner}
+            requestStatus={request.status}
+          />
         </div>
       </div>
     </div>
