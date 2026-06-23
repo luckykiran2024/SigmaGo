@@ -71,6 +71,12 @@ export default async function TenantLayout({
                 >
                   New Request
                 </Link>
+                <Link
+                  href={`/${resolvedParams.tenant}/delegations`}
+                  className="text-sm font-semibold text-gray-500 hover:text-accent transition"
+                >
+                  Delegations
+                </Link>
                 {isAdmin && (
                   <>
                     <Link
@@ -78,6 +84,12 @@ export default async function TenantLayout({
                       className="text-sm font-semibold text-gray-500 hover:text-accent transition"
                     >
                       Workflows
+                    </Link>
+                    <Link
+                      href={`/${resolvedParams.tenant}/admin/delegations`}
+                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
+                    >
+                      Delegations Admin
                     </Link>
                     <Link
                       href={`/${resolvedParams.tenant}/admin/archived`}

@@ -29,6 +29,18 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) redirect('/login');
 
+  const nowStr = new Date().toISOString();
+  const { data: activeDelegations } = await supabase
+    .from('delegations')
+    .select('delegator_id')
+    .eq('tenant_id', tenantId)
+    .eq('delegate_id', profile.id)
+    .eq('status', 'active')
+    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+
+  const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
+
   // Phase 3: Fetch Raised by Me and Involved in Steps concurrently
   const [raisedByMeRes, involvedStepsRes] = await Promise.all([
     supabase
@@ -40,7 +52,7 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
     supabase
       .from('approval_steps')
       .select('request_id, type, status, approval_requests(id, subject, status, created_at, categories(name))')
-      .eq('approver_id', profile.id)
+      .in('approver_id', [profile.id, ...delegatorIds])
   ]);
 
   const raisedByMe = raisedByMeRes.data;

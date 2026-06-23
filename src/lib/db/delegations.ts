@@ -1,24 +1,43 @@
-﻿import { createClient } from '../supabase/server'
+import { createClient } from '../supabase/server'
+import { adminClient } from '../supabase/admin'
 
-export async function getActiveDelegation(tenantId: string, categoryId: string) {
+export async function getLiveDelegationsForDelegate(delegateId: string, tenantId: string) {
   const supabase = await createClient()
+  const nowStr = new Date().toISOString()
   
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) throw new Error('Unauthorized')
+  const { data, error } = await supabase
+    .from('delegations')
+    .select('id, delegator_id, delegator:users!delegator_id(id, name, employee_id)')
+    .eq('tenant_id', tenantId)
+    .eq('delegate_id', delegateId)
+    .eq('status', 'active')
+    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowStr}`)
+
+  if (error) {
+    console.error("Error fetching live delegations:", error)
+    return []
+  }
+  return data || []
+}
+
+export async function getLiveDelegation(tenantId: string, delegatorId: string, delegateId: string) {
+  const supabase = await createClient()
+  const nowStr = new Date().toISOString()
 
   const { data, error } = await supabase
     .from('delegations')
-    .select('*')
+    .select('id')
     .eq('tenant_id', tenantId)
-    .eq('grantor_id', user.id)
+    .eq('delegator_id', delegatorId)
+    .eq('delegate_id', delegateId)
     .eq('status', 'active')
-    .lte('starts_at', new Date().toISOString())
-    .or(`ends_at.is.null,ends_at.gt.${new Date().toISOString()}`)
-    .or(`scope_categories.is.null,scope_categories.cs.{${categoryId}}`)
+    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowStr}`)
     .limit(1)
     .maybeSingle()
 
-  if (error) throw error
+  if (error) return null
   return data
 }
 

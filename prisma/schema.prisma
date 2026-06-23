@@ -58,11 +58,7 @@ enum GranterRole {
   SUPER_ADMIN
 }
 
-enum DelegationStatus {
-  ACTIVE
-  INACTIVE
-  REVOKED
-}
+
 
 enum DeliveryStatus {
   PENDING
@@ -230,10 +226,11 @@ model Delegation {
   delegate_id      String
   scope_categories Json?    
   amount_threshold Int?     
-  starts_at        DateTime @default(now())
+  starts_at        DateTime? @default(now())
   ends_at          DateTime? 
-  status           DelegationStatus @default(ACTIVE)
+  status           String   @default("active")
   created_by       String
+  created_at       DateTime @default(now())
 
   tenant           Tenant   @relation(fields: [tenant_id], references: [id])
   delegator        User     @relation("Delegator", fields: [delegator_id], references: [id])

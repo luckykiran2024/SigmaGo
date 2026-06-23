@@ -37,6 +37,20 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
 
   const userName = publicUser?.name || user.email?.split('@')[0] || 'Member';
 
+  // 1. Fetch active delegations where the logged-in user is the delegate
+  const nowStr = new Date().toISOString();
+  const { data: activeDelegations } = await supabase
+    .from('delegations')
+    .select('delegator_id, delegator:users!delegator_id(name)')
+    .eq('tenant_id', tenantId)
+    .eq('delegate_id', publicUser?.id)
+    .eq('status', 'active')
+    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+
+  const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
+  const delegatorNamesMap = new Map((activeDelegations || []).map((d: any) => [d.delegator_id, d.delegator?.name || 'Unknown']));
+
   // Run my requests and pending approvals queries concurrently
   const [myRequestsRes, pendingApprovalsRes] = await Promise.all([
     supabase
@@ -49,8 +63,8 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
       .limit(10),
     supabase
       .from('approval_steps')
-      .select('request_id, status, approval_requests(id, subject, status, created_at, owner:users!owner_id(name))')
-      .eq('approver_id', publicUser?.id)
+      .select('request_id, status, approver_id, approval_requests(id, subject, status, created_at, owner:users!owner_id(name))')
+      .in('approver_id', [publicUser?.id, ...delegatorIds])
       .eq('status', 'pending')
       .limit(10)
   ]);
@@ -68,9 +82,15 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         if (req && !actionRequiredMap.has(req.id)) {
           const rawOwner = req.owner;
           const owner = Array.isArray(rawOwner) ? rawOwner[0] : rawOwner;
+          
+          const delegatedFrom = step.approver_id !== publicUser?.id 
+            ? (delegatorNamesMap.get(step.approver_id) || 'Unknown Approver')
+            : null;
+
           actionRequiredMap.set(req.id, {
             ...req,
-            owner
+            owner,
+            delegatedFrom
           });
         }
       }
@@ -172,7 +192,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
                             <span>Created {formatDate(req.created_at)}</span>
                           </div>
                         </div>
-                        <div className="shrink-0 flex items-center">
+                        <div className="shrink-0 flex items-center gap-2">
+                          {req.delegatedFrom && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">
+                              Delegated from {req.delegatedFrom}
+                            </span>
+                          )}
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-100 uppercase tracking-wider">
                             Needs Your Review
                           </span>

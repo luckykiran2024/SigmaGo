@@ -219,6 +219,10 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                   if (step.type === 'REFERENCE') {
                     decisionText = 'FYI';
                     decisionColorClass = 'text-blue-600 font-bold';
+                  } else if (step.acted_by_id && step.acted_by_id !== step.approver_id) {
+                    const verb = step.status === 'approved' ? 'Approved' : step.status === 'rejected' ? 'Rejected' : 'Actioned';
+                    decisionText = `${verb} by ${step.acted_by?.name || 'Delegate'} (delegate for ${step.users?.name || 'Assigned'})`;
+                    decisionColorClass = step.status === 'approved' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
                   } else if (step.status === 'approved') {
                     decisionText = 'Approved';
                     decisionColorClass = 'text-green-600 font-bold';
@@ -235,7 +239,18 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                         Stage {step.stage_index ?? '0'}
                       </td>
                       <td className="px-4 py-4">
-                        <div className="font-bold text-gray-900">{step.users?.name || 'Unknown'}</div>
+                        <div className="font-bold text-gray-900">
+                          {step.acted_by_id && step.acted_by_id !== step.approver_id ? (
+                            <span>
+                              {step.users?.name || 'Unknown'}{' '}
+                              <span className="text-xxs text-accent font-semibold normal-case">
+                                (Actioned by {step.acted_by?.name || 'Delegate'} as delegate)
+                              </span>
+                            </span>
+                          ) : (
+                            step.users?.name || 'Unknown'
+                          )}
+                        </div>
                         <div className="text-xxs text-gray-400 font-semibold uppercase tracking-wider pt-0.5">
                           {step.users?.designation || 'Staff'} {step.users?.employee_id ? `? ${step.users?.employee_id}` : ''}
                         </div>

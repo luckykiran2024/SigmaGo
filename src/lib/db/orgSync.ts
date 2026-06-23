@@ -161,7 +161,7 @@ export async function syncOrganization(
 
     await adminClient
       .from('delegations')
-      .update({ status: 'INACTIVE' })
+      .update({ status: 'revoked' })
       .eq('tenant_id', tenantId)
       .eq('status', 'active')
       .or(`delegator_id.eq.${userId},delegate_id.eq.${userId}`);

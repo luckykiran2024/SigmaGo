@@ -21,6 +21,11 @@ interface Step {
   status: 'waiting' | 'pending' | 'approved' | 'rejected' | 'skipped';
   acted_at: string | null;
   comment: string | null;
+  acted_by_id?: string | null;
+  acted_by?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface TimelineEditorProps {
@@ -383,7 +388,15 @@ export default function TimelineEditor({
                                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1">
                                   <div className="space-y-1 w-full">
                                     <p className="text-sm font-bold text-ink">
-                                      {userMap.get(step.approver_id) || 'Unknown Approver'}
+                                      {step.acted_by_id && step.acted_by_id !== step.approver_id ? (
+                                        <span>
+                                          {step.status === 'approved' ? 'Approved' : step.status === 'rejected' ? 'Rejected' : 'Actioned'} by{' '}
+                                          <span className="text-accent">{step.acted_by?.name || 'Delegate'}</span>{' '}
+                                          (delegate for {userMap.get(step.approver_id) || 'Unknown Approver'})
+                                        </span>
+                                      ) : (
+                                        userMap.get(step.approver_id) || 'Unknown Approver'
+                                      )}
                                       {isApproverInactive && (
                                         <span className="ml-2 text-2xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 font-bold uppercase">
                                           Inactive

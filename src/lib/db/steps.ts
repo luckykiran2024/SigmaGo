@@ -89,6 +89,15 @@ export async function actOnStep(payload: {
 
   if (stepError) throw stepError
 
+  const { data: users } = await adminClient
+    .from('users')
+    .select('id, name, employee_id')
+    .in('id', [payload.actorId, checkStep.approver_id]);
+
+  const actorUser = users?.find(u => u.id === payload.actorId);
+  const approverUser = users?.find(u => u.id === checkStep.approver_id);
+  const verb = payload.action === 'approved' ? 'approved' : 'rejected';
+
   await adminClient.from('audit_log').insert({
     tenant_id:   payload.tenantId,
     request_id:  step.request_id,
@@ -97,7 +106,14 @@ export async function actOnStep(payload: {
     metadata: {
       step_id:       payload.stepId,
       action_source: payload.actionSource,
-      condition:     payload.conditionText
+      condition:     payload.conditionText,
+      ...(delegationId ? {
+        actor_name_snapshot: actorUser?.name || 'Unknown',
+        actor_employee_id_snapshot: actorUser?.employee_id || 'N/A',
+        delegator_name_snapshot: approverUser?.name || 'Unknown',
+        delegator_employee_id_snapshot: approverUser?.employee_id || 'N/A',
+        summary: `${actorUser?.name || 'Unknown'} (${actorUser?.employee_id || 'N/A'}) ${verb} on behalf of ${approverUser?.name || 'Unknown'} (${approverUser?.employee_id || 'N/A'}) as delegate.`
+      } : {})
     }
   })
 

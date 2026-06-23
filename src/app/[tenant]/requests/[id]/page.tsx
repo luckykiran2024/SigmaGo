@@ -98,9 +98,27 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     );
   }
 
+  const nowStr = new Date().toISOString();
+  const { data: activeDelegations } = await supabase
+    .from('delegations')
+    .select('delegator_id')
+    .eq('tenant_id', tenantId)
+    .eq('delegate_id', loggedInPublicUser?.id)
+    .eq('status', 'active')
+    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+
+  const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
+
   const activeStep = request.approval_steps?.find(
-    (s: any) => s.status === 'pending' && s.approver_id === loggedInPublicUser?.id
+    (s: any) => s.status === 'pending' && (
+      s.approver_id === loggedInPublicUser?.id ||
+      delegatorIds.includes(s.approver_id)
+    )
   );
+
+  const isDelegatedStep = activeStep && activeStep.approver_id !== loggedInPublicUser?.id;
+  const delegatorName = isDelegatedStep ? (userMap.get(activeStep.approver_id) || 'Assigned Approver') : '';
 
   let activeDirectApproverId = null;
   const activeDirectStep = request.approval_steps?.find(
@@ -325,8 +343,15 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             <div className="bg-white shadow-sm border-2 border-accent rounded-2xl p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
               
-              <h3 className="text-lg font-display font-extrabold text-ink mb-2">Your Approval Required</h3>
-              <p className="text-xs text-gray-500 font-medium mb-4">Please review the document and submit your decision below.</p>
+              <h3 className="text-lg font-display font-extrabold text-ink mb-2">
+                {isDelegatedStep ? 'Approval Required (Delegate)' : 'Your Approval Required'}
+              </h3>
+              <p className="text-xs text-gray-500 font-medium mb-4">
+                {isDelegatedStep 
+                  ? `You are acting on behalf of ${delegatorName} as their active delegate. Please review the document and submit your decision.`
+                  : 'Please review the document and submit your decision below.'
+                }
+              </p>
               
               <form action={submitAction} className="space-y-4">
                 <input type="hidden" name="stepId" value={activeStep.id} />
@@ -373,15 +398,23 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                       {/* Bullet icon */}
                       <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
                       <div>
-                        <span className="font-bold text-ink">{userMap.get(log.actor_id) || 'System / Staff'}</span>
-                        {' '}
-                        <span className="text-gray-500 font-medium">
-                          {log.action_type === 'step_approve' ? 'approved this step' :
-                           log.action_type === 'step_reject' ? 'rejected this step' :
-                           log.action_type === 'request_blocked' ? 'blocked this request (approver inactive)' :
-                           log.action_type === 'step_reassigned' ? 'reassigned this approval step' :
-                           log.action_type.replace(/_/g, ' ')}
-                        </span>
+                        {log.metadata?.summary ? (
+                          <span className="text-gray-700 font-medium font-semibold">{log.metadata.summary}</span>
+                        ) : (
+                          <>
+                            <span className="font-bold text-ink">{userMap.get(log.actor_id) || 'System / Staff'}</span>
+                            {' '}
+                            <span className="text-gray-500 font-medium">
+                              {log.action_type === 'step_approved' ? 'approved this step' :
+                               log.action_type === 'step_rejected' ? 'rejected this step' :
+                               log.action_type === 'step_approve' ? 'approved this step' :
+                               log.action_type === 'step_reject' ? 'rejected this step' :
+                               log.action_type === 'request_blocked' ? 'blocked this request (approver inactive)' :
+                               log.action_type === 'step_reassigned' ? 'reassigned this approval step' :
+                               log.action_type.replace(/_/g, ' ')}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <span className="text-gray-400 text-xs font-semibold shrink-0">{formatDate(log.created_at)}</span>
