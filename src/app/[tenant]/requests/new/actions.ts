@@ -1,6 +1,6 @@
 'use server';
 
-import { createRequest, submitRequest } from '@/lib/db/requests';
+import { createRequest, submitRequest, uploadAttachment } from '@/lib/db/requests';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import { redirect } from 'next/navigation';
@@ -98,6 +98,24 @@ export async function submitNewRequest(
 
   // Auto-submit the request to advance it from 'draft' to 'pending'
   await submitRequest(request.id, publicUser.id, publicUser.tenant_id);
+
+  // Extract, validate and upload attachments
+  const files = formData.getAll('attachments') as File[];
+  const validFiles = files.filter((f) => f && f.name && f.size > 0);
+  const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  for (const file of validFiles) {
+    if (file.size > MAX_SIZE) {
+      throw new Error(`File "${file.name}" exceeds the maximum allowed size of 50MB.`);
+    }
+  }
+
+  if (validFiles.length > 0) {
+    await Promise.all(
+      validFiles.map(async (file) => {
+        await uploadAttachment(file, request.id, publicUser.tenant_id, publicUser.id);
+      })
+    );
+  }
 
   redirect(`/${tenant}/requests/${request.id}`);
 }

@@ -141,6 +141,8 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
     { userId: '', role: 'GENERAL' }
   ]);
 
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
   const addPathRow = () => {
     setApprovalPath([...approvalPath, { userId: '', role: 'GENERAL' }]);
   };
@@ -197,6 +199,31 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
     return null;
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const invalidFiles = filesArray.filter(f => f.size > 50 * 1024 * 1024);
+      if (invalidFiles.length > 0) {
+        setErrorMsg("Some selected files exceed the 50MB size limit and were skipped.");
+      }
+      const validFiles = filesArray.filter(f => f.size <= 50 * 1024 * 1024);
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -213,6 +240,13 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
       const formData = new FormData(e.currentTarget);
       // Filter out unfilled rows before submission
       const cleanPath = approvalPath.filter(x => x.userId);
+
+      // Append manually managed selected files
+      formData.delete('attachments');
+      selectedFiles.forEach((file) => {
+        formData.append('attachments', file);
+      });
+
       await submitNewRequest(formData, content, tenant, cleanPath);
     } catch (err: any) {
       console.error(err);
@@ -396,6 +430,63 @@ export default function RequestForm({ tenant, categories, activeUsers }: Request
           </label>
           <div className="prose max-w-none">
             <RichTextEditor content={content} onChange={setContent} />
+          </div>
+        </div>
+
+        {/* Attachments Section */}
+        <div className="space-y-4 border-t border-gray-100 pt-6">
+          <div>
+            <label className="block text-sm font-bold text-ink flex items-center gap-2">
+              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              Attachments (Optional)
+            </label>
+            <p className="text-xs text-gray-400 font-medium mt-1">
+              Upload any files supporting your request (e.g. PDFs, images, spreadsheets). Max 50MB per file.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="relative border-2 border-dashed border-gray-200 hover:border-accent/40 rounded-xl p-6 text-center cursor-pointer transition bg-gray-50/10">
+              <input
+                type="file"
+                multiple
+                name="attachments"
+                onChange={handleFileChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="text-sm font-semibold text-gray-500 flex flex-col items-center gap-2">
+                <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>Click or drag files here to attach</span>
+              </div>
+            </div>
+
+            {/* Selected Files List */}
+            {selectedFiles.length > 0 && (
+              <ul className="divide-y divide-gray-100 border border-gray-100 rounded-xl bg-white overflow-hidden shadow-sm">
+                {selectedFiles.map((file, idx) => (
+                  <li key={idx} className="flex items-center justify-between p-3.5 hover:bg-gray-50/50 transition">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="text-sm font-semibold text-ink truncate max-w-xs md:max-w-md">{file.name}</span>
+                      <span className="text-xs text-gray-400 font-medium shrink-0">({formatBytes(file.size)})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(idx)}
+                      className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-gray-100 transition shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

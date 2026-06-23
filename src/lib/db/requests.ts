@@ -126,9 +126,16 @@ export async function uploadAttachment(file: File, requestId: string, tenantId: 
   const supabase = await createClient()
   const path = `${tenantId}/${requestId}/${Date.now()}-${file.name}`
 
+  // Convert File to ArrayBuffer and Buffer to ensure Serverless runtime compatibility
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
   const { data, error } = await supabase.storage
     .from('attachments')
-    .upload(path, file, { upsert: false })
+    .upload(path, buffer, {
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
+    })
 
   if (error) throw error
 
@@ -138,7 +145,7 @@ export async function uploadAttachment(file: File, requestId: string, tenantId: 
     filename:     file.name,
     storage_path: data.path,
     size_bytes:   file.size,
-    mime_type:    file.type,
+    mime_type:    file.type || 'application/octet-stream',
     uploaded_by:  userId
   })
 

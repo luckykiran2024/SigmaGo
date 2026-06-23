@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getRequestDetail } from '@/lib/db/requests';
+import { getRequestDetail, getSignedUrl } from '@/lib/db/requests';
 import { actOnStep } from '@/lib/db/steps';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
@@ -13,6 +13,15 @@ function formatDate(dateStr: string | null) {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'
   }).format(new Date(dateStr));
+}
+
+function formatBytes(bytes: number, decimals = 2) {
+  if (!bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 
@@ -50,6 +59,19 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
       .select('id, name, status, designation, career_level')
       .eq('tenant_id', tenantId)
   ]);
+
+  // Pre-generate signed URLs for all attachments concurrently
+  const attachmentsWithUrls = request.attachments ? await Promise.all(
+    (request.attachments as any[]).map(async (att: any) => {
+      try {
+        const url = await getSignedUrl(att.storage_path);
+        return { ...att, url };
+      } catch (err) {
+        console.error("Error generating signed URL for attachment:", att.id, err);
+        return { ...att, url: '#' };
+      }
+    })
+  ) : [];
 
   const tenantUsers = tenantUsersRes.data;
     
@@ -249,6 +271,43 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             <div className="px-6 py-8 prose max-w-none">
               <RichTextEditor content={request.body_json} editable={false} />
             </div>
+
+            {/* Attachments Section */}
+            {attachmentsWithUrls.length > 0 && (
+              <div className="px-6 pb-8 border-t border-gray-100 pt-6">
+                <h4 className="text-sm font-bold text-ink uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  Supporting Attachments
+                </h4>
+                <ul className="divide-y divide-gray-100 border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm">
+                  {attachmentsWithUrls.map((att: any) => (
+                    <li key={att.id} className="flex items-center justify-between p-4 hover:bg-gray-50/50 transition">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="text-sm font-bold text-ink truncate max-w-xs md:max-w-md">{att.filename}</span>
+                        <span className="text-xs text-gray-400 font-medium shrink-0">({formatBytes(att.size_bytes)})</span>
+                      </div>
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={att.filename}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-200 hover:border-accent/40 rounded-xl text-xs font-bold text-gray-600 hover:text-accent hover:bg-accent/5 transition"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Action Box */}
