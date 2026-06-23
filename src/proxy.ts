@@ -1,4 +1,4 @@
-﻿import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
@@ -50,8 +50,10 @@ export async function proxy(request: NextRequest) {
   if (isLocalhost) {
     tenant = domainParts.length > 1 ? domainParts[0] : 'meridian'; 
   } else {
-    if (hostname.endsWith('sigmago.app')) {
+    if (hostname.endsWith('.sigmago.app')) {
       tenant = hostname.replace('.sigmago.app', '');
+    } else if (hostname === 'sigmago.app' || hostname.endsWith('.vercel.app')) {
+      tenant = '';
     } else {
       tenant = hostname;
     }
