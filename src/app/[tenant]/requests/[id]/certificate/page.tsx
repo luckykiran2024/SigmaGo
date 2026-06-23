@@ -5,7 +5,7 @@ import { getProfileForAuthUser } from '@/lib/db/users';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { ShieldCheck, ArrowLeft, Printer, CheckCircle2, XCircle } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Printer, CheckCircle2, XCircle, Link2 } from 'lucide-react';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return 'N/A';
@@ -45,13 +45,16 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
     return <div className="p-8 text-center text-red-600 font-bold">Request not found.</div>;
   }
 
-  // Security Check: Restrict to authorized users
+  // Security Check: Restrict to authorized users of the same tenant (non-public)
+  const isSameTenant = loggedInPublicUser.tenant_id === tenantId;
   const isOwner = request.owner_id === loggedInPublicUser.id;
   const isAdmin = loggedInPublicUser.role === 'admin' || loggedInPublicUser.role === 'super_admin' || loggedInPublicUser.role === 'ADMIN' || loggedInPublicUser.role === 'SUPER_ADMIN';
   const isOnPath = request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser.id);
   const isGrantee = request.view_grants?.some((g: any) => g.grantee_id === loggedInPublicUser.id && g.status === 'active');
   
-  if (!isOwner && !isAdmin && !isOnPath && !isGrantee && request.visibility !== 'public') {
+  const isAuthorized = isSameTenant && (isOwner || isAdmin || isOnPath || isGrantee);
+  
+  if (!isAuthorized) {
     return <div className="p-8 text-center text-red-600 font-bold">Unauthorized to view this certificate.</div>;
   }
 
@@ -91,13 +94,22 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Request details
         </Link>
-        <button
-          id="print-cert-btn"
-          className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent-light focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
-        >
-          <Printer className="w-4 h-4 mr-2" />
-          Print / Save PDF
-        </button>
+        <div className="flex gap-2.5">
+          <button
+            id="share-cert-btn"
+            className="inline-flex items-center justify-center rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-600 hover:text-accent hover:bg-accent/5 hover:border-accent/40 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 shadow-sm"
+          >
+            <Link2 className="w-4 h-4 mr-2" />
+            Copy share link
+          </button>
+          <button
+            id="print-cert-btn"
+            className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent-light focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Print / Save PDF
+          </button>
+        </div>
       </div>
 
       {/* Main Certificate Sheet */}
@@ -278,12 +290,30 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
       </div>
 
-      {/* Inline Client Print Trigger Script */}
+      {/* Inline Client Print & Copy Trigger Script */}
       <script dangerouslySetInnerHTML={{ __html: `
-        const btn = document.getElementById('print-cert-btn');
-        if (btn) {
-          btn.addEventListener('click', function() {
+        const printBtn = document.getElementById('print-cert-btn');
+        if (printBtn) {
+          printBtn.addEventListener('click', function() {
             window.print();
+          });
+        }
+        
+        const shareBtn = document.getElementById('share-cert-btn');
+        if (shareBtn) {
+          shareBtn.addEventListener('click', function() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(function() {
+              const originalText = shareBtn.innerHTML;
+              shareBtn.innerHTML = '<svg class="w-4 h-4 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Copied!';
+              shareBtn.classList.add('border-green-200', 'bg-green-50/50', 'text-green-700');
+              setTimeout(function() {
+                shareBtn.innerHTML = originalText;
+                shareBtn.classList.remove('border-green-200', 'bg-green-50/50', 'text-green-700');
+              }, 2000);
+            }).catch(function(err) {
+              console.error('Failed to copy link: ', err);
+            });
           });
         }
       ` }} />
