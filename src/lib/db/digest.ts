@@ -1,4 +1,4 @@
-﻿import { adminClient } from '../supabase/admin'
+import { adminClient } from '../supabase/admin'
 
 export async function findOverdueSteps() {
   const { data, error } = await adminClient.rpc('get_overdue_steps')
@@ -16,6 +16,7 @@ export async function getDigestPayload() {
         id, ref, subject, created_at, tenant_id,
         categories ( name ),
         users!owner_id ( name )
+      )
     `)
     .eq('status', 'pending')
     .eq('users.status', 'active')

@@ -6,12 +6,12 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== "Bearer ${process.env.CRON_SECRET}") {
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
     const overdueSteps = await findOverdueSteps()
-    console.log("Found ${overdueSteps?.length || 0} overdue steps.")
+    console.log(`Found ${overdueSteps?.length || 0} overdue steps.`)
     // Processing logic for escalation/nudge goes here
 
     return NextResponse.json({ success: true, count: overdueSteps?.length || 0 })
