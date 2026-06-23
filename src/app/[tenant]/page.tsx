@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
+import { getProfileForAuthUser } from '@/lib/db/users';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -31,12 +32,8 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   if (!tenantData) redirect('/login');
   const tenantId = tenantData.id;
 
-  // 2. Resolve the logged-in user's public profile id
-  const { data: publicUser } = await supabase
-    .from('users')
-    .select('id, name')
-    .eq('auth_user_id', user.id)
-    .single();
+  // 2. Resolve the logged-in user's public profile id (linking auth_user_id if not done yet)
+  const publicUser = await getProfileForAuthUser(user.id, user.email || '');
 
   const userName = publicUser?.name || user.email?.split('@')[0] || 'Member';
 
