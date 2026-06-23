@@ -80,6 +80,12 @@ export default async function TenantLayout({
                       Workflows
                     </Link>
                     <Link
+                      href={`/${resolvedParams.tenant}/admin/archived`}
+                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
+                    >
+                      Archived
+                    </Link>
+                    <Link
                       href={`/${resolvedParams.tenant}/admin/org`}
                       className="text-sm font-semibold text-gray-500 hover:text-accent transition"
                     >

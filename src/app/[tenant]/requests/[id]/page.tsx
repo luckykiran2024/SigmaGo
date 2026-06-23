@@ -81,6 +81,22 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   const isOwner = request.owner_id === loggedInPublicUser?.id;
   const isAdmin = loggedInPublicUser?.role === 'admin' || loggedInPublicUser?.role === 'super_admin' || loggedInPublicUser?.role === 'ADMIN' || loggedInPublicUser?.role === 'SUPER_ADMIN';
 
+  const isOnPath = request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser?.id);
+  const isGrantee = request.view_grants?.some((g: any) => g.grantee_id === loggedInPublicUser?.id && g.status === 'active');
+  const hasAccessToArchived = isAdmin || isOnPath || isGrantee;
+
+  if (request.archived && !hasAccessToArchived) {
+    return (
+      <div className="p-8 text-center bg-white border border-gray-100 rounded-2xl max-w-lg mx-auto mt-12 shadow-sm font-body">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+        <h2 className="text-xl font-bold text-ink">Access Denied</h2>
+        <p className="text-sm text-gray-500 mt-2">
+          This approval request has been archived and is only accessible by administrators, assigned approvers, or explicitly authorized team members.
+        </p>
+      </div>
+    );
+  }
+
   const activeStep = request.approval_steps?.find(
     (s: any) => s.status === 'pending' && s.approver_id === loggedInPublicUser?.id
   );

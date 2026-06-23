@@ -35,7 +35,8 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
       .from('approval_requests')
       .select('id, subject, status, created_at, categories(name)')
       .eq('tenant_id', tenantId)
-      .eq('owner_id', profile.id),
+      .eq('owner_id', profile.id)
+      .eq('archived', false),
     supabase
       .from('approval_steps')
       .select('request_id, type, status, approval_requests(id, subject, status, created_at, categories(name))')

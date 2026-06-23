@@ -44,6 +44,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
       .select('id, subject, status, created_at, category_id, categories(name)')
       .eq('tenant_id', tenantId)
       .eq('owner_id', publicUser?.id)
+      .eq('archived', false)
       .order('created_at', { ascending: false })
       .limit(10),
     supabase

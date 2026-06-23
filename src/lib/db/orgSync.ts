@@ -153,6 +153,12 @@ export async function syncOrganization(
   }
 
   for (const userId of deactivated) {
+    // Archive requests raised by the user who is deactivating
+    await adminClient
+      .from('approval_requests')
+      .update({ archived: true })
+      .eq('owner_id', userId);
+
     await adminClient
       .from('delegations')
       .update({ status: 'INACTIVE' })

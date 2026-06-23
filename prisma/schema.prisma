@@ -165,6 +165,7 @@ model ApprovalRequest {
   created_at      DateTime @default(now())
   finalized_at    DateTime?
   conditions      Json?
+  archived        Boolean  @default(false)
 
   tenant          Tenant   @relation(fields: [tenant_id], references: [id])
   owner           User     @relation(fields: [owner_id], references: [id])

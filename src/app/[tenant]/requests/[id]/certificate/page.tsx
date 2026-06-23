@@ -52,7 +52,10 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   const isOnPath = request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser.id);
   const isGrantee = request.view_grants?.some((g: any) => g.grantee_id === loggedInPublicUser.id && g.status === 'active');
   
-  const isAuthorized = isSameTenant && (isOwner || isAdmin || isOnPath || isGrantee);
+  const isAuthorized = isSameTenant && (
+    (request.archived && (isAdmin || isOnPath || isGrantee)) ||
+    (!request.archived && (isOwner || isAdmin || isOnPath || isGrantee))
+  );
   
   if (!isAuthorized) {
     return <div className="p-8 text-center text-red-600 font-bold">Unauthorized to view this certificate.</div>;
