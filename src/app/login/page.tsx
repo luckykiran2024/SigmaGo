@@ -24,8 +24,12 @@ function LoginForm() {
     setStatusMsg(null);
     setErrorMsg(null);
     try {
-      await resetPassword(resetEmail);
-      setStatusMsg("A password reset link has been sent. Check your email.");
+      const res = await resetPassword(resetEmail);
+      if (res && !res.success) {
+        setErrorMsg(res.error || "Failed to send password reset link.");
+      } else {
+        setStatusMsg("A password reset link has been sent. Check your email.");
+      }
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to send password reset link.");
     } finally {

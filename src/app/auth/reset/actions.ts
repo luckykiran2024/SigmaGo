@@ -9,7 +9,7 @@ export async function updatePasswordAction(password: string) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    return { success: false, error: error.message };
   }
-  return true;
+  return { success: true };
 }

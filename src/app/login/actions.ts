@@ -67,6 +67,7 @@ export async function resetPassword(email: string) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    return { success: false, error: error.message };
   }
+  return { success: true };
 }

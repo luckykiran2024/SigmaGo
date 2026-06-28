@@ -27,8 +27,13 @@ export default function ResetPasswordPage() {
     setErrorMsg('');
 
     try {
-      await updatePasswordAction(password);
-      setStatus('success');
+      const res = await updatePasswordAction(password);
+      if (res && !res.success) {
+        setErrorMsg(res.error || 'Failed to update password.');
+        setStatus('error');
+      } else {
+        setStatus('success');
+      }
     } catch (err: any) {
       setStatus('error');
       setErrorMsg(err.message || 'Failed to update password.');
