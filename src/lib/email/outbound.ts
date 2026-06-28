@@ -1,3 +1,37 @@
+
+function extractPlainTextFromTiptap(doc: any): string {
+  if (!doc) return 'No justification provided.';
+  
+  if (typeof doc === 'string') {
+    try {
+      const parsed = JSON.parse(doc);
+      return extractPlainTextFromTiptap(parsed);
+    } catch (e) {
+      return doc;
+    }
+  }
+
+  let text = '';
+  
+  function walk(node: any) {
+    if (!node) return;
+    if (node.type === 'text' && node.text) {
+      text += node.text;
+    }
+    if (node.content && Array.isArray(node.content)) {
+      for (const child of node.content) {
+        walk(child);
+      }
+    }
+    if (node.type === 'paragraph' && text.length > 0 && !text.endsWith('\n')) {
+      text += '\n';
+    }
+  }
+
+  walk(doc);
+  return text.trim() || 'No justification provided.';
+}
+
 import { adminClient } from '../supabase/admin';
 import crypto from 'crypto';
 
@@ -111,13 +145,7 @@ export async function sendApprovalActionEmail(
   const ownerName = req.users?.name || 'Unknown';
   
   // Parse body text from editor JSON if applicable
-  let justification = 'No justification provided.';
-  try {
-    const doc = req.body_json;
-    if (doc && typeof doc === 'object') {
-      justification = JSON.stringify(doc);
-    }
-  } catch (e) {}
+  const justification = extractPlainTextFromTiptap(req.body_json);
 
   // Generate action token
   const token = await generateActionToken(stepId, step.approver_id || '', step.request_id, step.tenant_id);
