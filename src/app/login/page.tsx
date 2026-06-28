@@ -62,11 +62,21 @@ function LoginForm() {
           
           {/* Query Param Message */}
           {message && !isResetMode && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex gap-3 items-start">
-              <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p className="text-sm text-red-700 font-medium">{decodeURIComponent(message)}</p>
+            <div className={`mb-6 p-4 rounded-xl flex gap-3 items-start border ${
+              message.toLowerCase().includes('success') || message.toLowerCase().includes('created')
+                ? 'bg-green-50 border-green-100 text-green-700'
+                : 'bg-red-50 border-red-100 text-red-700'
+            }`}>
+              {message.toLowerCase().includes('success') || message.toLowerCase().includes('created') ? (
+                <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              )}
+              <p className="text-sm font-medium">{decodeURIComponent(message)}</p>
             </div>
           )}
 
