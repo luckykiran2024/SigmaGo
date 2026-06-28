@@ -36,8 +36,7 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
     .eq('tenant_id', tenantId)
     .eq('delegate_id', profile.id)
     .eq('status', 'active')
-    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
-    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+    .filter('', 'and', `(or(starts_at.is.null,starts_at.lte.${nowStr}),or(ends_at.is.null,ends_at.gte.${nowStr}))`);
 
   const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
 

@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { AlertTriangle, Users } from 'lucide-react';
+import { AlertTriangle, Users, MessageSquare } from 'lucide-react';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import TimelineEditor from './TimelineEditor';
 
@@ -105,8 +105,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     .eq('tenant_id', tenantId)
     .eq('delegate_id', loggedInPublicUser?.id)
     .eq('status', 'active')
-    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
-    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+    .filter('', 'and', `(or(starts_at.is.null,starts_at.lte.${nowStr}),or(ends_at.is.null,ends_at.gte.${nowStr}))`);
 
   const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
 
@@ -143,9 +142,17 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     const comment = formData.get('comment') as string;
     const stepId = formData.get('stepId') as string;
 
+    if (action === 'discuss' && (!comment || comment.trim().length === 0)) {
+      throw new Error('Comment is required when requesting a discussion.');
+    }
+
+    let actionVal: 'approved' | 'rejected' | 'discuss' = 'approved';
+    if (action === 'reject') actionVal = 'rejected';
+    else if (action === 'discuss') actionVal = 'discuss';
+
     await actOnStep({
       stepId,
-      action: action === 'approve' ? 'approved' : 'rejected',
+      action: actionVal,
       actorId: actionPublicUser.id,
       tenantId,
       comment,
@@ -243,6 +250,39 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
         </div>
       )}
 
+      {request.status === 'in_discussion' && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex gap-3 items-start">
+            <MessageSquare className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-amber-800">Request in Discussion</h4>
+              <p className="text-xs text-amber-700 mt-1 font-medium">
+                An approver has requested clarification on this request. Review comments below or resume the workflow.
+              </p>
+            </div>
+          </div>
+          {(request.owner_id === loggedInPublicUser?.id ||
+            request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser?.id) ||
+            loggedInPublicUser?.role === 'admin' ||
+            loggedInPublicUser?.role === 'super_admin' ||
+            loggedInPublicUser?.role === 'ADMIN' ||
+            loggedInPublicUser?.role === 'SUPER_ADMIN') && (
+            <form action={async () => {
+              'use server';
+              const { resumeRequestAction } = await import('./discussionActions');
+              await resumeRequestAction(resolvedParams.tenant, resolvedParams.id);
+            }}>
+              <button
+                type="submit"
+                className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 px-4 rounded-xl transition shadow-sm"
+              >
+                Resume & Review
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left column: Document details & Audit logs */}
         <div className="lg:col-span-2 space-y-8">
@@ -287,9 +327,10 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     request.status === 'approved' ? 'bg-green-50 text-green-700 border border-green-100' :
                     request.status === 'rejected' ? 'bg-red-50 text-red-700 border border-red-100' :
                     request.status === 'blocked' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+                    request.status === 'in_discussion' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
                     'bg-yellow-50 text-yellow-700 border border-yellow-100'
                   }`}>
-                    {request.status}
+                    {request.status === 'in_discussion' ? 'in discussion' : request.status}
                   </span>
                 </div>
               </div>
@@ -380,6 +421,14 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   >
                     Reject
                   </button>
+                  <button 
+                    type="submit" 
+                    name="action" 
+                    value="discuss" 
+                    className="flex-1 inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-4 rounded-xl text-sm font-bold shadow-md shadow-amber-500/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    Discuss
+                  </button>
                 </div>
               </form>
             </div>
@@ -409,6 +458,8 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                                log.action_type === 'step_rejected' ? 'rejected this step' :
                                log.action_type === 'step_approve' ? 'approved this step' :
                                log.action_type === 'step_reject' ? 'rejected this step' :
+                               log.action_type === 'step_discussion' ? 'requested discussion' :
+                               log.action_type === 'request_resumed' ? 'resumed this request' :
                                log.action_type === 'request_blocked' ? 'blocked this request (approver inactive)' :
                                log.action_type === 'step_reassigned' ? 'reassigned this approval step' :
                                log.action_type.replace(/_/g, ' ')}

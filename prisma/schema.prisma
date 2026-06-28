@@ -26,6 +26,7 @@ enum RequestStatus {
   APPROVED
   REJECTED
   LOCKED
+  IN_DISCUSSION
 }
 
 enum RequestVisibility {
@@ -87,6 +88,7 @@ model Tenant {
   webhook_endpoints    WebhookEndpoint[]
   audit_logs           AuditLog[]
   workflows            Workflow[]
+  action_tokens        ActionToken[]
 }
 
 model User {
@@ -114,6 +116,7 @@ model User {
 
   delegations_given    Delegation[]  @relation("Delegator")
   delegations_received Delegation[]  @relation("Delegate")
+  action_tokens        ActionToken[]
 
   @@unique([tenant_id, email])
 }
@@ -174,6 +177,7 @@ model ApprovalRequest {
   view_grants     ViewGrant[]
   attachments     Attachment[]
   webhook_deliveries WebhookDelivery[]
+  action_tokens   ActionToken[]
 }
 
 model ApprovalStep {
@@ -193,6 +197,7 @@ model ApprovalStep {
   approver       User            @relation("StepApprover", fields: [approver_id], references: [id])
   acted_by       User?           @relation("StepActor", fields: [acted_by_id], references: [id])
   delegation     Delegation?     @relation(fields: [delegation_id], references: [id])
+  action_tokens  ActionToken[]
 }
 
 model ViewGrant {
@@ -343,4 +348,24 @@ model Workflow {
 
   tenant      Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   category    Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+}
+
+
+model ActionToken {
+  id           String    @id @default(uuid())
+  token        String    @unique
+  step_id      String
+  approver_id  String
+  request_id   String
+  tenant_id    String
+  used_at      DateTime?
+  expires_at   DateTime
+  created_at   DateTime  @default(now())
+
+  tenant       Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  request      ApprovalRequest @relation(fields: [request_id], references: [id], onDelete: Cascade)
+  step         ApprovalStep    @relation(fields: [step_id], references: [id], onDelete: Cascade)
+  approver     User            @relation(fields: [approver_id], references: [id], onDelete: Cascade)
+
+  @@map("action_tokens")
 }

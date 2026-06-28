@@ -84,6 +84,7 @@ export default function ApprovalsSearchList({
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="in_discussion">In Discussion</option>
             <option value="blocked">Blocked</option>
           </select>
         </div>
@@ -143,9 +144,10 @@ export default function ApprovalsSearchList({
                           req.status === 'approved' ? 'bg-green-50 text-green-700 border-green-100' :
                           req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-100' :
                           req.status === 'blocked' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                          req.status === 'in_discussion' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                           'bg-yellow-50 text-yellow-700 border-yellow-100'
                         }`}>
-                          {req.status}
+                          {req.status === 'in_discussion' ? 'in discussion' : req.status}
                         </span>
                         <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${roleBadgeClass}`}>
                           {roleLabel}
@@ -197,9 +199,10 @@ export default function ApprovalsSearchList({
                       req.status === 'approved' ? 'bg-green-50 text-green-700 border-green-100' :
                       req.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-100' :
                       req.status === 'blocked' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
+                      req.status === 'in_discussion' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                       'bg-yellow-50 text-yellow-700 border-yellow-100'
                     }`}>
-                      {req.status}
+                      {req.status === 'in_discussion' ? 'in discussion' : req.status}
                     </span>
                   </div>
                 </Link>

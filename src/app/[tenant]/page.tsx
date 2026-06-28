@@ -45,8 +45,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
     .eq('tenant_id', tenantId)
     .eq('delegate_id', publicUser?.id)
     .eq('status', 'active')
-    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
-    .or(`ends_at.is.null,ends_at.gte.${nowStr}`);
+    .filter('', 'and', `(or(starts_at.is.null,starts_at.lte.${nowStr}),or(ends_at.is.null,ends_at.gte.${nowStr}))`);
 
   const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
   const delegatorNamesMap = new Map((activeDelegations || []).map((d: any) => [d.delegator_id, d.delegator?.name || 'Unknown']));
@@ -236,9 +235,10 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider ${
                             req.status === 'approved' ? 'bg-green-50 text-green-700 border border-green-100' :
                             req.status === 'rejected' ? 'bg-red-50 text-red-700 border border-red-100' :
+                            req.status === 'in_discussion' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
                             'bg-yellow-50 text-yellow-700 border border-yellow-100'
                           }`}>
-                            {req.status}
+                            {req.status === 'in_discussion' ? 'in discussion' : req.status}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-2xs text-gray-400 font-medium">

@@ -80,6 +80,9 @@ export async function submitRequest(requestId: string, userId: string, tenantId:
 
   if (refError) throw refError;
 
+  // FYI emails trigger
+  triggerFyiEmails(requestId, tenantId).catch(console.error);
+
   // activate first stage steps
   await advanceChain(requestId, tenantId);
 
@@ -159,4 +162,34 @@ export async function getSignedUrl(storagePath: string) {
     .createSignedUrl(storagePath, 3600)
   if (error) throw error
   return data.signedUrl
+}
+
+
+async function triggerFyiEmails(requestId: string, tenantId: string) {
+  try {
+    const { data: tenant } = await adminClient
+      .from('tenants')
+      .select('subdomain')
+      .eq('id', tenantId)
+      .single();
+    if (!tenant) return;
+
+    const { data: refSteps } = await adminClient
+      .from('approval_steps')
+      .select('id, approver:users!approver_id(email)')
+      .eq('request_id', requestId)
+      .eq('type', 'REFERENCE');
+
+    if (refSteps) {
+      const { sendFyiEmail } = await import('../email/outbound');
+      for (const step of refSteps) {
+        const email = (step.approver as any)?.email;
+        if (email) {
+          await sendFyiEmail(tenant.subdomain, step.id, email);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error triggering FYI emails:", err);
+  }
 }

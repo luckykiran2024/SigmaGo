@@ -11,8 +11,7 @@ export async function getLiveDelegationsForDelegate(delegateId: string, tenantId
     .eq('tenant_id', tenantId)
     .eq('delegate_id', delegateId)
     .eq('status', 'active')
-    .or(`starts_at.is.null,starts_at.lte.${nowStr}`)
-    .or(`ends_at.is.null,ends_at.gte.${nowStr}`)
+    .filter('', 'and', `(or(starts_at.is.null,starts_at.lte.${nowStr}),or(ends_at.is.null,ends_at.gte.${nowStr}))`)
 
   if (error) {
     console.error("Error fetching live delegations:", error)
