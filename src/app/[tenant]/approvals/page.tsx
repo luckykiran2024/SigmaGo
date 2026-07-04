@@ -79,6 +79,32 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
 
   const involvedIn = Array.from(involvedMap.values());
 
+  // Load archived requests in this tenant if admin
+  let archivedRequests: any[] = [];
+  const isAdmin = profile && (
+    profile.role === 'admin' ||
+    profile.role === 'super_admin' ||
+    profile.role === 'ADMIN' ||
+    profile.role === 'SUPER_ADMIN'
+  );
+
+  if (isAdmin) {
+    const { data: archived } = await adminClient
+      .from('approval_requests')
+      .select(`
+        id,
+        subject,
+        status,
+        created_at,
+        owner:users!owner_id ( name, email, employee_id ),
+        categories ( name )
+      `)
+      .eq('tenant_id', tenantId)
+      .eq('archived', true)
+      .order('created_at', { ascending: false });
+    archivedRequests = archived || [];
+  }
+
   return (
     <div className="space-y-10 py-4 font-body max-w-7xl mx-auto">
       <div className="border-b border-gray-100 pb-6">
@@ -93,6 +119,8 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ tena
       <ApprovalsSearchList
         raisedByMe={raisedByMe || []}
         involvedIn={involvedIn}
+        archivedRequests={archivedRequests}
+        isAdmin={isAdmin}
         tenantSubdomain={resolvedParams.tenant}
       />
     </div>

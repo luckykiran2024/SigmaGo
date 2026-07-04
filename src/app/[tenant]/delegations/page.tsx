@@ -3,6 +3,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import { redirect } from 'next/navigation';
 import { createDelegationAction, revokeDelegationAction } from './actions';
+import PersonPicker from '@/components/ui/PersonPicker';
 import { Calendar, Trash2, User, Clock } from 'lucide-react';
 
 export default async function MyDelegationsPage({
@@ -31,13 +32,7 @@ export default async function MyDelegationsPage({
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) redirect('/login');
 
-  const { data: otherUsers } = await adminClient
-    .from('users')
-    .select('id, name, email, designation, status')
-    .eq('tenant_id', tenantId)
-    .eq('status', 'active')
-    .neq('id', profile.id)
-    .order('name');
+
 
   const { data: myDelegations } = await adminClient
     .from('delegations')
@@ -124,18 +119,12 @@ export default async function MyDelegationsPage({
               <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
                 Delegate To
               </label>
-              <select
+              <PersonPicker
+                tenant={resolvedParams.tenant}
+                exclude={[profile.id]}
                 name="delegateId"
-                required
-                className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-xs bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
-              >
-                <option value="">Select colleague...</option>
-                {otherUsers?.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} - {u.designation || 'Staff'} ({u.email})
-                  </option>
-                ))}
-              </select>
+                placeholder="Select colleague..."
+              />
             </div>
 
             <div className="space-y-2">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import RichTextEditor from '@/components/ui/RichTextEditor';
 import { submitNewRequest } from './actions';
+import PersonPicker from '@/components/ui/PersonPicker';
 import Link from 'next/link';
 import { Plus, Trash2, Users, ArrowUp, ArrowDown, Search } from 'lucide-react';
 
@@ -19,6 +20,7 @@ interface RequestFormProps {
   categories: { id: string; name: string }[];
   activeUsers: ActiveUser[];
   workflows?: any[];
+  loggedInUserId: string;
 }
 
 interface ApprovalPathItem {
@@ -26,119 +28,7 @@ interface ApprovalPathItem {
   role: 'GENERAL' | 'PARALLEL' | 'REFERENCE';
 }
 
-function TypeaheadPicker({
-  activeUsers,
-  selectedUserId,
-  selectedUserIds,
-  onChange,
-  disabled
-}: {
-  activeUsers: ActiveUser[];
-  selectedUserId: string;
-  selectedUserIds: string[];
-  onChange: (userId: string) => void;
-  disabled?: boolean;
-}) {
-  const [search, setSearch] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Sync selectedUserId to search input text
-  useEffect(() => {
-    const selectedUser = activeUsers.find(u => u.id === selectedUserId);
-    if (selectedUser) {
-      setSearch(`${selectedUser.name} — ${selectedUser.designation || 'Staff'} (Emp ID: ${selectedUser.employee_id || 'N/A'})`);
-    } else if (!selectedUserId) {
-      setSearch('');
-    }
-  }, [selectedUserId, activeUsers]);
-
-  // Handle outside clicks to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        // Reset search to original if no selection made
-        const selectedUser = activeUsers.find(u => u.id === selectedUserId);
-        if (selectedUser) {
-          setSearch(`${selectedUser.name} — ${selectedUser.designation || 'Staff'} (Emp ID: ${selectedUser.employee_id || 'N/A'})`);
-        } else {
-          setSearch('');
-        }
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedUserId, activeUsers]);
-
-  const suggestions = activeUsers.filter(u => {
-    const isSelectedElsewhere = selectedUserIds.includes(u.id) && u.id !== selectedUserId;
-    if (isSelectedElsewhere) return false;
-
-    const query = search.toLowerCase().trim();
-    if (!query) return true;
-
-    // Matches if it's already selected (to show it in list) or if query matches name/employee_id
-    if (u.id === selectedUserId) return true;
-
-    return (
-      (u.name || '').toLowerCase().includes(query) ||
-      (u.employee_id || '').toLowerCase().includes(query)
-    );
-  });
-
-  return (
-    <div ref={containerRef} className="relative w-full">
-      <div className="relative rounded-xl shadow-sm">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            if (disabled) return;
-            setSearch(e.target.value);
-            onChange(''); // Reset selection until user explicitly clicks a suggestion
-            setIsOpen(true);
-          }}
-          onFocus={() => {
-            if (!disabled) setIsOpen(true);
-          }}
-          disabled={disabled}
-          className="block w-full rounded-xl border border-gray-200 py-2 pl-3 pr-10 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-          placeholder="Search name or Employee ID..."
-          required
-        />
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-          <Search className="w-4 h-4" />
-        </div>
-      </div>
-
-      {isOpen && suggestions.length > 0 && !disabled && (
-        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
-          {suggestions.map(u => (
-            <li
-              key={u.id}
-              onMouseDown={() => {
-                onChange(u.id);
-                setSearch(`${u.name} — ${u.designation || 'Staff'} (Emp ID: ${u.employee_id || 'N/A'})`);
-                setIsOpen(false);
-              }}
-              className="cursor-pointer select-none relative py-2.5 pl-3 pr-9 hover:bg-accent/10 hover:text-accent font-semibold text-xs text-ink transition"
-            >
-              {u.name} — {u.designation || 'Staff'} (Emp ID: {u.employee_id || 'N/A'})
-            </li>
-          ))}
-        </ul>
-      )}
-      {isOpen && suggestions.length === 0 && !disabled && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl bg-white py-3 px-4 shadow-lg border border-gray-100 text-xs font-semibold text-gray-400">
-          No matches found
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function RequestForm({ tenant, categories, activeUsers, workflows = [] }: RequestFormProps) {
+export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId }: RequestFormProps) {
   const [content, setContent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -400,12 +290,13 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
                     <label className="block md:hidden text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                       Person
                     </label>
-                    <TypeaheadPicker
-                      activeUsers={activeUsers}
-                      selectedUserId={row.userId}
-                      selectedUserIds={selectedUserIds}
-                      onChange={(val) => updatePathRow(idx, 'userId', val)}
-                      disabled={isPathLocked}
+                    <PersonPicker
+                      tenant={tenant}
+                      exclude={[loggedInUserId, ...selectedUserIds.filter(id => id !== row.userId)]}
+                      activeOnly={true}
+                      value={row.userId}
+                      onSelect={(val) => updatePathRow(idx, 'userId', val || '')}
+                      placeholder="Search name, email, or ID..."
                     />
                   </div>
 

@@ -103,6 +103,7 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
         categories={categories}
         activeUsers={activeUsers}
         workflows={workflows}
+        loggedInUserId={loggedInPublicUserId || ''}
       />
     </div>
   );

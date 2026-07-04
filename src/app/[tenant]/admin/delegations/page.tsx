@@ -3,6 +3,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import { redirect } from 'next/navigation';
 import { createDelegationAction, revokeDelegationAction } from '../../delegations/actions';
+import PersonPicker from '@/components/ui/PersonPicker';
 import { Calendar, Trash2, Shield, User, Clock } from 'lucide-react';
 
 export default async function AdminDelegationsPage({
@@ -135,36 +136,24 @@ export default async function AdminDelegationsPage({
               <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
                 Original Approver (Delegator)
               </label>
-              <select
+              <PersonPicker
+                tenant={resolvedParams.tenant}
+                activeOnly={false}
                 name="delegatorId"
-                required
-                className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-xs bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
-              >
-                <option value="">Select delegator...</option>
-                {allUsers?.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} {u.status === 'inactive' || u.status === 'INACTIVE' ? ' (Inactive)' : ''} - {u.designation || 'Staff'} ({u.email})
-                  </option>
-                ))}
-              </select>
+                placeholder="Select delegator..."
+              />
             </div>
 
             <div className="space-y-1">
               <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
                 Delegate To
               </label>
-              <select
+              <PersonPicker
+                tenant={resolvedParams.tenant}
+                activeOnly={true}
                 name="delegateId"
-                required
-                className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-xs bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
-              >
-                <option value="">Select delegate...</option>
-                {activeUsers?.map((u: any) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} - {u.designation || 'Staff'} ({u.email})
-                  </option>
-                ))}
-              </select>
+                placeholder="Select delegate..."
+              />
             </div>
 
             <div className="space-y-2">

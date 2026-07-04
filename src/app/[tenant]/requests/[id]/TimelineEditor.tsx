@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Users, AlertTriangle, Plus, Trash2, ArrowUp, ArrowDown, Settings, ShieldCheck, Check, Edit2 } from 'lucide-react';
 import { amendPathAction } from './amendActions';
+import PersonPicker from '@/components/ui/PersonPicker';
 
 interface TenantUser {
   id: string;
@@ -235,19 +236,13 @@ export default function TimelineEditor({
                     <label className="block md:hidden text-4xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                       Approver
                     </label>
-                    <select
+                    <PersonPicker
+                      tenant={tenantSubdomain}
+                      activeOnly={true}
                       value={row.approverId}
-                      onChange={e => updateStep(idx, 'approverId', e.target.value)}
-                      required
-                      className="block w-full rounded-xl border border-gray-200 py-2 px-3 text-ink text-xs bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
-                    >
-                      <option value="">Select active staff...</option>
-                      {activeTenantUsers.map(u => (
-                        <option key={u.id} value={u.id}>
-                          {u.name} — {u.designation || 'Staff'} ({u.email})
-                        </option>
-                      ))}
-                    </select>
+                      onSelect={(val) => updateStep(idx, 'approverId', val || '')}
+                      placeholder="Select active staff..."
+                    />
                   </div>
 
                   {/* Role Selector */}
@@ -429,18 +424,14 @@ export default function TimelineEditor({
                                           Reassign Approver
                                         </label>
                                         <div className="flex gap-2">
-                                          <select 
-                                            name="newApproverId" 
-                                            required
-                                            className="block flex-1 rounded-lg border border-gray-200 py-1.5 px-3 text-xs text-ink bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-                                          >
-                                            <option value="">Select active staff...</option>
-                                            {activeTenantUsers.map(u => (
-                                              <option key={u.id} value={u.id}>
-                                                {u.name} - {u.designation || 'Staff'} ({u.career_level || 'L1'})
-                                              </option>
-                                            ))}
-                                          </select>
+                                          <div className="flex-1">
+                                            <PersonPicker
+                                              tenant={tenantSubdomain}
+                                              activeOnly={true}
+                                              name="newApproverId"
+                                              placeholder="Select active staff..."
+                                            />
+                                          </div>
                                           <button 
                                             type="submit" 
                                             className="inline-flex items-center justify-center px-3 py-1.5 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-lg transition"

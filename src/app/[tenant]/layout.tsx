@@ -1,7 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
+import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getProfileForAuthUser } from '@/lib/db/users';
+import TopNav from '@/components/ui/TopNav';
+import UserMenu from '@/components/ui/UserMenu';
+import { Plus } from 'lucide-react';
 
 export default async function TenantLayout({
   children,
@@ -19,7 +23,20 @@ export default async function TenantLayout({
     redirect('/login');
   }
 
+  // Fetch profile and tenant details concurrently
   const profile = await getProfileForAuthUser(user.id, user.email || '');
+  if (!profile) {
+    redirect('/login');
+  }
+
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('id, name')
+    .eq('id', profile.tenant_id)
+    .single();
+
+  const tenantName = tenant ? tenant.name : 'Workspace';
+
   const isAdmin = profile && (
     profile.role === 'admin' ||
     profile.role === 'super_admin' ||
@@ -43,88 +60,40 @@ export default async function TenantLayout({
             
             {/* Left Section: Logo & Nav */}
             <div className="flex items-center gap-8">
-              <Link href={`/${resolvedParams.tenant}`} className="flex items-center gap-2 group">
+              <Link href={`/${resolvedParams.tenant}`} className="flex items-center gap-2 group shrink-0">
                 <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center shadow-sm shadow-ink/10 group-hover:scale-105 transition">
                   <span className="text-white font-display font-extrabold text-xs tracking-tight">SG</span>
                 </div>
-                <span className="font-display text-xl font-extrabold text-ink tracking-tight">
-                  Sigma<span className="text-accent font-extrabold">Go</span>
+                <span className="font-display text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
+                  <span className="text-ink font-extrabold text-base">SigmaGo</span>
+                  <span className="text-gray-300 font-light">|</span>
+                  <span className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
                 </span>
               </Link>
 
-              <nav className="hidden md:flex items-center gap-6">
-                <Link
-                  href={`/${resolvedParams.tenant}`}
-                  className="text-sm font-semibold text-ink hover:text-accent transition"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href={`/${resolvedParams.tenant}/approvals`}
-                  className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                >
-                  Approvals
-                </Link>
-                <Link
-                  href={`/${resolvedParams.tenant}/requests/new`}
-                  className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                >
-                  New Request
-                </Link>
-                <Link
-                  href={`/${resolvedParams.tenant}/delegations`}
-                  className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                >
-                  Delegations
-                </Link>
-                {isAdmin && (
-                  <>
-                    <Link
-                      href={`/${resolvedParams.tenant}/admin/workflows`}
-                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                    >
-                      Workflows
-                    </Link>
-                    <Link
-                      href={`/${resolvedParams.tenant}/admin/delegations`}
-                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                    >
-                      Delegations Admin
-                    </Link>
-                    <Link
-                      href={`/${resolvedParams.tenant}/admin/archived`}
-                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                    >
-                      Archived
-                    </Link>
-                    <Link
-                      href={`/${resolvedParams.tenant}/admin/org`}
-                      className="text-sm font-semibold text-gray-500 hover:text-accent transition"
-                    >
-                      Org Admin
-                    </Link>
-                  </>
-                )}
-              </nav>
+              {/* Dynamic top-nav highlighting component */}
+              <TopNav tenant={resolvedParams.tenant} isAdmin={isAdmin} />
             </div>
 
-            {/* Right Section: User & Sign Out */}
+            {/* Right Section: Actions & User menu */}
             <div className="flex items-center gap-4">
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs text-gray-400 font-medium">Signed in as</span>
-                <span className="text-sm font-semibold text-ink">{user.email}</span>
-              </div>
+              <Link
+                href={`/${resolvedParams.tenant}/requests/new`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white hover:bg-accent/90 rounded-xl text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Plus className="w-4 h-4" />
+                New Request
+              </Link>
               
-              <div className="w-px h-8 bg-gray-200 hidden sm:block" />
+              <div className="w-px h-6 bg-gray-100" />
 
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 bg-white hover:bg-gray-50 hover:text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition shadow-sm"
-                >
-                  Sign Out
-                </button>
-              </form>
+              <UserMenu
+                email={user.email || ''}
+                name={profile.name || 'User'}
+                tenantName={tenantName}
+                tenantSubdomain={resolvedParams.tenant}
+                signOutAction={signOut}
+              />
             </div>
 
           </div>
