@@ -1,4 +1,3 @@
-
 function extractPlainTextFromTiptap(doc: any): string {
   if (!doc) return 'No justification provided.';
   
@@ -116,6 +115,30 @@ export async function sendApprovalActionEmail(
   stepId: string,
   approverEmail: string
 ): Promise<void> {
+  // Check user notification preferences first
+  const { data: recipientProfile } = await adminClient
+    .from('users')
+    .select('user_settings')
+    .eq('email', approverEmail)
+    .maybeSingle();
+
+  const settings = (recipientProfile?.user_settings || {}) as any;
+  if (settings.action_needed_emails === false) {
+    console.log(`Skipping sendApprovalActionEmail to ${approverEmail} due to preferences.`);
+    return;
+  }
+
+  // Resolve tenant info
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+  const logoHtml = tenant?.logo_url 
+    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
+    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+
   // Fetch step details
   const { data: step, error: stepError } = await adminClient
     .from('approval_steps')
@@ -159,6 +182,7 @@ export async function sendApprovalActionEmail(
   const subject = `[Action needed] ${req.subject}`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
+      ${logoHtml}
       <h2 style="color: #111; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Approval Required</h2>
       <p style="font-size: 14px; color: #555; font-weight: 500;">A request requires your review.</p>
       
@@ -206,6 +230,30 @@ export async function sendFyiEmail(
   stepId: string,
   recipientEmail: string
 ): Promise<void> {
+  // Check user notification preferences first
+  const { data: recipientProfile } = await adminClient
+    .from('users')
+    .select('user_settings')
+    .eq('email', recipientEmail)
+    .maybeSingle();
+
+  const settings = (recipientProfile?.user_settings || {}) as any;
+  if (settings.fyi_emails === false) {
+    console.log(`Skipping sendFyiEmail to ${recipientEmail} due to preferences.`);
+    return;
+  }
+
+  // Resolve tenant info
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+  const logoHtml = tenant?.logo_url 
+    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
+    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+
   const { data: step, error: stepError } = await adminClient
     .from('approval_steps')
     .select(`
@@ -227,6 +275,7 @@ export async function sendFyiEmail(
   const subject = `[FYI] ${req.subject}`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
+      ${logoHtml}
       <h2 style="color: #111; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">FYI: Request Notification</h2>
       <p style="font-size: 14px; color: #555;">You are receiving this reference notification for a request submitted by <strong>${ownerName}</strong>.</p>
       
@@ -250,6 +299,30 @@ export async function sendDiscussionNotificationEmail(
   raiserName: string,
   ownerEmail: string
 ): Promise<void> {
+  // Check user notification preferences first
+  const { data: recipientProfile } = await adminClient
+    .from('users')
+    .select('user_settings')
+    .eq('email', ownerEmail)
+    .maybeSingle();
+
+  const settings = (recipientProfile?.user_settings || {}) as any;
+  if (settings.action_needed_emails === false) {
+    console.log(`Skipping sendDiscussionNotificationEmail to ${ownerEmail} due to preferences.`);
+    return;
+  }
+
+  // Resolve tenant info
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+  const logoHtml = tenant?.logo_url 
+    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
+    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+
   const { data: request } = await adminClient
     .from('approval_requests')
     .select('subject')
@@ -262,6 +335,7 @@ export async function sendDiscussionNotificationEmail(
   const subject = `[Discussion Requested] ${request.subject}`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
+      ${logoHtml}
       <h2 style="color: #f59e0b; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Discussion Required</h2>
       <p style="font-size: 14px; color: #555;">
         Approver <strong>${raiserName}</strong> has requested discussion on your request: <strong>${request.subject}</strong>.

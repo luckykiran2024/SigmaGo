@@ -31,7 +31,7 @@ export default async function TenantLayout({
 
   const { data: tenant } = await adminClient
     .from('tenants')
-    .select('id, name')
+    .select('id, name, logo_url')
     .eq('id', profile.tenant_id)
     .single();
 
@@ -61,14 +61,20 @@ export default async function TenantLayout({
             {/* Left Section: Logo & Nav */}
             <div className="flex items-center gap-8">
               <Link href={`/${resolvedParams.tenant}`} className="flex items-center gap-2 group shrink-0">
-                <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center shadow-sm shadow-ink/10 group-hover:scale-105 transition">
-                  <span className="text-white font-display font-extrabold text-xs tracking-tight">SG</span>
-                </div>
-                <span className="font-display text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
-                  <span className="text-ink font-extrabold text-base">SigmaGo</span>
-                  <span className="text-gray-300 font-light">|</span>
-                  <span className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
-                </span>
+                {tenant?.logo_url ? (
+                  <img src={tenant.logo_url} alt={tenantName} className="max-h-8 object-contain" />
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center shadow-sm shadow-ink/10 group-hover:scale-105 transition">
+                      <span className="text-white font-display font-extrabold text-xs tracking-tight">SG</span>
+                    </div>
+                    <span className="font-display text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
+                      <span className="text-ink font-extrabold text-base">SigmaGo</span>
+                      <span className="text-gray-300 font-light">|</span>
+                      <span className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
+                    </span>
+                  </>
+                )}
               </Link>
 
               {/* Dynamic top-nav highlighting component */}
@@ -93,6 +99,7 @@ export default async function TenantLayout({
                 tenantName={tenantName}
                 tenantSubdomain={resolvedParams.tenant}
                 signOutAction={signOut}
+                avatarUrl={(profile as any).avatar_url}
               />
             </div>
 

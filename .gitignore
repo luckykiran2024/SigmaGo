@@ -63,3 +63,4 @@ test_columns.js
 _archive/
 docker-compose.yml
 .vercel
+.env*

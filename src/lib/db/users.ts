@@ -6,7 +6,7 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
   // If found, return it immediately — do NO other work. This is the common case and must be fast.
   const { data: existingProfile } = await adminClient
     .from('users')
-    .select('id, tenant_id, name, email, role, status')
+    .select('id, tenant_id, name, email, role, status, avatar_url')
     .eq('auth_user_id', authUserId)
     .maybeSingle();
 
@@ -23,7 +23,7 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
   // Find the unlinked CSV row by email
   const { data: csvProfile } = await adminClient
     .from('users')
-    .select('id, tenant_id, name, email, role, status')
+    .select('id, tenant_id, name, email, role, status, avatar_url')
     .ilike('email', normalizedEmail)
     .is('auth_user_id', null)
     .maybeSingle();
@@ -73,7 +73,7 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
       .from('users')
       .update({ auth_user_id: authUserId })
       .eq('id', csvProfile.id)
-      .select('id, tenant_id, name, email, role, status')
+      .select('id, tenant_id, name, email, role, status, avatar_url')
       .single();
 
     if (!linkError && updatedProfile) {

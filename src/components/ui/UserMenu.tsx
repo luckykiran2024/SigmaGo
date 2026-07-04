@@ -9,6 +9,7 @@ interface UserMenuProps {
   tenantName: string;
   tenantSubdomain: string;
   signOutAction: () => void;
+  avatarUrl: string | null;
 }
 
 export default function UserMenu({
@@ -16,7 +17,8 @@ export default function UserMenu({
   name,
   tenantName,
   tenantSubdomain,
-  signOutAction
+  signOutAction,
+  avatarUrl
 }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -43,9 +45,13 @@ export default function UserMenu({
     <div className="relative font-body" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/15 flex items-center justify-center font-bold text-accent shadow-sm transition active:scale-95"
+        className="w-10 h-10 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/15 flex items-center justify-center font-bold text-accent shadow-sm transition active:scale-95 overflow-hidden"
       >
-        {initials}
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          initials
+        )}
       </button>
 
       {isOpen && (
@@ -60,7 +66,7 @@ export default function UserMenu({
 
           <div className="space-y-0.5">
             <Link
-              href={`/${tenantSubdomain}/admin/settings`}
+              href={`/${tenantSubdomain}/settings`}
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2.5 text-sm font-bold text-gray-600 rounded-xl hover:bg-gray-50 hover:text-ink transition"
             >

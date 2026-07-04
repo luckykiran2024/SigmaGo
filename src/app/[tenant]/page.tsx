@@ -109,7 +109,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
             Dashboard
           </h1>
           <p className="mt-2 text-sm text-gray-500 font-medium">
-            Welcome back, <span className="text-accent font-semibold">{userName}</span>. Manage your approvals for {tenantData.name}.
+            Welcome back, <span className="text-ink font-bold">{userName}</span>. Manage your approvals for {tenantData.name}.
           </p>
         </div>
         <div className="mt-4 flex md:ml-4 md:mt-0">

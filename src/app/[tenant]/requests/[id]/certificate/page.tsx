@@ -24,7 +24,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   // Resolve tenant info
   const { data: tenantData } = await adminClient
     .from('tenants')
-    .select('id, name')
+    .select('id, name, logo_url')
     .eq('subdomain', resolvedParams.tenant)
     .single();
 
@@ -124,10 +124,14 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
         {/* Certificate Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between border-b border-gray-200 pb-8 mb-8 gap-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-accent font-display font-extrabold text-xl tracking-tight">
-              <ShieldCheck className="w-6 h-6 text-accent" />
-              <span>SigmaGo</span>
-            </div>
+            {tenantData?.logo_url ? (
+              <img src={tenantData.logo_url} alt={tenantName} className="max-h-12 object-contain" />
+            ) : (
+              <div className="flex items-center gap-2 text-accent font-display font-extrabold text-xl tracking-tight">
+                <ShieldCheck className="w-6 h-6 text-accent" />
+                <span>SigmaGo</span>
+              </div>
+            )}
             <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{tenantName} Organization</p>
           </div>
           <div className="sm:text-right space-y-1">
