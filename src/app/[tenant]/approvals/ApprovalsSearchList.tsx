@@ -1,8 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Inbox, FileText, ArrowRight, Archive } from 'lucide-react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Search, Inbox, FileText, ArrowRight, Archive, Calendar, XCircle } from 'lucide-react';
+import PersonPicker from '@/components/ui/PersonPicker';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface ApprovalsSearchListProps {
   raisedByMe: any[];
@@ -10,6 +17,9 @@ interface ApprovalsSearchListProps {
   archivedRequests: any[];
   isAdmin: boolean;
   tenantSubdomain: string;
+  categories: Category[];
+  selectedOwner: { id: string; name: string } | null;
+  hasActiveFilters: boolean;
 }
 
 function formatDate(dateStr: string | null) {
@@ -24,48 +34,156 @@ export default function ApprovalsSearchList({
   involvedIn,
   archivedRequests = [],
   isAdmin,
-  tenantSubdomain
+  tenantSubdomain,
+  categories = [],
+  selectedOwner,
+  hasActiveFilters
 }: ApprovalsSearchListProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
-  // Filter helper matching query and status
-  const filterRequest = (req: any) => {
-    const subjectMatch = (req.subject || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const categoryName = req.categories?.name || '';
-    const categoryMatch = categoryName.toLowerCase().includes(searchQuery.toLowerCase());
-    const statusTextMatch = (req.status || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesQuery = subjectMatch || categoryMatch || statusTextMatch;
+  // Input states synchronized with searchParams
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
+  const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category_id') || 'all');
+  const [ownerFilter, setOwnerFilter] = useState(searchParams.get('owner_id') || null);
+  const [fromDate, setFromDate] = useState(searchParams.get('from_date') || '');
+  const [toDate, setToDate] = useState(searchParams.get('to_date') || '');
+  const [datePreset, setDatePreset] = useState('custom');
 
-    const matchesStatus = statusFilter === 'all' || (req.status || '').toLowerCase() === statusFilter.toLowerCase();
+  // Update query state if searchParams change externally
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+    setStatusFilter(searchParams.get('status') || 'all');
+    setCategoryFilter(searchParams.get('category_id') || 'all');
+    setOwnerFilter(searchParams.get('owner_id') || null);
+    setFromDate(searchParams.get('from_date') || '');
+    setToDate(searchParams.get('to_date') || '');
+  }, [searchParams]);
 
-    return matchesQuery && matchesStatus;
+  // Debounced search query update
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery !== (searchParams.get('q') || '')) {
+        updateFilters({ q: searchQuery });
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Helper to push new filter states to URL search parameters
+  const updateFilters = (newFilters: { [key: string]: string | null }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    Object.entries(newFilters).forEach(([key, val]) => {
+      if (val === null || val === 'all' || val === '') {
+        params.delete(key);
+      } else {
+        params.set(key, val);
+      }
+    });
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
-  // Live filter and sort Raised by Me
-  const filteredRaised = useMemo(() => {
-    return raisedByMe
-      .filter(filterRequest)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [raisedByMe, searchQuery, statusFilter]);
+  const handleStatusChange = (status: string) => {
+    setStatusFilter(status);
+    updateFilters({ status });
+  };
 
-  // Live filter and sort Involved in
-  const filteredInvolved = useMemo(() => {
-    return involvedIn
-      .filter(filterRequest)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [involvedIn, searchQuery, statusFilter]);
+  const handleCategoryChange = (catId: string) => {
+    setCategoryFilter(catId);
+    updateFilters({ category_id: catId });
+  };
 
-  // Live filter and sort Archived requests
-  const filteredArchived = useMemo(() => {
-    return archivedRequests
-      .filter(filterRequest)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [archivedRequests, searchQuery, statusFilter]);
+  const handleOwnerChange = (userId: string | null) => {
+    setOwnerFilter(userId);
+    updateFilters({ owner_id: userId });
+  };
+
+  const handleFromDateChange = (date: string) => {
+    setFromDate(date);
+    setDatePreset('custom');
+    updateFilters({ from_date: date });
+  };
+
+  const handleToDateChange = (date: string) => {
+    setToDate(date);
+    setDatePreset('custom');
+    updateFilters({ to_date: date });
+  };
+
+  const handlePresetChange = (preset: string) => {
+    setDatePreset(preset);
+    const today = new Date();
+    let from = '';
+    let to = today.toISOString().split('T')[0];
+
+    if (preset === '7days') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      from = d.toISOString().split('T')[0];
+    } else if (preset === '30days') {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      from = d.toISOString().split('T')[0];
+    } else if (preset === 'quarter') {
+      const currentMonth = today.getMonth();
+      const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+      const d = new Date(today.getFullYear(), quarterStartMonth, 1);
+      from = d.toISOString().split('T')[0];
+    } else if (preset === 'year') {
+      from = `${today.getFullYear()}-01-01`;
+    } else if (preset === 'all') {
+      from = '';
+      to = '';
+    }
+
+    setFromDate(from);
+    setToDate(to);
+    updateFilters({ from_date: from, to_date: to });
+  };
+
+  const clearFilter = (key: string) => {
+    if (key === 'q') setSearchQuery('');
+    if (key === 'status') setStatusFilter('all');
+    if (key === 'category_id') setCategoryFilter('all');
+    if (key === 'owner_id') setOwnerFilter(null);
+    if (key === 'date') {
+      setFromDate('');
+      setToDate('');
+      setDatePreset('custom');
+      updateFilters({ from_date: null, to_date: null });
+      return;
+    }
+    updateFilters({ [key]: null });
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setOwnerFilter(null);
+    setFromDate('');
+    setToDate('');
+    setDatePreset('custom');
+    router.push(pathname);
+  };
+
+  // Count active filters
+  let activeFilterCount = 0;
+  if (searchQuery) activeFilterCount++;
+  if (statusFilter !== 'all') activeFilterCount++;
+  if (categoryFilter !== 'all') activeFilterCount++;
+  if (ownerFilter) activeFilterCount++;
+  if (fromDate || toDate) activeFilterCount++;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-body">
       
       {/* Admin Tab Bar */}
       {isAdmin && (
@@ -95,37 +213,148 @@ export default function ApprovalsSearchList({
         </div>
       )}
 
-      {/* Search and Filters Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
-        {/* Search input */}
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+      {/* FILTER BAR - Single Row responsive layout */}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 space-y-4">
+        <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center">
+          {/* Search (existing) */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-xs text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition bg-white"
+              placeholder="Search subject..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
-            placeholder="Search by subject, category, or status..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+
+          {/* Status Select */}
+          <div className="w-full xl:w-40 shrink-0">
+            <select
+              className="block w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white transition font-bold"
+              value={statusFilter}
+              onChange={(e) => handleStatusChange(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="in_discussion">In Discussion</option>
+              <option value="blocked">Blocked</option>
+            </select>
+          </div>
+
+          {/* Category Select */}
+          <div className="w-full xl:w-44 shrink-0">
+            <select
+              className="block w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white transition font-bold"
+              value={categoryFilter}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+            >
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Raised by Owner (PersonPicker searchable typeahead) */}
+          <div className="w-full xl:w-56 shrink-0 relative">
+            <PersonPicker
+              tenant={tenantSubdomain}
+              value={ownerFilter}
+              onSelect={handleOwnerChange}
+              placeholder="Filter by owner..."
+            />
+          </div>
+
+          {/* Date range inputs & presets */}
+          <div className="w-full xl:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 border border-gray-200 rounded-xl px-3 py-1.5 bg-white">
+              <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => handleFromDateChange(e.target.value)}
+                className="text-xs font-bold text-gray-700 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
+              />
+              <span className="text-gray-400 text-xs">-</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => handleToDateChange(e.target.value)}
+                className="text-xs font-bold text-gray-700 bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
+              />
+            </div>
+
+            <select
+              value={datePreset}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="custom">Date Preset</option>
+              <option value="7days">Last 7 days</option>
+              <option value="30days">Last 30 days</option>
+              <option value="quarter">This quarter</option>
+              <option value="year">This year</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
         </div>
 
-        {/* Status Filter Dropdown */}
-        <div className="w-full sm:w-48">
-          <select
-            className="block w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-white transition"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="in_discussion">In Discussion</option>
-            <option value="blocked">Blocked</option>
-          </select>
-        </div>
+        {/* Removable chips */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-50">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">Active filters:</span>
+            
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-155 hover:bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('q')}>
+                Search: "{searchQuery}"
+                <span className="text-gray-400 font-extrabold ml-1">×</span>
+              </span>
+            )}
+
+            {statusFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-155 hover:bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('status')}>
+                Status: {statusFilter}
+                <span className="text-gray-400 font-extrabold ml-1">×</span>
+              </span>
+            )}
+
+            {categoryFilter !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-155 hover:bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('category_id')}>
+                Category: {categories.find(c => c.id === categoryFilter)?.name || 'Selected'}
+                <span className="text-gray-400 font-extrabold ml-1">×</span>
+              </span>
+            )}
+
+            {selectedOwner && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-155 hover:bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('owner_id')}>
+                Owner: {selectedOwner.name}
+                <span className="text-gray-400 font-extrabold ml-1">×</span>
+              </span>
+            )}
+
+            {(fromDate || toDate) && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 border border-gray-155 hover:bg-gray-100 text-gray-600 text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('date')}>
+                Date: {fromDate || '*'} to {toDate || '*'}
+                <span className="text-gray-400 font-extrabold ml-1">×</span>
+              </span>
+            )}
+
+            {activeFilterCount >= 2 && (
+              <button
+                onClick={clearAllFilters}
+                type="button"
+                className="text-[10px] font-extrabold text-accent hover:underline ml-2"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {activeTab === 'active' ? (
@@ -140,19 +369,33 @@ export default function ApprovalsSearchList({
                 <p className="text-xs text-gray-400 font-semibold mt-0.5">Requests where you are on the approval path</p>
               </div>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/5 text-accent border border-accent/10">
-                {filteredInvolved.length} requests
+                {involvedIn.length} requests
               </span>
             </div>
 
-            {filteredInvolved.length === 0 ? (
-              <div className="text-center py-16 px-4">
-                <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="text-sm font-bold text-ink">No requests found</h4>
-                <p className="text-xs text-gray-400 mt-1">You are not involved in any requests matching your filters.</p>
+            {involvedIn.length === 0 ? (
+              <div className="text-center py-16 px-4 space-y-3">
+                <Inbox className="w-12 h-12 text-gray-300 mx-auto" />
+                <h4 className="text-sm font-bold text-ink">
+                  {hasActiveFilters ? 'No requests match your filters' : 'No requests found'}
+                </h4>
+                <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+                  {hasActiveFilters 
+                    ? 'Try clearing some filters to broaden your search results.' 
+                    : 'Inbox is clean! You have no pending requests to approve.'}
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 rounded-xl text-xs font-bold transition shadow-3xs"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-gray-100 max-h-[480px] overflow-y-auto">
-                {filteredInvolved.map((req) => {
+                {involvedIn.map((req) => {
                   const catName = req.categories?.name || 'Uncategorized';
                   return (
                     <div key={req.id} className="p-5 hover:bg-gray-50/30 transition flex items-center justify-between gap-4">
@@ -195,19 +438,33 @@ export default function ApprovalsSearchList({
                 <p className="text-xs text-gray-400 font-semibold mt-0.5">Requests you submitted for approval</p>
               </div>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/5 text-accent border border-accent/10">
-                {filteredRaised.length} requests
+                {raisedByMe.length} requests
               </span>
             </div>
 
-            {filteredRaised.length === 0 ? (
-              <div className="text-center py-16 px-4">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="text-sm font-bold text-ink">No requests found</h4>
-                <p className="text-xs text-gray-400 mt-1">You haven't submitted any requests matching your filters.</p>
+            {raisedByMe.length === 0 ? (
+              <div className="text-center py-16 px-4 space-y-3">
+                <FileText className="w-12 h-12 text-gray-300 mx-auto" />
+                <h4 className="text-sm font-bold text-ink">
+                  {hasActiveFilters ? 'No requests match your filters' : 'No requests found'}
+                </h4>
+                <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+                  {hasActiveFilters 
+                    ? 'Try clearing some filters to broaden your search results.' 
+                    : "You haven't submitted any requests."}
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 rounded-xl text-xs font-bold transition shadow-3xs"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-gray-100 max-h-[480px] overflow-y-auto">
-                {filteredRaised.map((req) => {
+                {raisedByMe.map((req) => {
                   const catName = req.categories?.name || 'Uncategorized';
                   return (
                     <div key={req.id} className="p-5 hover:bg-gray-50/30 transition flex items-center justify-between gap-4">
@@ -252,31 +509,45 @@ export default function ApprovalsSearchList({
               <p className="text-xs text-gray-400 font-semibold mt-0.5">Requests belonging to inactive/exited employees</p>
             </div>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/5 text-accent border border-accent/10">
-              {filteredArchived.length} requests
+              {archivedRequests.length} requests
             </span>
           </div>
 
-          {filteredArchived.length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <Archive className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h4 className="text-sm font-bold text-ink">No archived requests</h4>
-              <p className="text-xs text-gray-400 mt-1">There are no archived requests matching your query.</p>
+          {archivedRequests.length === 0 ? (
+            <div className="text-center py-16 px-4 space-y-3">
+              <Archive className="w-12 h-12 text-gray-300 mx-auto" />
+              <h4 className="text-sm font-bold text-ink">
+                {hasActiveFilters ? 'No archived requests match your filters' : 'No archived requests'}
+              </h4>
+              <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+                {hasActiveFilters 
+                  ? 'Try clearing some filters to broaden your search results.' 
+                  : 'There are no archived requests.'}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 rounded-xl text-xs font-bold transition shadow-3xs"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100">
+              <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subject</th>
-                    <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Owner</th>
-                    <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
-                    <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Created</th>
+                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Subject</th>
+                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Created</th>
                     <th scope="col" className="relative px-6 py-3.5"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                  {filteredArchived.map((req) => {
+                  {archivedRequests.map((req) => {
                     const ownerName = req.owner?.name || 'Unknown';
                     const categoryName = req.categories?.name || 'Uncategorized';
                     return (
