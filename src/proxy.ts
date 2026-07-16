@@ -31,9 +31,19 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Define public pages that do not require auth and should not be rewritten to tenant scope
+  const path = request.nextUrl.pathname;
+  const isAuthPage = path.startsWith('/login') || path.startsWith('/auth');
+  const isPublicPage =
+    path === '/' ||
+    path.startsWith('/product') ||
+    path.startsWith('/about') ||
+    path.startsWith('/blog') ||
+    path === '/sitemap.xml' ||
+    path === '/robots.txt';
+
   // --- Auth Protection ---
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/auth')
-  if (!user && !isAuthPage && !request.nextUrl.pathname.startsWith('/api')) {
+  if (!user && !isAuthPage && !isPublicPage && !path.startsWith('/api')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -48,7 +58,11 @@ export async function proxy(request: NextRequest) {
   let tenant = '';
   
   if (isLocalhost) {
-    tenant = domainParts.length > 1 ? domainParts[0] : 'meridian'; 
+    // If it has a subdomain on localhost (e.g. meridian.localhost:3000), route to that tenant.
+    // If it is just localhost:3000, keep tenant as empty "" so it can serve the public marketing landing page.
+    if (domainParts.length > 1) {
+      tenant = domainParts[0];
+    }
   } else {
     if (hostname.endsWith('.sigmago.app')) {
       tenant = hostname.replace('.sigmago.app', '');
@@ -59,7 +73,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  if (tenant && !url.pathname.startsWith('/' + tenant) && !isAuthPage && !request.nextUrl.pathname.startsWith('/api')) {
+  // Do not rewrite public marketing pages to a tenant path
+  if (tenant && !isPublicPage && !isAuthPage && !url.pathname.startsWith('/' + tenant) && !request.nextUrl.pathname.startsWith('/api')) {
     const newUrl = new URL('/' + tenant + url.pathname, request.url)
     return NextResponse.rewrite(newUrl, {
       request: supabaseResponse.headers ? supabaseResponse : undefined
