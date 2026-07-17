@@ -29,7 +29,19 @@ const config: Config = {
         display: ["var(--font-archivo)", "sans-serif"],
         body: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-jetbrains)", "monospace"],
+        ibmserif: ["var(--font-ibm-serif)", "serif"],
+        ibmsans: ["var(--font-ibm-sans)", "sans-serif"],
+        ibmmono: ["var(--font-ibm-mono)", "monospace"],
       },
+      keyframes: {
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        }
+      },
+      animation: {
+        "fade-up": "fade-up 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+      }
     },
   },
   plugins: [
