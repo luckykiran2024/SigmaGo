@@ -16,12 +16,12 @@ export default function AdminSidebar({ tenant }: { tenant: string }) {
   ];
 
   return (
-    <aside className="w-full md:w-64 shrink-0 bg-white border border-gray-100 rounded-2xl p-4 self-start shadow-sm space-y-4 font-body">
+    <aside className="w-full md:w-64 shrink-0 bg-forest rounded-2xl p-4 self-start shadow-sm space-y-4 font-ibmsans text-[#F2F0E8]">
       <div>
-        <h3 className="px-3 text-2xs font-extrabold text-gray-400 uppercase tracking-widest">
+        <h3 className="px-3 text-2xs font-extrabold text-[#A8B0A2] uppercase tracking-widest font-ibmmono">
           Admin Console
         </h3>
-        <p className="px-3 text-[10px] text-gray-400 font-semibold mt-0.5">Management & Rules</p>
+        <p className="px-3 text-[10px] text-[#A8B0A2] font-semibold mt-0.5">Management & Rules</p>
       </div>
 
       <nav className="space-y-1">
@@ -34,11 +34,11 @@ export default function AdminSidebar({ tenant }: { tenant: string }) {
               href={item.href}
               className={`flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold rounded-xl transition ${
                 isActive
-                  ? 'bg-accent/5 text-accent shadow-sm border-l-2 border-accent'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
+                  ? 'bg-[#D4A017]/14 text-[#F2F0E8] border-l-[3px] border-[#D4A017]'
+                  : 'text-[#A8B0A2] hover:bg-white/5 hover:text-[#F2F0E8]'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-gray-400'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#D4A017]' : 'text-[#A8B0A2]'}`} />
               {item.name}
             </Link>
           );

@@ -52,9 +52,9 @@ export default async function TenantLayout({
   };
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col font-body">
+    <div className="min-h-screen bg-canvas flex flex-col font-ibmsans text-ink">
       {/* Premium Header/Navbar */}
-      <header className="bg-white border-b border-gray-100 shadow-sm z-30 sticky top-0">
+      <header className="bg-paper border-b border-hair shadow-sm z-30 sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             
@@ -66,12 +66,12 @@ export default async function TenantLayout({
                 ) : (
                   <>
                     <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center shadow-sm shadow-ink/10 group-hover:scale-105 transition">
-                      <span className="text-white font-display font-extrabold text-xs tracking-tight">SG</span>
+                      <span className="text-white font-ibmserif font-bold text-xs tracking-tight">SG</span>
                     </div>
-                    <span className="font-display text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
-                      <span className="text-ink font-extrabold text-base">SigmaGo</span>
+                    <span className="font-ibmsans text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
+                      <span className="text-ink font-ibmserif font-bold text-base">SigmaGo</span>
                       <span className="text-gray-300 font-light">|</span>
-                      <span className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
+                      <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
                     </span>
                   </>
                 )}
@@ -85,13 +85,13 @@ export default async function TenantLayout({
             <div className="flex items-center gap-4">
               <Link
                 href={`/${resolvedParams.tenant}/requests/new`}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-white hover:bg-accent/90 rounded-xl text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent text-ink hover:bg-accent/90 rounded-full text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus className="w-4 h-4" />
                 New Request
               </Link>
               
-              <div className="w-px h-6 bg-gray-100" />
+              <div className="w-px h-6 bg-hair" />
 
               <UserMenu
                 email={user.email || ''}
@@ -108,7 +108,7 @@ export default async function TenantLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
     </div>

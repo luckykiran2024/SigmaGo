@@ -9,21 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#1A1A1A",
-        accent: {
-          DEFAULT: "#FF5A3C",
-          light: "#FFA08F",
-          deep: "#D43F25",
-        },
-        teal: {
-          DEFAULT: "#FF5A3C",
-          light: "#FFA08F",
-          deep: "#D43F25",
-        },
-        "go-mist": "#FFF0ED",
+        ink: "#17200F",
+        accent: { DEFAULT: "#D4A017", light: "#E3B02A", deep: "#A67C1A" },
+        // Legacy usage: mirrors accent
+        teal:   { DEFAULT: "#D4A017", light: "#E3B02A", deep: "#A67C1A" },
+        "go-mist": "#FBF6E6",
         paper: "#FFFFFF",
-        panel: "#F5F5F4",
-        "seal-gold": "#C8862A",
+        panel: "#F1EEE4",
+        canvas: "#FAF8F2",      // app background
+        forest: "#1E2B1C",      // sidebar / dark surfaces
+        "forest-deep": "#141D13",
+        body: "#4B5347",
+        muted: "#5E6657",
+        hair: "rgba(30,43,28,.12)",
+        "seal-gold": "#D4A017",
+        ok: "#2E7D5B",
+        warn: "#C08A2E",
+        err: "#B4453C",
+        info: "#3B6B8F",
       },
       fontFamily: {
         display: ["var(--font-archivo)", "sans-serif"],

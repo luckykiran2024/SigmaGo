@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { AlertTriangle, Users, MessageSquare } from 'lucide-react';
+import { AlertTriangle, MessageSquare } from 'lucide-react';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import TimelineEditor from './TimelineEditor';
 
@@ -24,8 +24,6 @@ function formatBytes(bytes: number, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
-
-
 
 export default async function RequestDetail({ params }: { params: Promise<{ id: string, tenant: string }> }) {
   const resolvedParams = await params;
@@ -88,10 +86,10 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
   if (request.archived && !hasAccessToArchived) {
     return (
-      <div className="p-8 text-center bg-white border border-gray-100 rounded-2xl max-w-lg mx-auto mt-12 shadow-sm font-body">
-        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-ink">Access Denied</h2>
-        <p className="text-sm text-gray-500 mt-2">
+      <div className="p-8 text-center bg-paper border border-hair rounded-[14px] max-w-lg mx-auto mt-12 shadow-[0_10px_28px_rgba(60,55,30,0.10)] font-ibmsans text-ink">
+        <AlertTriangle className="w-12 h-12 text-err mx-auto mb-3" />
+        <h2 className="text-xl font-bold font-ibmserif text-ink">Access Denied</h2>
+        <p className="text-sm text-muted mt-2">
           This approval request has been archived and is only accessible by administrators, assigned approvers, or explicitly authorized team members.
         </p>
       </div>
@@ -126,8 +124,6 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   if (activeDirectStep) {
     activeDirectApproverId = activeDirectStep.approver_id;
   }
-
-
 
   async function submitAction(formData: FormData) {
     'use server';
@@ -221,15 +217,13 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     revalidatePath(`/${resolvedParams.tenant}/requests/${resolvedParams.id}`);
   }
 
-
-
   return (
-    <div className="space-y-6 py-4 font-body">
+    <div className="space-y-6 py-4 font-ibmsans text-ink">
       {/* Back Link */}
       <div>
         <Link 
           href={`/${resolvedParams.tenant}`}
-          className="inline-flex items-center text-sm font-semibold text-accent hover:text-accent-light transition"
+          className="inline-flex items-center text-sm font-semibold text-accent hover:text-accent-deep transition"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -239,11 +233,11 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
       </div>
 
       {request.status === 'blocked' && (
-        <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-100 flex gap-3 items-start">
-          <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5 animate-pulse" />
+        <div className="p-4 rounded-xl bg-err/10 border border-err/20 flex gap-3 items-start animate-pulse">
+          <AlertTriangle className="w-5 h-5 text-err shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-yellow-800">Workflow Blocked</h4>
-            <p className="text-xs text-yellow-700 mt-1 font-medium">
+            <h4 className="text-sm font-bold text-err">Workflow Blocked</h4>
+            <p className="text-xs text-ink mt-1 font-medium">
               This approval request is blocked because one or more active approvers became inactive. The request owner or a tenant admin must reassign the pending step.
             </p>
           </div>
@@ -251,12 +245,12 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
       )}
 
       {request.status === 'in_discussion' && (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="p-4 rounded-xl bg-info/10 border border-info/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex gap-3 items-start">
-            <MessageSquare className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <MessageSquare className="w-5 h-5 text-info shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-bold text-amber-800">Request in Discussion</h4>
-              <p className="text-xs text-amber-700 mt-1 font-medium">
+              <h4 className="text-sm font-bold text-info">Request in Discussion</h4>
+              <p className="text-xs text-ink mt-1 font-medium">
                 An approver has requested clarification on this request. Review comments below or resume the workflow.
               </p>
             </div>
@@ -274,7 +268,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             }}>
               <button
                 type="submit"
-                className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 px-4 rounded-xl transition shadow-sm"
+                className="shrink-0 bg-info hover:bg-info/90 text-white text-xs font-bold py-2 px-4 rounded-full transition shadow-sm"
               >
                 Resume & Review
               </button>
@@ -287,26 +281,26 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
         {/* Left column: Document details & Audit logs */}
         <div className="lg:col-span-2 space-y-8">
           {/* Main Document Details Card */}
-          <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
+          <div className="bg-paper border border-hair rounded-[14px] shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
             {/* Header info */}
-            <div className="px-6 py-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="px-6 py-6 border-b border-hair bg-panel/50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-display font-extrabold text-ink leading-tight">{request.subject}</h1>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 font-medium pt-1">
+                  <h1 className="text-2xl font-ibmserif font-extrabold text-ink leading-tight">{request.subject}</h1>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted font-medium pt-1">
                     <div>
-                      <span className="text-gray-400">Category:</span>{' '}
-                      <span className="text-gray-700 font-semibold">{request.categories?.name || 'Uncategorized'}</span>
+                      <span className="text-muted">Category:</span>{' '}
+                      <span className="text-ink font-semibold">{request.categories?.name || 'Uncategorized'}</span>
                     </div>
                     <span>•</span>
                     <div>
-                      <span className="text-gray-400">Submitted by:</span>{' '}
-                      <span className="text-gray-700 font-semibold">{request.users?.name || 'Unknown User'}</span>
+                      <span className="text-muted">Submitted by:</span>{' '}
+                      <span className="text-ink font-semibold">{request.users?.name || 'Unknown User'}</span>
                     </div>
                     <span>•</span>
-                    <div>
-                      <span className="text-gray-400">Submitted at:</span>{' '}
-                      <span className="text-gray-700 font-semibold">{formatDate(request.created_at)}</span>
+                    <div className="flex items-center gap-1 font-ibmmono">
+                      <span className="text-muted">Submitted at:</span>{' '}
+                      <span className="text-ink font-semibold">{formatDate(request.created_at)}</span>
                     </div>
                   </div>
                 </div>
@@ -315,57 +309,57 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     <Link
                       href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}/certificate`}
                       target="_blank"
-                      className="inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-accent/10 hover:bg-accent-light focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+                      className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-xs font-bold text-ink shadow-md shadow-accent/10 hover:bg-accent/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
                     >
-                      <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4 mr-1.5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Certificate
                     </Link>
                   )}
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    request.status === 'approved' ? 'bg-green-50 text-green-700 border border-green-100' :
-                    request.status === 'rejected' ? 'bg-red-50 text-red-700 border border-red-100' :
-                    request.status === 'blocked' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
-                    request.status === 'in_discussion' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                    'bg-yellow-50 text-yellow-700 border border-yellow-100'
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border font-ibmmono ${
+                    request.status === 'approved' ? 'bg-ok/10 text-ok border-ok/20' :
+                    request.status === 'rejected' ? 'bg-err/10 text-err border-err/20' :
+                    request.status === 'blocked' ? 'bg-err/10 text-err border-err/20 animate-pulse' :
+                    request.status === 'in_discussion' ? 'bg-info/10 text-info border-info/20' :
+                    'bg-warn/10 text-warn border-warn/20'
                   }`}>
-                    {request.status === 'in_discussion' ? 'in discussion' : request.status}
+                    {request.status === 'in_discussion' ? 'discuss' : request.status}
                   </span>
                 </div>
               </div>
             </div>
             
             {/* Document Content (Rich Text) */}
-            <div className="px-6 py-8 prose max-w-none">
+            <div className="px-6 py-8 prose max-w-none text-[#4B5347] font-ibmsans text-[19px] leading-[1.65] prose-headings:font-ibmserif prose-headings:text-ink prose-a:text-accent hover:prose-a:underline select-text">
               <RichTextEditor content={request.body_json} editable={false} />
             </div>
 
             {/* Attachments Section */}
             {attachmentsWithUrls.length > 0 && (
-              <div className="px-6 pb-8 border-t border-gray-100 pt-6">
-                <h4 className="text-sm font-bold text-ink uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <div className="px-6 pb-8 border-t border-hair pt-6">
+                <h4 className="text-sm font-bold text-ink uppercase tracking-wider mb-3 flex items-center gap-1.5 font-ibmmono">
                   <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                   Supporting Attachments
                 </h4>
-                <ul className="divide-y divide-gray-100 border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm">
+                <ul className="divide-y divide-hair border border-hair rounded-[14px] bg-paper overflow-hidden shadow-sm">
                   {attachmentsWithUrls.map((att: any) => (
-                    <li key={att.id} className="flex items-center justify-between p-4 hover:bg-gray-50/50 transition">
+                    <li key={att.id} className="flex items-center justify-between p-4 hover:bg-panel/30 transition">
                       <div className="flex items-center gap-3 min-w-0">
-                        <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span className="text-sm font-bold text-ink truncate max-w-xs md:max-w-md">{att.filename}</span>
-                        <span className="text-xs text-gray-400 font-medium shrink-0">({formatBytes(att.size_bytes)})</span>
+                        <span className="text-xs text-muted font-medium shrink-0 font-ibmmono">({formatBytes(att.size_bytes)})</span>
                       </div>
                       <a
                         href={att.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         download={att.filename}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-200 hover:border-accent/40 rounded-xl text-xs font-bold text-gray-600 hover:text-accent hover:bg-accent/5 transition"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-hair hover:border-accent/40 rounded-full text-xs font-bold text-ink hover:text-accent hover:bg-panel transition"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -381,13 +375,13 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
           {/* Action Box */}
           {activeStep && request.status !== 'blocked' && (
-            <div className="bg-white shadow-sm border-2 border-accent rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-paper shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-accent rounded-[14px] p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
               
-              <h3 className="text-lg font-display font-extrabold text-ink mb-2">
+              <h3 className="text-lg font-ibmserif font-extrabold text-ink mb-2">
                 {isDelegatedStep ? 'Approval Required (Delegate)' : 'Your Approval Required'}
               </h3>
-              <p className="text-xs text-gray-500 font-medium mb-4">
+              <p className="text-xs text-muted font-medium mb-4">
                 {isDelegatedStep 
                   ? `You are acting on behalf of ${delegatorName} as their active delegate. Please review the document and submit your decision.`
                   : 'Please review the document and submit your decision below.'
@@ -400,7 +394,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   <textarea 
                     name="comment" 
                     rows={3} 
-                    className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm" 
+                    className="block w-full rounded-xl border border-hair py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition sm:text-sm" 
                     placeholder="Add an optional comment..."
                   ></textarea>
                 </div>
@@ -409,7 +403,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="approve" 
-                    className="flex-1 inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-xl text-sm font-bold shadow-md shadow-green-600/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-ok hover:bg-ok/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-ok/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Approve
                   </button>
@@ -417,7 +411,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="reject" 
-                    className="flex-1 inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-xl text-sm font-bold shadow-md shadow-red-600/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-err hover:bg-err/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-err/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Reject
                   </button>
@@ -425,7 +419,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="discuss" 
-                    className="flex-1 inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white py-2.5 px-4 rounded-xl text-sm font-bold shadow-md shadow-amber-500/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-info hover:bg-info/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-info/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Discuss
                   </button>
@@ -435,9 +429,9 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
           )}
 
           {/* Audit Log Card */}
-          <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-base font-bold text-ink font-display">Audit Log</h3>
+          <div className="bg-paper border border-hair rounded-[14px] shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
+            <div className="px-6 py-5 border-b border-hair bg-panel/50">
+              <h3 className="text-base font-bold text-ink font-ibmserif">Audit Log</h3>
             </div>
             <div className="px-6 py-6">
               <ul className="space-y-5">
@@ -445,15 +439,15 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   <li key={log.id} className="text-sm flex items-start justify-between gap-4">
                     <div className="flex gap-2.5 items-start">
                       {/* Bullet icon */}
-                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted/40 shrink-0" />
                       <div>
                         {log.metadata?.summary ? (
-                          <span className="text-gray-700 font-medium font-semibold">{log.metadata.summary}</span>
+                          <span className="text-ink font-semibold">{log.metadata.summary}</span>
                         ) : (
                           <>
                             <span className="font-bold text-ink">{userMap.get(log.actor_id) || 'System / Staff'}</span>
                             {' '}
-                            <span className="text-gray-500 font-medium">
+                            <span className="text-muted font-medium">
                               {log.action_type === 'step_approved' ? 'approved this step' :
                                log.action_type === 'step_rejected' ? 'rejected this step' :
                                log.action_type === 'step_approve' ? 'approved this step' :
@@ -468,11 +462,11 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                         )}
                       </div>
                     </div>
-                    <span className="text-gray-400 text-xs font-semibold shrink-0">{formatDate(log.created_at)}</span>
+                    <span className="text-muted text-xs font-semibold shrink-0 font-ibmmono">{formatDate(log.created_at)}</span>
                   </li>
                 ))}
                 {(!auditLogs || auditLogs.length === 0) && (
-                  <p className="text-sm text-gray-400 italic">No events recorded yet.</p>
+                  <p className="text-sm text-muted italic">No events recorded yet.</p>
                 )}
               </ul>
             </div>

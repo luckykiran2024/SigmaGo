@@ -46,6 +46,10 @@ export const metadata: Metadata = {
   description: "Enterprise approval workflow system for SigmaGo.",
 };
 
+export const viewport = {
+  themeColor: "#1E2B1C",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -135,9 +135,15 @@ export async function sendApprovalActionEmail(
     .eq('subdomain', tenantSubdomain)
     .single();
   const tenantName = tenant ? tenant.name : 'Workspace';
-  const logoHtml = tenant?.logo_url 
-    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
-    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+  
+  const headerHtml = `
+    <div style="background-color: #1E2B1C; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
+      ${tenant?.logo_url 
+        ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 32px; display: block;" />` 
+        : `<div style="font-family: sans-serif; font-size: 18px; font-weight: 800; color: #F2F0E8;">SigmaGo | <span style="font-size: 12px; font-weight: 600; color: #A8B0A2;">${tenantName}</span></div>`
+      }
+    </div>
+  `;
 
   // Fetch step details
   const { data: step, error: stepError } = await adminClient
@@ -181,43 +187,43 @@ export async function sendApprovalActionEmail(
 
   const subject = `[Action needed] ${req.subject}`;
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
-      ${logoHtml}
-      <h2 style="color: #111; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Approval Required</h2>
-      <p style="font-size: 14px; color: #555; font-weight: 500;">A request requires your review.</p>
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #FAF8F2; color: #4B5347;">
+      ${headerHtml}
+      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Approval Required</h2>
+      <p style="font-size: 14px; color: #4B5347; font-weight: 500;">A request requires your review.</p>
       
       <table style="width: 100%; font-size: 14px; margin: 20px 0; border-collapse: collapse;">
         <tr>
-          <td style="padding: 6px 0; font-weight: bold; color: #888; width: 120px;">Subject</td>
-          <td style="padding: 6px 0; color: #111; font-weight: bold;">${req.subject}</td>
+          <td style="padding: 6px 0; font-weight: bold; color: #5E6657; width: 120px;">Subject</td>
+          <td style="padding: 6px 0; color: #17200F; font-weight: bold;">${req.subject}</td>
         </tr>
         <tr>
-          <td style="padding: 6px 0; font-weight: bold; color: #888;">Category</td>
-          <td style="padding: 6px 0; color: #111;">${categoryName}</td>
+          <td style="padding: 6px 0; font-weight: bold; color: #5E6657;">Category</td>
+          <td style="padding: 6px 0; color: #17200F;">${categoryName}</td>
         </tr>
         <tr>
-          <td style="padding: 6px 0; font-weight: bold; color: #888;">Raised By</td>
-          <td style="padding: 6px 0; color: #111;">${ownerName}</td>
+          <td style="padding: 6px 0; font-weight: bold; color: #5E6657;">Raised By</td>
+          <td style="padding: 6px 0; color: #17200F;">${ownerName}</td>
         </tr>
         <tr>
-          <td style="padding: 6px 0; font-weight: bold; color: #888;">Current Stage</td>
-          <td style="padding: 6px 0; color: #111;">Stage ${step.stage_index + 1}</td>
+          <td style="padding: 6px 0; font-weight: bold; color: #5E6657;">Current Stage</td>
+          <td style="padding: 6px 0; color: #17200F;">Stage ${step.stage_index + 1}</td>
         </tr>
       </table>
-
-      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-        <h4 style="margin: 0 0 10px 0; color: #111;">Justification Summary</h4>
-        <div style="font-size: 13px; color: #555; line-height: 1.5;">${justification}</div>
+ 
+      <div style="background-color: #F1EEE4; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #D4A017;">
+        <h4 style="margin: 0 0 10px 0; color: #17200F;">Justification Summary</h4>
+        <div style="font-size: 13px; color: #4B5347; line-height: 1.5;">${justification}</div>
       </div>
-
+ 
       <div style="margin: 30px 0; text-align: center;">
-        <a href="${approveUrl}" style="background-color: #10b981; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; margin-right: 10px; display: inline-block;">Approve</a>
-        <a href="${rejectUrl}" style="background-color: #ef4444; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; margin-right: 10px; display: inline-block;">Reject</a>
-        <a href="${discussUrl}" style="background-color: #f59e0b; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Discuss</a>
+        <a href="${approveUrl}" style="background-color: #D4A017; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; margin-right: 8px; display: inline-block;">Approve</a>
+        <a href="${rejectUrl}" style="background-color: transparent; border: 2px solid #B4453C; color: #B4453C; padding: 8px 22px; text-decoration: none; font-weight: bold; border-radius: 9999px; margin-right: 8px; display: inline-block;">Reject</a>
+        <a href="${discussUrl}" style="background-color: transparent; border: 2px solid #3B6B8F; color: #3B6B8F; padding: 8px 22px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Discuss</a>
       </div>
-
-      <p style="font-size: 12px; color: #888; text-align: center; border-top: 1px solid #eaeaea; padding-top: 15px;">
-        You can also <a href="${viewUrl}" style="color: #6366f1; text-decoration: none; font-weight: bold;">Open in SigmaGo</a> to view details.
+ 
+      <p style="font-size: 12px; color: #5E6657; text-align: center; border-top: 1px solid rgba(30,43,28,.12); padding-top: 15px;">
+        You can also <a href="${viewUrl}" style="color: #D4A017; text-decoration: none; font-weight: bold;">Open in SigmaGo</a> to view details.
       </p>
     </div>
   `;
@@ -250,9 +256,15 @@ export async function sendFyiEmail(
     .eq('subdomain', tenantSubdomain)
     .single();
   const tenantName = tenant ? tenant.name : 'Workspace';
-  const logoHtml = tenant?.logo_url 
-    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
-    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+  
+  const headerHtml = `
+    <div style="background-color: #1E2B1C; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
+      ${tenant?.logo_url 
+        ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 32px; display: block;" />` 
+        : `<div style="font-family: sans-serif; font-size: 18px; font-weight: 800; color: #F2F0E8;">SigmaGo | <span style="font-size: 12px; font-weight: 600; color: #A8B0A2;">${tenantName}</span></div>`
+      }
+    </div>
+  `;
 
   const { data: step, error: stepError } = await adminClient
     .from('approval_steps')
@@ -274,17 +286,17 @@ export async function sendFyiEmail(
 
   const subject = `[FYI] ${req.subject}`;
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
-      ${logoHtml}
-      <h2 style="color: #111; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">FYI: Request Notification</h2>
-      <p style="font-size: 14px; color: #555;">You are receiving this reference notification for a request submitted by <strong>${ownerName}</strong>.</p>
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #FAF8F2; color: #4B5347;">
+      ${headerHtml}
+      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">FYI: Request Notification</h2>
+      <p style="font-size: 14px; color: #4B5347;">You are receiving this reference notification for a request submitted by <strong>${ownerName}</strong>.</p>
       
       <div style="margin: 20px 0;">
-        <p style="font-size: 14px; color: #111; font-weight: bold;">Subject: ${req.subject}</p>
+        <p style="font-size: 14px; color: #17200F; font-weight: bold;">Subject: ${req.subject}</p>
       </div>
 
-      <div style="margin: 25px 0;">
-        <a href="${viewUrl}" style="background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Open in SigmaGo</a>
+      <div style="margin: 25px 0; text-align: center;">
+        <a href="${viewUrl}" style="background-color: #D4A017; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Open in SigmaGo</a>
       </div>
     </div>
   `;
@@ -319,9 +331,15 @@ export async function sendDiscussionNotificationEmail(
     .eq('subdomain', tenantSubdomain)
     .single();
   const tenantName = tenant ? tenant.name : 'Workspace';
-  const logoHtml = tenant?.logo_url 
-    ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 40px; margin-bottom: 20px; display: block;" />` 
-    : `<div style="font-family: sans-serif; font-size: 20px; font-weight: 800; color: #111; margin-bottom: 20px;">SigmaGo | <span style="font-size: 14px; font-weight: 600; color: #666;">${tenantName}</span></div>`;
+  
+  const headerHtml = `
+    <div style="background-color: #1E2B1C; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
+      ${tenant?.logo_url 
+        ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 32px; display: block;" />` 
+        : `<div style="font-family: sans-serif; font-size: 18px; font-weight: 800; color: #F2F0E8;">SigmaGo | <span style="font-size: 12px; font-weight: 600; color: #A8B0A2;">${tenantName}</span></div>`
+      }
+    </div>
+  `;
 
   const { data: request } = await adminClient
     .from('approval_requests')
@@ -334,20 +352,20 @@ export async function sendDiscussionNotificationEmail(
   const viewUrl = `${APP_URL}/${tenantSubdomain}/requests/${requestId}`;
   const subject = `[Discussion Requested] ${request.subject}`;
   const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
-      ${logoHtml}
-      <h2 style="color: #f59e0b; font-weight: 800; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Discussion Required</h2>
-      <p style="font-size: 14px; color: #555;">
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #FAF8F2; color: #4B5347;">
+      ${headerHtml}
+      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Discussion Required</h2>
+      <p style="font-size: 14px; color: #4B5347;">
         Approver <strong>${raiserName}</strong> has requested discussion on your request: <strong>${request.subject}</strong>.
       </p>
       
-      <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 20px 0;">
-        <h4 style="margin: 0 0 5px 0; color: #92400e;">Approver's Comment</h4>
-        <p style="margin: 0; font-size: 13px; color: #78350f; font-style: italic;">"${comment}"</p>
+      <div style="background-color: #FBF6E6; border-left: 4px solid #C08A2E; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin: 0 0 5px 0; color: #C08A2E; font-weight: bold;">Approver's Comment</h4>
+        <p style="margin: 0; font-size: 13px; color: #17200F; font-style: italic;">"${comment}"</p>
       </div>
 
-      <div style="margin: 25px 0;">
-        <a href="${viewUrl}" style="background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Resume & Review</a>
+      <div style="margin: 25px 0; text-align: center;">
+        <a href="${viewUrl}" style="background-color: #D4A017; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Resume & Review</a>
       </div>
     </div>
   `;
