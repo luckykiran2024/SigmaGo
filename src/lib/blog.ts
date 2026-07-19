@@ -11,6 +11,8 @@ export interface BlogPost {
   description: string;
   tags: string[];
   contentHtml: string;
+  status?: string;
+  author?: string;
 }
 
 export function getSortedPostsData(): Omit<BlogPost, 'contentHtml'>[] {
@@ -39,6 +41,8 @@ export function getSortedPostsData(): Omit<BlogPost, 'contentHtml'>[] {
         date: matterResult.data.date || '',
         description: matterResult.data.description || '',
         tags: matterResult.data.tags || [],
+        status: matterResult.data.status || '',
+        author: matterResult.data.author || 'Unknown Author',
       };
     });
 
@@ -75,6 +79,8 @@ export async function getPostData(slug: string): Promise<BlogPost | null> {
     date: matterResult.data.date || '',
     description: matterResult.data.description || '',
     tags: matterResult.data.tags || [],
+    status: matterResult.data.status || '',
+    author: matterResult.data.author || 'Unknown Author',
     contentHtml,
   };
 }

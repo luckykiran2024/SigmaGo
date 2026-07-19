@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, JetBrains_Mono, IBM_Plex_Serif, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Inter, Outfit, JetBrains_Mono, IBM_Plex_Serif, IBM_Plex_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -41,6 +41,13 @@ const ibmMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "SigmaGo Workflow Portal",
   description: "Enterprise approval workflow system for SigmaGo.",
@@ -58,7 +65,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-paper">
       <body
-        className={`${inter.variable} ${outfit.variable} ${jetbrains.variable} ${ibmSerif.variable} ${ibmSans.variable} ${ibmMono.variable} font-body antialiased h-full text-ink`}
+        className={`${inter.variable} ${outfit.variable} ${jetbrains.variable} ${ibmSerif.variable} ${ibmSans.variable} ${ibmMono.variable} ${fraunces.variable} font-body antialiased h-full text-ink`}
       >
         {children}
       </body>

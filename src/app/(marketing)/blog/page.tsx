@@ -1,76 +1,114 @@
 import Link from 'next/link';
 import { getSortedPostsData } from '@/lib/blog';
-import { BookOpen, Calendar, ArrowRight } from 'lucide-react';
-import type { Metadata } from 'next';
+import { ArrowRight, BookOpen } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Blog - SigmaGo',
-  description: 'Read our latest thinking on Decision Debt and how companies remember what they decide.',
-};
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  }).format(new Date(dateStr));
+}
 
-export default function BlogIndexPage() {
+export default function BlogPage() {
   const posts = getSortedPostsData();
 
   return (
-    <div className="bg-[#274C77] text-[#C9D5E7] font-ibmsans">
-      {/* Header (Navy background #0C2340) */}
-      <section className="bg-[#0C2340] py-20 md:py-24 border-b border-white/5">
-        <div className="max-w-4xl mx-auto px-6 text-center space-y-6 animate-fade-up">
-          <span className="font-ibmmono text-xs uppercase tracking-widest text-[#C9A227]">
-            [ Decision Debt Archive ]
+    <div className="bg-[#FAF8F2] text-[#17200F] font-inter">
+      
+      {/* 1. HERO SECTION */}
+      <section className="py-[clamp(64px,7vw,110px)] border-b border-hair">
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 space-y-6 animate-fade-up">
+          <span className="inline-block font-ibmmono text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4A017] bg-[#D4A017]/10 px-3 py-1 rounded-full">
+            OUR THINKING
           </span>
-          <h1 className="text-3xl md:text-5xl font-ibmserif font-bold text-[#F5EAD1] leading-tight">
-            Our <span className="text-[#C9A227]">Thinking</span>
+          
+          <h1 
+            className="font-fraunces text-[#17200F] font-bold leading-[1.04] tracking-tight"
+            style={{ fontSize: 'clamp(38px, 5.2vw, 66px)', letterSpacing: '-0.025em' }}
+          >
+            Notes on <span className="text-[#D4A017]">[Decision Debt.]</span>
           </h1>
-          <p className="text-sm md:text-base text-[#C9D5E7] max-w-2xl mx-auto font-semibold leading-relaxed">
-            We write about Decision Debt — the unrecorded decisions every company is borrowing against.
+          
+          <p 
+            className="text-[#5E6657] max-w-xl font-medium leading-[1.7]"
+            style={{ fontSize: 'clamp(17px, 1.4vw, 19px)' }}
+          >
+            The unrecorded decisions every company is borrowing against — and what they cost.
           </p>
         </div>
       </section>
 
-      {/* Blog List (White cards) */}
-      <section className="py-20 bg-[#274C77]">
-        <div className="max-w-3xl mx-auto px-6 space-y-8 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          {posts.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center text-[#274C77] shadow-[0_20px_50px_rgba(7,20,40,0.25)] border-0">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 text-[#C9A227]" />
-              <p className="text-sm font-bold">No posts published yet.</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {posts.map((post) => (
-                <article key={post.slug} className="bg-white rounded-3xl p-8 sm:p-10 shadow-[0_20px_50px_rgba(7,20,40,0.25)] border-0 flex flex-col justify-between space-y-6 hover:translate-y-[-4px] transition duration-300">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] font-ibmmono font-bold text-[#C9A227] uppercase tracking-widest">
-                      <Calendar className="w-4 h-4 text-[#C9A227]" />
-                      <span>{post.date}</span>
-                    </div>
-
-                    <Link href={`/blog/${post.slug}`} className="block group">
-                      <h2 className="text-xl sm:text-2xl font-ibmserif font-bold text-[#0C2340] group-hover:text-[#C9A227] transition">
+      {/* 2. POSTS GRID */}
+      <section className="py-[clamp(64px,7vw,110px)] bg-[#FAF8F2]">
+        <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            {posts.map((post: any, idx: number) => {
+              const isSoon = post.status === 'soon';
+              
+              if (isSoon) {
+                return (
+                  <div
+                    key={post.slug}
+                    className="bg-white border border-hair rounded-[14px] p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] relative flex flex-col justify-between space-y-6 select-none animate-fade-up opacity-80"
+                    style={{ animationDelay: `${idx * 60}ms` }}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-ibmmono text-xs uppercase tracking-wider text-gray-400">
+                          {formatDate(post.date)}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-[#D4A017]/10 text-[#D4A017] uppercase tracking-wider font-ibmmono border border-[#D4A017]/20">
+                          COMING SOON
+                        </span>
+                      </div>
+                      <h3 className="font-fraunces text-xl font-bold text-[#17200F]">
                         {post.title}
-                      </h2>
-                    </Link>
+                      </h3>
+                      <p className="text-xs text-[#4B5347] leading-relaxed">
+                        {post.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
 
-                    <p className="text-xs text-gray-500 font-semibold leading-relaxed">
+              return (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="bg-white border border-hair rounded-[14px] p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] hover:-translate-y-1 hover:shadow-lg transition duration-200 ease-out flex flex-col justify-between space-y-6 animate-fade-up group"
+                  style={{ animationDelay: `${idx * 60}ms` }}
+                >
+                  <div className="space-y-3">
+                    <span className="font-ibmmono text-xs uppercase tracking-wider text-[#D4A017] mb-1.5 block">
+                      {formatDate(post.date)}
+                    </span>
+                    <h3 className="font-fraunces text-xl font-bold text-[#17200F] group-hover:text-[#D4A017] transition">
+                      {post.title}
+                    </h3>
+                    <p className="text-xs text-[#4B5347] leading-relaxed">
                       {post.description}
                     </p>
                   </div>
-
-                  <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="inline-flex items-center text-xs font-bold text-[#C9A227] hover:text-[#C9A227]/90 transition"
-                    >
-                      Read article <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                    </Link>
+                  <div className="inline-flex items-center text-xs font-bold text-[#D4A017] group-hover:text-[#E3B02A] transition">
+                    Read essay <ArrowRight className="w-4 h-4 ml-1" />
                   </div>
-                </article>
-              ))}
-            </div>
-          )}
+                </Link>
+              );
+            })}
+
+            {posts.length === 0 && (
+              <div className="col-span-full text-center py-16 text-muted space-y-2">
+                <BookOpen className="w-12 h-12 mx-auto text-muted/50" />
+                <p className="text-sm font-semibold">No essays published yet.</p>
+              </div>
+            )}
+
+          </div>
         </div>
       </section>
+
     </div>
   );
 }

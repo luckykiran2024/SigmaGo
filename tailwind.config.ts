@@ -35,6 +35,8 @@ const config: Config = {
         ibmserif: ["var(--font-ibm-serif)", "serif"],
         ibmsans: ["var(--font-ibm-sans)", "sans-serif"],
         ibmmono: ["var(--font-ibm-mono)", "monospace"],
+        fraunces: ["var(--font-fraunces)", "serif"],
+        inter: ["var(--font-inter)", "sans-serif"],
       },
       keyframes: {
         "fade-up": {
