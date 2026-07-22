@@ -287,6 +287,19 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-1">
                   <h1 className="text-2xl font-ibmserif font-extrabold text-ink leading-tight">{request.subject}</h1>
+              {/* Beneficiary Info */}
+              {request.beneficiary && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted font-medium">For:</span>
+                  <span className="font-semibold text-ink">{(request.beneficiary as any).name}</span>
+                  {(request.beneficiary as any).designation && (
+                    <span className="text-gray-400">— {(request.beneficiary as any).designation}</span>
+                  )}
+                  {(request.beneficiary as any).employee_id && (
+                    <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{(request.beneficiary as any).employee_id}</span>
+                  )}
+                </div>
+              )}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted font-medium pt-1">
                     <div>
                       <span className="text-muted">Category:</span>{' '}

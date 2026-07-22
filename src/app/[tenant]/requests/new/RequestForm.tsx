@@ -40,6 +40,9 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
 
   const [isPathLocked, setIsPathLocked] = useState(false);
 
+  // Beneficiary state (optional - the person the request is ABOUT)
+  const [beneficiaryId, setBeneficiaryId] = useState<string>('');
+
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCatId = e.target.value;
     if (!selectedCatId) {
@@ -172,7 +175,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         formData.append('attachments', file);
       });
 
-      await submitNewRequest(formData, content, tenant, cleanPath);
+      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit request.");
@@ -354,6 +357,32 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Beneficiary (optional) */}
+        <div className="border-t border-gray-100 pt-6">
+          <label className="block text-sm font-bold text-ink mb-1">
+            This request is for <span className="text-gray-400 font-medium">(optional)</span>
+          </label>
+          <p className="text-xs text-gray-400 font-medium mb-2">
+            If this request is about a specific person (e.g. employee leave, equipment for someone), select them here.
+          </p>
+          <PersonPicker
+            tenant={tenant}
+            value={beneficiaryId || null}
+            onSelect={(id) => setBeneficiaryId(id || '')}
+            exclude={[loggedInUserId]}
+            placeholder="Search for a person..."
+          />
+          {beneficiaryId && (
+            <button
+              type="button"
+              onClick={() => setBeneficiaryId('')}
+              className="text-xs text-gray-400 hover:text-red-500 mt-1.5 font-medium transition"
+            >
+              ✕ Remove beneficiary
+            </button>
+          )}
         </div>
 
         {/* Content rich text editor */}

@@ -163,6 +163,16 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                   <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Submission Date</span>
                   <p className="text-sm font-semibold text-ink mt-1 font-ibmmono">{formatDate(request.created_at)}</p>
                 </div>
+              {/* Beneficiary */}
+              {request.beneficiary && (
+                <div className="text-center">
+                  <div className="text-xs text-muted uppercase tracking-widest font-semibold mb-1">Beneficiary</div>
+                  <div className="text-sm font-bold text-ink">{(request.beneficiary as any).name}</div>
+                  {(request.beneficiary as any).designation && (
+                    <div className="text-xs text-gray-400">{(request.beneficiary as any).designation}</div>
+                  )}
+                </div>
+              )}
               </div>
               
               <div className="grid grid-cols-2 gap-4">

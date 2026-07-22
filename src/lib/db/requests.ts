@@ -9,6 +9,7 @@ export async function createRequest(payload: {
   subject:    string
   bodyJson:   object
   visibility: 'public' | 'private'
+  beneficiaryId?: string | null
   steps: Array<{
     approverId:  string
     type:        'GENERAL' | 'PARALLEL' | 'REFERENCE'
@@ -18,17 +19,22 @@ export async function createRequest(payload: {
 }) {
   const supabase = await createClient()
 
+  const insertPayload: Record<string, any> = {
+    tenant_id:   payload.tenantId,
+    owner_id:    payload.ownerId,
+    category_id: payload.categoryId,
+    subject:     payload.subject,
+    body_json:   payload.bodyJson,
+    visibility:  payload.visibility,
+    status:      'draft'
+  }
+  if (payload.beneficiaryId) {
+    insertPayload.beneficiary_id = payload.beneficiaryId
+  }
+
   const { data: request, error: reqError } = await supabase
     .from('approval_requests')
-    .insert({
-      tenant_id:   payload.tenantId,
-      owner_id:    payload.ownerId,
-      category_id: payload.categoryId,
-      subject:     payload.subject,
-      body_json:   payload.bodyJson,
-      visibility:  payload.visibility,
-      status:      'draft'
-    })
+    .insert(insertPayload)
     .select()
     .single()
 
@@ -104,6 +110,7 @@ export async function getRequestDetail(requestId: string) {
       *,
       categories ( name, default_sla_hours ),
       users!owner_id ( id, name, email, designation, employee_id ),
+      beneficiary:users!beneficiary_id ( id, name, email, designation, employee_id ),
       approval_steps (
         id, approver_id, type, order_index, stage_index, status,
         acted_at, comment, condition_text, action_source,

@@ -6,7 +6,7 @@ async function main() {
   console.log("Seeding database...");
   
   // 1. Create Tenant
-  const tenant = await prisma.tenant.upsert({
+  const tenant = await prisma.tenants.upsert({
     where: { subdomain: 'meridian' },
     update: {},
     create: {
@@ -21,7 +21,7 @@ async function main() {
   });
 
   // 2. Create Users
-  const ceo = await prisma.user.upsert({
+  const ceo = await prisma.users.upsert({
     where: { tenant_id_email: { tenant_id: tenant.id, email: 'ceo@meridiantech.local' } },
     update: {},
     create: {
@@ -32,7 +32,7 @@ async function main() {
     }
   });
 
-  const manager = await prisma.user.upsert({
+  const manager = await prisma.users.upsert({
     where: { tenant_id_email: { tenant_id: tenant.id, email: 'manager@meridiantech.local' } },
     update: {},
     create: {
@@ -44,7 +44,7 @@ async function main() {
   });
 
   // 3. Create Categories
-  await prisma.category.create({
+  await prisma.categories.create({
     data: {
       tenant_id: tenant.id,
       name: 'Budget Approval',

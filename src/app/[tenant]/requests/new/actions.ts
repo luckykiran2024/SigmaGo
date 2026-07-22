@@ -9,7 +9,8 @@ export async function submitNewRequest(
   formData: FormData,
   contentJson: any,
   tenant: string,
-  approvalPath: Array<{ userId: string; role: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>
+  approvalPath: Array<{ userId: string; role: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>,
+  beneficiaryId?: string | null
 ) {
   const subject = formData.get('subject') as string;
   const categoryId = formData.get('category') as string;
@@ -93,6 +94,7 @@ export async function submitNewRequest(
     subject: subject,
     bodyJson: contentJson || {},
     visibility: 'public',
+    beneficiaryId: beneficiaryId || null,
     steps: steps
   });
 
