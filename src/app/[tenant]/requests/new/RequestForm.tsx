@@ -15,12 +15,23 @@ interface ActiveUser {
   employee_id: string | null;
 }
 
+interface CustomFieldDef {
+  id: string;
+  label: string;
+  key: string;
+  type: 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'PERSON';
+  options: string[] | null;
+  required: boolean;
+  category_id: string | null;
+}
+
 interface RequestFormProps {
   tenant: string;
   categories: { id: string; name: string }[];
   activeUsers: ActiveUser[];
   workflows?: any[];
   loggedInUserId: string;
+  customFields?: CustomFieldDef[];
 }
 
 interface ApprovalPathItem {
@@ -28,7 +39,7 @@ interface ApprovalPathItem {
   role: 'GENERAL' | 'PARALLEL' | 'REFERENCE';
 }
 
-export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId }: RequestFormProps) {
+export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId, customFields = [] }: RequestFormProps) {
   const [content, setContent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -42,6 +53,21 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
 
   // Beneficiary state (optional - the person the request is ABOUT)
   const [beneficiaryId, setBeneficiaryId] = useState<string>('');
+
+  // Custom field values
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
+
+  const updateCustomFieldValue = (key: string, value: any) => {
+    setCustomFieldValues(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Get custom fields for selected category
+  const selectedCategoryId = typeof document !== 'undefined'
+    ? (document.querySelector('select[name="category"]') as HTMLSelectElement)?.value
+    : '';
+  const visibleCustomFields = customFields.filter(f =>
+    !f.category_id || f.category_id === selectedCategoryId
+  );
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCatId = e.target.value;
@@ -175,7 +201,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         formData.append('attachments', file);
       });
 
-      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null);
+      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit request.");
@@ -384,6 +410,69 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
             </button>
           )}
         </div>
+
+        {/* Custom Fields */}
+        {visibleCustomFields.length > 0 && (
+          <div className="border-t border-gray-100 pt-6 space-y-4">
+            <h3 className="text-sm font-bold text-ink">Additional Information</h3>
+            {visibleCustomFields.map(field => (
+              <div key={field.id}>
+                <label className="block text-xs font-bold text-ink mb-1">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-0.5">*</span>}
+                </label>
+                {field.type === 'TEXT' && (
+                  <input
+                    type="text"
+                    value={customFieldValues[field.key] || ''}
+                    onChange={e => updateCustomFieldValue(field.key, e.target.value)}
+                    required={field.required}
+                    className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  />
+                )}
+                {field.type === 'NUMBER' && (
+                  <input
+                    type="number"
+                    value={customFieldValues[field.key] || ''}
+                    onChange={e => updateCustomFieldValue(field.key, e.target.value)}
+                    required={field.required}
+                    className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  />
+                )}
+                {field.type === 'DATE' && (
+                  <input
+                    type="date"
+                    value={customFieldValues[field.key] || ''}
+                    onChange={e => updateCustomFieldValue(field.key, e.target.value)}
+                    required={field.required}
+                    className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  />
+                )}
+                {field.type === 'SELECT' && (
+                  <select
+                    value={customFieldValues[field.key] || ''}
+                    onChange={e => updateCustomFieldValue(field.key, e.target.value)}
+                    required={field.required}
+                    className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  >
+                    <option value="">Select...</option>
+                    {(field.options || []).map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
+                {field.type === 'PERSON' && (
+                  <PersonPicker
+                    tenant={tenant}
+                    value={customFieldValues[field.key] || null}
+                    onSelect={id => updateCustomFieldValue(field.key, id || '')}
+                    placeholder="Search for a person..."
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Content rich text editor */}
         <div className="space-y-2 border-t border-gray-100 pt-6">

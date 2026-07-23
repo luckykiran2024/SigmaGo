@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import { getWorkflows } from '@/lib/db/workflows';
+import { getCustomFieldsForTenant } from '@/lib/db/customFields';
 
 export default async function NewRequestPage({ params }: { params: Promise<{ tenant: string }> }) {
   const resolvedParams = await params;
@@ -28,6 +29,7 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
   let categories: { id: string; name: string }[] = [];
   let activeUsers: { id: string; name: string; designation: string | null; career_level: string | null; employee_id: string | null }[] = [];
   let workflows: any[] = [];
+  let customFields: any[] = [];
 
   if (tenantData) {
     const { data: cats } = await adminClient
@@ -86,6 +88,9 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
       activeUsers = mergedUsers.filter((u: any) => u.id !== loggedInPublicUserId);
     }
 
+    // Load custom fields for tenant
+    customFields = await getCustomFieldsForTenant(tenantData.id);
+
     // Load workflows for tenant
     const tenantWorkflows = await getWorkflows(tenantData.id);
     if (tenantWorkflows) {
@@ -104,6 +109,7 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
         activeUsers={activeUsers}
         workflows={workflows}
         loggedInUserId={loggedInPublicUserId || ''}
+        customFields={customFields}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getRequestDetail, getSignedUrl } from '@/lib/db/requests';
+import { getCustomFieldsForTenant } from '@/lib/db/customFields';
 import { actOnStep } from '@/lib/db/steps';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
@@ -73,6 +74,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   ) : [];
 
   const tenantUsers = tenantUsersRes.data;
+  const customFieldDefs = tenantId ? await getCustomFieldsForTenant(tenantId) : [];
     
   const userMap = new Map((tenantUsers || []).map(u => [u.id, u.name]));
   const activeTenantUsers = (tenantUsers || []).filter(u => u.status === 'active' || u.status === 'ACTIVE');
@@ -346,6 +348,25 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             {/* Document Content (Rich Text) */}
             <div className="px-6 py-8 prose max-w-none text-[#4B5347] font-ibmsans text-[19px] leading-[1.65] prose-headings:font-ibmserif prose-headings:text-ink prose-a:text-accent hover:prose-a:underline select-text">
               <RichTextEditor content={request.body_json} editable={false} />
+
+              {/* Custom Fields */}
+              {request.custom_fields && Object.keys(request.custom_fields as Record<string, any>).length > 0 && (
+                <div className="mt-6 border-t border-gray-100 pt-5">
+                  <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Additional Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {Object.entries(request.custom_fields as Record<string, any>).map(([key, value]) => {
+                      const fieldDef = customFieldDefs.find((f: any) => f.key === key);
+                      const label = fieldDef ? fieldDef.label : key;
+                      return (
+                        <div key={key} className="bg-gray-50/50 rounded-xl px-4 py-2.5">
+                          <div className="text-2xs font-bold text-muted uppercase tracking-wider">{label}</div>
+                          <div className="text-sm font-semibold text-ink mt-0.5">{String(value) || '—'}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Attachments Section */}

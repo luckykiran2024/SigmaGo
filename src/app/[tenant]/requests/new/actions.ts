@@ -10,7 +10,8 @@ export async function submitNewRequest(
   contentJson: any,
   tenant: string,
   approvalPath: Array<{ userId: string; role: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>,
-  beneficiaryId?: string | null
+  beneficiaryId?: string | null,
+  customFieldValues?: Record<string, any>
 ) {
   const subject = formData.get('subject') as string;
   const categoryId = formData.get('category') as string;
@@ -95,6 +96,7 @@ export async function submitNewRequest(
     bodyJson: contentJson || {},
     visibility: 'public',
     beneficiaryId: beneficiaryId || null,
+    customFields: customFieldValues || {},
     steps: steps
   });
 

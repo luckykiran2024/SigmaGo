@@ -10,6 +10,7 @@ export async function createRequest(payload: {
   bodyJson:   object
   visibility: 'public' | 'private'
   beneficiaryId?: string | null
+  customFields?: Record<string, any>
   steps: Array<{
     approverId:  string
     type:        'GENERAL' | 'PARALLEL' | 'REFERENCE'
@@ -30,6 +31,9 @@ export async function createRequest(payload: {
   }
   if (payload.beneficiaryId) {
     insertPayload.beneficiary_id = payload.beneficiaryId
+  }
+  if (payload.customFields && Object.keys(payload.customFields).length > 0) {
+    insertPayload.custom_fields = payload.customFields
   }
 
   const { data: request, error: reqError } = await supabase

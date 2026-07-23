@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Building, GitBranch, Users, Tag, Settings } from 'lucide-react';
+import { Building, GitBranch, Users, Tag, Settings, ListChecks } from 'lucide-react';
 
 export default function AdminSidebar({ tenant }: { tenant: string }) {
   const pathname = usePathname();
@@ -12,6 +12,7 @@ export default function AdminSidebar({ tenant }: { tenant: string }) {
     { name: 'Workflows', href: `/${tenant}/admin/workflows`, icon: GitBranch },
     { name: 'Delegations', href: `/${tenant}/admin/delegations`, icon: Users },
     { name: 'Categories', href: `/${tenant}/admin/categories`, icon: Tag },
+    { name: 'Custom Fields', href: `/${tenant}/admin/custom-fields`, icon: ListChecks },
     { name: 'Settings', href: `/${tenant}/admin/settings`, icon: Settings }
   ];
 
