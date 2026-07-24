@@ -6,8 +6,10 @@ import { getProfileForAuthUser } from '@/lib/db/users';
 import { getWorkflows } from '@/lib/db/workflows';
 import { getCustomFieldsForTenant } from '@/lib/db/customFields';
 
-export default async function NewRequestPage({ params }: { params: Promise<{ tenant: string }> }) {
+export default async function NewRequestPage({ params, searchParams }: { params: Promise<{ tenant: string }>; searchParams?: Promise<{ renewFrom?: string }> }) {
   const resolvedParams = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const renewFromId = resolvedSearchParams.renewFrom;
   const supabase = await createClient();
 
   // Ensure user is authenticated
@@ -29,12 +31,13 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
   let categories: { id: string; name: string }[] = [];
   let activeUsers: { id: string; name: string; designation: string | null; career_level: string | null; employee_id: string | null }[] = [];
   let workflows: any[] = [];
+  let renewFromRequest: any = null;
   let customFields: any[] = [];
 
   if (tenantData) {
     const { data: cats } = await adminClient
       .from('categories')
-      .select('id, name')
+      .select('id, name, validity_mode, default_validity_days, max_validity_days, review_only')
       .eq('tenant_id', tenantData.id);
     if (cats) {
       categories = cats;
@@ -110,6 +113,7 @@ export default async function NewRequestPage({ params }: { params: Promise<{ ten
         workflows={workflows}
         loggedInUserId={loggedInPublicUserId || ''}
         customFields={customFields}
+        renewFromRequest={renewFromRequest}
       />
     </div>
   );

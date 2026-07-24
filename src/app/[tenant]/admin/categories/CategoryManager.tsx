@@ -24,6 +24,10 @@ export default function CategoryManager({
   const [categories, setCategories] = useState(initialCategories);
   const [name, setName] = useState('');
   const [slaHours, setSlaHours] = useState(prefilledSla);
+  const [validityMode, setValidityMode] = useState<'NONE' | 'OPTIONAL' | 'REQUIRED'>('NONE');
+  const [defaultValidityDays, setDefaultValidityDays] = useState<string>('');
+  const [maxValidityDays, setMaxValidityDays] = useState<string>('');
+  const [reviewOnly, setReviewOnly] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,9 +39,18 @@ export default function CategoryManager({
     setError(null);
 
     try {
-      await createCategoryAction(tenantId, name.trim(), Number(slaHours));
+      await createCategoryAction(tenantId, name.trim(), Number(slaHours), {
+        validity_mode: validityMode,
+        default_validity_days: defaultValidityDays ? Number(defaultValidityDays) : null,
+        max_validity_days: maxValidityDays ? Number(maxValidityDays) : null,
+        review_only: reviewOnly
+      });
       setName('');
       setSlaHours(prefilledSla);
+      setValidityMode('NONE');
+      setDefaultValidityDays('');
+      setMaxValidityDays('');
+      setReviewOnly(false);
       
       // Refresh router and state
       router.refresh();
@@ -104,6 +117,70 @@ export default function CategoryManager({
               className="appearance-none block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-xs font-bold bg-white"
             />
           </div>
+        </div>
+
+        
+        {/* Validity & Duration Rules */}
+        <div className="border-t border-gray-100 pt-4 space-y-3">
+          <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            Validity & Duration Settings
+          </label>
+          <p className="text-2xs text-gray-500 font-medium">
+            Use Required for exception-type categories — an exception with no end date becomes an unrecorded policy change.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">Requirement</label>
+              <select
+                value={validityMode}
+                onChange={(e) => setValidityMode(e.target.value as any)}
+                className="appearance-none block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink focus:outline-none focus:ring-2 focus:ring-accent sm:text-xs font-bold bg-white"
+              >
+                <option value="NONE">Not applicable (No end date)</option>
+                <option value="OPTIONAL">Optional duration</option>
+                <option value="REQUIRED">Required duration</option>
+              </select>
+            </div>
+
+            {validityMode !== 'NONE' && (
+              <>
+                <div>
+                  <label className="block text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">Default (Days)</label>
+                  <input
+                    type="number"
+                    value={defaultValidityDays}
+                    onChange={(e) => setDefaultValidityDays(e.target.value)}
+                    placeholder="e.g. 90"
+                    className="appearance-none block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent sm:text-xs font-bold bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-2xs font-bold text-gray-400 uppercase tracking-wider mb-1">Max Duration (Days)</label>
+                  <input
+                    type="number"
+                    value={maxValidityDays}
+                    onChange={(e) => setMaxValidityDays(e.target.value)}
+                    placeholder="e.g. 365"
+                    className="appearance-none block w-full px-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent sm:text-xs font-bold bg-white"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {validityMode !== 'NONE' && (
+            <label className="flex items-center gap-2 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={reviewOnly}
+                onChange={(e) => setReviewOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+              />
+              <span className="text-xs font-semibold text-ink">Review date only (does not expire approval)</span>
+            </label>
+          )}
         </div>
 
         <div className="flex justify-end">

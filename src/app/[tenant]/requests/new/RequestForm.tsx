@@ -26,6 +26,7 @@ interface CustomFieldDef {
 }
 
 interface RequestFormProps {
+  renewFromRequest?: any;
   tenant: string;
   categories: { id: string; name: string }[];
   activeUsers: ActiveUser[];
@@ -39,7 +40,7 @@ interface ApprovalPathItem {
   role: 'GENERAL' | 'PARALLEL' | 'REFERENCE';
 }
 
-export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId, customFields = [] }: RequestFormProps) {
+export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId, customFields = [], renewFromRequest }: RequestFormProps) {
   const [content, setContent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -56,6 +57,8 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
 
   // Custom field values
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({});
+  const [validUntil, setValidUntil] = useState<string>('');
+  const [reviewDate, setReviewDate] = useState<string>('');
 
   const updateCustomFieldValue = (key: string, value: any) => {
     setCustomFieldValues(prev => ({ ...prev, [key]: value }));
@@ -201,7 +204,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         formData.append('attachments', file);
       });
 
-      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues);
+      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues, { validUntil, reviewDate, renewedFromId: renewFromRequest?.id });
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit request.");
@@ -410,6 +413,47 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
             </button>
           )}
         </div>
+
+        
+        {/* Validity & Expiry / Review Date */}
+        {(() => {
+          const selectedCatId = typeof document !== 'undefined'
+            ? (document.querySelector('select[name="category"]') as HTMLSelectElement)?.value
+            : '';
+          const selectedCat = categories.find(c => (c as any).id === selectedCatId) as any;
+          if (!selectedCat || selectedCat.validity_mode === 'NONE') return null;
+
+          const isRequired = selectedCat.validity_mode === 'REQUIRED';
+          const isReview = !!selectedCat.review_only;
+
+          return (
+            <div className="border-t border-gray-100 pt-6 space-y-3">
+              <label className="block text-sm font-bold text-ink">
+                {isReview ? 'Review Date' : 'Validity Duration'}
+                {isRequired && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <p className="text-xs text-gray-400 font-medium">
+                {isReview
+                  ? 'Set a review reminder date. This does not automatically expire the approval.'
+                  : isRequired
+                  ? 'This category requires a valid until end date for all approvals.'
+                  : 'Optionally set an expiration date for this approval.'
+                }
+                {selectedCat.max_validity_days && ` Maximum duration: ${selectedCat.max_validity_days} days.`}
+              </p>
+
+              <div className="max-w-xs">
+                <input
+                  type="date"
+                  value={isReview ? reviewDate : validUntil}
+                  onChange={(e) => isReview ? setReviewDate(e.target.value) : setValidUntil(e.target.value)}
+                  required={isRequired}
+                  className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Custom Fields */}
         {visibleCustomFields.length > 0 && (

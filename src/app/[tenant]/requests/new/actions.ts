@@ -1,5 +1,8 @@
 'use server';
 
+import { adminClient } from '@/lib/supabase/admin';
+
+
 import { createRequest, submitRequest, uploadAttachment } from '@/lib/db/requests';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileForAuthUser } from '@/lib/db/users';
@@ -11,7 +14,8 @@ export async function submitNewRequest(
   tenant: string,
   approvalPath: Array<{ userId: string; role: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>,
   beneficiaryId?: string | null,
-  customFieldValues?: Record<string, any>
+  customFieldValues?: Record<string, any>,
+  validityData?: { validUntil?: string | null; reviewDate?: string | null; renewedFromId?: string | null }
 ) {
   const subject = formData.get('subject') as string;
   const categoryId = formData.get('category') as string;
@@ -38,6 +42,30 @@ export async function submitNewRequest(
 
   if (!categoryId) {
     throw new Error("Please select a category");
+  }
+
+
+  // Validate category validity constraints
+  if (categoryId) {
+    const { data: cat } = await adminClient
+      .from('categories')
+      .select('validity_mode, max_validity_days, review_only')
+      .eq('id', categoryId)
+      .single();
+
+    if (cat) {
+      if (cat.validity_mode === 'REQUIRED' && !validityData?.validUntil && !validityData?.reviewDate) {
+        throw new Error("This category requires a Valid Until end date.");
+      }
+      if (cat.max_validity_days && validityData?.validUntil) {
+        const until = new Date(validityData.validUntil);
+        const now = new Date();
+        const maxMs = Number(cat.max_validity_days) * 24 * 60 * 60 * 1000;
+        if (until.getTime() - now.getTime() > maxMs + 86400000) {
+          throw new Error(`Validity duration exceeds maximum allowed limit of ${cat.max_validity_days} days.`);
+        }
+      }
+    }
   }
 
   if (!approvalPath || approvalPath.length === 0) {
@@ -97,6 +125,9 @@ export async function submitNewRequest(
     visibility: 'public',
     beneficiaryId: beneficiaryId || null,
     customFields: customFieldValues || {},
+    validUntil: validityData?.validUntil || null,
+    reviewDate: validityData?.reviewDate || null,
+    renewedFromId: validityData?.renewedFromId || null,
     steps: steps
   });
 

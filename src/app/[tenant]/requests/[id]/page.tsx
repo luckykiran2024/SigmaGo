@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getRequestDetail, getSignedUrl } from '@/lib/db/requests';
+import { getValidityInfo } from '@/lib/utils/validity';
 import { getCustomFieldsForTenant } from '@/lib/db/customFields';
 import { actOnStep } from '@/lib/db/steps';
 import { createClient } from '@/lib/supabase/server';
@@ -78,6 +79,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     
   const userMap = new Map((tenantUsers || []).map(u => [u.id, u.name]));
   const activeTenantUsers = (tenantUsers || []).filter(u => u.status === 'active' || u.status === 'ACTIVE');
+  const validity = getValidityInfo(request as any);
 
   const isOwner = request.owner_id === loggedInPublicUser?.id;
   const isAdmin = loggedInPublicUser?.role === 'admin' || loggedInPublicUser?.role === 'super_admin' || loggedInPublicUser?.role === 'ADMIN' || loggedInPublicUser?.role === 'SUPER_ADMIN';
@@ -330,6 +332,21 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Certificate
+                    </Link>
+                  )}
+                  {/* Validity Badge */}
+                  {validity.state !== 'NOT_APPLICABLE' && (
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border font-ibmmono ${validity.badgeClass}`}>
+                      {validity.label}
+                    </span>
+                  )}
+                  {/* Renew Button */}
+                  {request.status === 'approved' && (validity.isExpired || validity.isExpiringSoon || request.valid_until) && (
+                    <Link
+                      href={`/${resolvedParams.tenant}/requests/new?renewFrom=${request.id}`}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-bold rounded-lg shadow-sm hover:bg-accent/90 transition"
+                    >
+                      ↻ Renew
                     </Link>
                   )}
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border font-ibmmono ${

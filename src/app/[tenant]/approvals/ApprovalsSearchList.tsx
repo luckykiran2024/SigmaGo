@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search, Inbox, FileText, ArrowRight, Archive, Calendar } from 'lucide-react';
 import PersonPicker from '@/components/ui/PersonPicker';
+import { getValidityInfo } from '@/lib/utils/validity';
 
 interface Category {
   id: string;
@@ -29,6 +30,8 @@ function formatDate(dateStr: string | null) {
   }).format(new Date(dateStr));
 }
 
+
+  
 export default function ApprovalsSearchList({
   raisedByMe,
   involvedIn,
@@ -53,6 +56,15 @@ export default function ApprovalsSearchList({
   const [fromDate, setFromDate] = useState(searchParams.get('from_date') || '');
   const [toDate, setToDate] = useState(searchParams.get('to_date') || '');
   const [datePreset, setDatePreset] = useState('custom');
+  const [validityFilter, setValidityFilter] = useState<'all' | 'active' | 'expiring' | 'expired'>('all');
+  const filterByValidity = (req: any) => {
+    if (validityFilter === 'all') return true;
+    const info = getValidityInfo(req);
+    if (validityFilter === 'active') return info.state === 'ACTIVE';
+    if (validityFilter === 'expiring') return info.state === 'EXPIRING_SOON';
+    if (validityFilter === 'expired') return info.state === 'EXPIRED';
+    return true;
+  };
 
   // Update query state if searchParams change externally
   useEffect(() => {

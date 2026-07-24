@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getRequestDetail } from '@/lib/db/requests';
+import { getValidityInfo } from '@/lib/utils/validity';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
@@ -41,6 +42,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
   // Resolve request details
   const request = await getRequestDetail(resolvedParams.id);
+  const validity = getValidityInfo(request as any);
   if (!request) {
     return <div className="p-8 text-center text-err font-bold">Request not found.</div>;
   }

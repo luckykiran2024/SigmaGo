@@ -11,6 +11,10 @@ export async function createRequest(payload: {
   visibility: 'public' | 'private'
   beneficiaryId?: string | null
   customFields?: Record<string, any>
+  validFrom?: string | null
+  validUntil?: string | null
+  reviewDate?: string | null
+  renewedFromId?: string | null
   steps: Array<{
     approverId:  string
     type:        'GENERAL' | 'PARALLEL' | 'REFERENCE'
@@ -35,6 +39,10 @@ export async function createRequest(payload: {
   if (payload.customFields && Object.keys(payload.customFields).length > 0) {
     insertPayload.custom_fields = payload.customFields
   }
+  if (payload.validFrom) insertPayload.valid_from = payload.validFrom
+  if (payload.validUntil) insertPayload.valid_until = payload.validUntil
+  if (payload.reviewDate) insertPayload.review_date = payload.reviewDate
+  if (payload.renewedFromId) insertPayload.renewed_from_id = payload.renewedFromId
 
   const { data: request, error: reqError } = await supabase
     .from('approval_requests')
@@ -112,7 +120,8 @@ export async function getRequestDetail(requestId: string) {
     .from('approval_requests')
     .select(`
       *,
-      categories ( name, default_sla_hours ),
+      categories ( id, name, default_sla_hours, validity_mode, default_validity_days, max_validity_days, review_only ),
+      renewed_from:approval_requests!renewed_from_id ( id, ref, subject ),
       users!owner_id ( id, name, email, designation, employee_id ),
       beneficiary:users!beneficiary_id ( id, name, email, designation, employee_id ),
       approval_steps (
