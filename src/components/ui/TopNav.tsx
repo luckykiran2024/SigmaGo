@@ -9,6 +9,7 @@ export default function TopNav({ tenant, isAdmin }: { tenant: string; isAdmin: b
   const navItems = [
     { name: 'Dashboard', href: `/${tenant}` },
     { name: 'Approvals', href: `/${tenant}/approvals` },
+    { name: 'AI Assistant', href: `/${tenant}/ai` },
     { name: 'Delegations', href: `/${tenant}/delegations` },
   ];
 
