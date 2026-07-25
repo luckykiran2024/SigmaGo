@@ -12,37 +12,8 @@ export const metadata: Metadata = {
 
 export default function MarketingLandingPage() {
   return (
-    <div className="bg-white text-ink font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brand/20">
-      {/* 1. STICKY NAV */}
-      <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur-xs">
-        <div className="max-w-[1140px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-ink">
-            <span className="w-[28px] h-[28px] bg-brand text-white rounded-[6px] flex items-center justify-center text-[13px] font-mono font-bold">
-              SG
-            </span>
-            <span className="font-bold text-[18px] tracking-tight text-ink">SigmaGo</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-medium text-muted">
-            <Link href="/product" className="hover:text-ink transition">Product</Link>
-            <a href="#how-it-works" className="hover:text-ink transition">How it works</a>
-            <a href="#proof" className="hover:text-ink transition">Proof</a>
-            <Link href="/blog" className="hover:text-ink transition">Blog</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="px-4 py-2 text-[15px] font-medium text-ink hover:bg-section-alt rounded-[6px] transition">
-              Log in
-            </Link>
-            <a
-              href={mailtoLink}
-              className="px-[20px] py-[11px] bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-[6px] transition shadow-xs"
-            >
-              Request a pilot
-            </a>
-          </div>
-        </div>
-      </header>
+    <div className="bg-white text-ink font-sans antialiased selection:bg-brand/20">
+      
 
       <main className="flex-grow">
         {/* 2. HERO */}
@@ -475,18 +446,7 @@ export default function MarketingLandingPage() {
         </section>
       </main>
 
-      {/* 10. FOOTER */}
-      <footer className="border-t border-border bg-white py-8 px-6">
-        <div className="max-w-[1140px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-[14px] text-muted font-medium">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-ink font-mono">SigmaGo</span>
-            <span>— The system of record for company decisions</span>
-          </div>
-          <div>
-            © {new Date().getFullYear()} SigmaGo. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      
     </div>
   );
 }

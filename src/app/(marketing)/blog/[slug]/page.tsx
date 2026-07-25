@@ -31,35 +31,35 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <div className="bg-[#F7F8FA] text-[#17200F] font-inter min-h-screen py-[clamp(64px,7vw,110px)]">
+    <div className="bg-white text-ink font-inter min-h-screen py-[clamp(64px,7vw,110px)]">
       <div className="max-w-[720px] mx-auto px-5 sm:px-8 space-y-8 animate-fade-up">
         
         {/* Back navigation link */}
         <Link 
           href="/blog"
-          className="inline-flex items-center text-xs font-bold text-[#C9A227] hover:text-[#E3B02A] transition"
+          className="inline-flex items-center text-xs font-bold text-brand hover:text-[#E3B02A] transition"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to all essays
         </Link>
 
         {/* Article Metadata line */}
-        <span className="font-mono text-xs uppercase tracking-wider text-[#C9A227] block">
+        <span className="font-mono text-xs uppercase tracking-wider text-brand block">
           {formatDate(post.date)} · {post.author || 'Lucky Soma'} · {readTime} MIN READ
         </span>
 
         {/* Title */}
-        <h1 className="font-sans text-3xl sm:text-4xl font-extrabold text-[#17200F] leading-tight">
+        <h1 className="font-sans text-3xl sm:text-4xl font-extrabold text-ink leading-tight">
           {post.title}
         </h1>
 
         {/* Main Content Area */}
         <article 
           className="prose max-w-none text-[#4B5347] font-inter select-text
-                     prose-headings:font-sans prose-headings:text-[#17200F] prose-headings:font-bold
+                     prose-headings:font-sans prose-headings:text-ink prose-headings:font-bold
                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
                      prose-p:mb-6 prose-p:leading-relaxed
-                     prose-a:text-[#C9A227] hover:prose-a:text-[#E3B02A] prose-a:font-bold prose-a:no-underline hover:prose-a:underline"
+                     prose-a:text-brand hover:prose-a:text-[#E3B02A] prose-a:font-bold prose-a:no-underline hover:prose-a:underline"
           style={{ fontSize: '17.5px', lineHeight: '1.8' }}
           dangerouslySetInnerHTML={{ __html: post.contentHtml }}
         />
@@ -68,7 +68,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="pt-8 border-t border-border mt-12">
           <Link 
             href="/blog"
-            className="inline-flex items-center text-xs font-bold text-[#C9A227] hover:text-[#E3B02A] transition"
+            className="inline-flex items-center text-xs font-bold text-brand hover:text-[#E3B02A] transition"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to all essays
