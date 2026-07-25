@@ -1,8 +1,30 @@
+import { createClient } from '@/lib/supabase/server';
+import { getProfileForAuthUser } from '@/lib/db/users';
+import { adminClient } from '@/lib/supabase/admin';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, ShieldCheck, Mail, CheckCircle } from 'lucide-react';
 import { PILOT_EMAIL } from '@/lib/site';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const profile = await getProfileForAuthUser(user.id, user.email || '');
+    if (profile) {
+      const { data: tenant } = await adminClient
+        .from('tenants')
+        .select('subdomain')
+        .eq('id', profile.tenant_id)
+        .single();
+
+      if (tenant) {
+        redirect(`/${tenant.subdomain}`);
+      }
+    }
+  }
+
   const mailtoLink = `mailto:${PILOT_EMAIL}?subject=SigmaGo%20pilot%20conversation`;
 
   return (
