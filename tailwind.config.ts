@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         bg: "#F7F8FA",
+        "section-alt": "#F9FAFB",
         surface: "#FFFFFF",
         border: "#E4E7EC",
         ink: "#101828",

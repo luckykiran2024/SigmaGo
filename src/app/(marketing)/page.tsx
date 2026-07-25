@@ -1,358 +1,496 @@
-import { createClient } from '@/lib/supabase/server';
-import { getProfileForAuthUser } from '@/lib/db/users';
-import { adminClient } from '@/lib/supabase/admin';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, ShieldCheck, Mail, CheckCircle } from 'lucide-react';
-import { PILOT_EMAIL } from '@/lib/site';
+import { ArrowRight, CheckCircle2, ShieldCheck, Mail, Lock, Search, FileText, Check, Shield } from 'lucide-react';
+import type { Metadata } from 'next';
 
-export default async function HomePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+const PILOT_EMAIL = 'pilot@sigmago.co';
+const mailtoLink = `mailto:${PILOT_EMAIL}?subject=SigmaGo%20pilot%20conversation`;
 
-  if (user) {
-    const profile = await getProfileForAuthUser(user.id, user.email || '');
-    if (profile) {
-      const { data: tenant } = await adminClient
-        .from('tenants')
-        .select('subdomain')
-        .eq('id', profile.tenant_id)
-        .single();
+export const metadata: Metadata = {
+  title: "SigmaGo — The system of record for company decisions",
+  description: "Every rupee is accounted for. Every decision should be too. SigmaGo keeps the books for your decisions — who approved what, in what order, on what reasoning. Sealed, provable, findable.",
+};
 
-      if (tenant) {
-        redirect(`/${tenant.subdomain}`);
-      }
-    }
-  }
-
-  const mailtoLink = `mailto:${PILOT_EMAIL}?subject=SigmaGo%20pilot%20conversation`;
-
+export default function MarketingLandingPage() {
   return (
-    <div className="bg-[#F7F8FA] text-[#17200F] font-inter">
-      
-      {/* 1. HERO SECTION (Page Ground background #F7F8FA) */}
-      <section className="py-[clamp(64px,7vw,110px)] border-b border-border">
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8">
-          <div className="grid grid-cols-1 min-[1000px]:grid-cols-[1.05fr_0.95fr] gap-16 items-center">
-            
-            {/* Left Column: Hero Text */}
-            <div className="space-y-6 animate-fade-up">
-              <span className="inline-block font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A227] bg-[#C9A227]/10 px-3 py-1 rounded-md">
-                THE SYSTEM OF RECORD FOR DECISIONS
-              </span>
-              
-              <h1 
-                className="font-sans text-[#17200F] font-bold leading-[1.04] tracking-tight"
-                style={{ fontSize: 'clamp(38px, 5.2vw, 66px)', letterSpacing: '-0.025em' }}
-              >
-                A company is the sum of its <span className="text-[#C9A227]">decisions.</span>
-              </h1>
-              
-              <p 
-                className="text-[#667085] max-w-xl font-medium leading-[1.7]"
-                style={{ fontSize: 'clamp(17px, 1.4vw, 19px)' }}
-              >
-                Budgets, hires, vendors, exceptions — thousands of yeses run your company. Today they live in inboxes and in memories that resign. SigmaGo is where decisions get made fast and kept forever.
-              </p>
-              
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                <a
-                  href={mailtoLink}
-                  className="px-8 py-4 text-center bg-[#C9A227] hover:bg-[#E3B02A] text-[#17200F] text-xs font-bold uppercase tracking-wider rounded-md shadow-[0_4px_12px_rgba(212,160,23,0.2)] hover:shadow-[0_6px_16px_rgba(212,160,23,0.3)] transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
-                >
-                  Book a pilot
-                </a>
-                <Link
-                  href="/product"
-                  className="px-8 py-4 text-center border border-border hover:bg-[#F1EEE4] text-[#17200F] text-xs font-bold uppercase tracking-wider rounded-md transition"
-                >
-                  See how it works <ArrowRight className="w-4.5 h-4.5 ml-2 inline" />
-                </Link>
-              </div>
-
-              <p className="text-[11px] text-[#667085] font-mono tracking-wide">
-                No new tool for approvers — they act from email.
-              </p>
-            </div>
-
-            {/* Right Column: Interactive Certificate Card */}
-            <div className="flex justify-center animate-fade-up min-[1000px]:justify-end" style={{ animationDelay: '60ms' }}>
-              <div className="w-full max-w-[420px] bg-white rounded-lg shadow-[0_15px_40px_rgba(60,55,30,0.13)] border border-border p-6 transform -rotate-[1.2deg] hover:rotate-0 transition duration-300 relative select-none">
-                
-                {/* Header bar with approved chip */}
-                <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-[#C9A227]" />
-                    <span className="font-sans text-sm font-bold text-[#17200F]">SigmaGo</span>
-                  </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black bg-[#2E7D5B]/10 text-[#2E7D5B] border border-[#2E7D5B]/20 font-mono uppercase tracking-wider">
-                    ● APPROVED
-                  </span>
-                </div>
-
-                {/* Eyebrow Label */}
-                <span className="block font-mono text-[9px] font-bold text-[#C9A227] tracking-[0.2em] uppercase">
-                  APPROVAL CERTIFICATE
-                </span>
-
-                {/* Title */}
-                <h3 className="font-sans text-base font-bold text-[#17200F] mt-1.5">
-                  Q3 Procurement — Vendor Switch
-                </h3>
-
-                {/* Meta details */}
-                <div className="mt-3 py-2 border-y border-border grid grid-cols-2 gap-4 text-[10px] font-mono text-[#667085]">
-                  <div>
-                    <span className="block text-gray-400 font-medium">RAISED BY:</span>
-                    <span className="font-bold text-[#17200F]">Rohan Mehta · MRD014</span>
-                  </div>
-                  <div>
-                    <span className="block text-gray-400 font-medium">SEALED:</span>
-                    <span className="font-bold text-[#17200F]">16 Jul 2026 · 10:20 IST</span>
-                  </div>
-                </div>
-
-                {/* Check Rows */}
-                <div className="mt-4 space-y-3">
-                  <div className="p-3 rounded-lg bg-[#2E7D5B]/5 border border-[#2E7D5B]/10 text-xs text-[#4B5347]">
-                    <div className="flex items-center gap-1.5 font-bold text-[#17200F] mb-1">
-                      <CheckCircle className="w-3.5 h-3.5 text-[#2E7D5B] shrink-0" />
-                      <span>VP Finance — Krishna Iyer</span>
-                    </div>
-                    <p className="italic text-gray-500 pl-5">"Budget check passed. Exception justified."</p>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-[#2E7D5B]/5 border border-[#2E7D5B]/10 text-xs text-[#4B5347]">
-                    <div className="flex items-center gap-1.5 font-bold text-[#17200F] mb-1">
-                      <CheckCircle className="w-3.5 h-3.5 text-[#2E7D5B] shrink-0" />
-                      <span>Founder — Lucky Soma</span>
-                    </div>
-                    <p className="italic text-gray-500 pl-5">"Standardize this vendor for future quarters."</p>
-                  </div>
-                </div>
-
-                {/* Gold Seal Ring */}
-                <div className="mt-5 border-t border-border pt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md border-2 border-double border-[#C9A227] flex items-center justify-center text-[#C9A227]">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <span className="text-[8px] font-mono font-extrabold text-[#667085] tracking-wider uppercase">
-                      SHA-256 INTEGRITY SEAL
-                    </span>
-                  </div>
-                  <span className="font-mono text-[9px] font-bold text-[#17200F] bg-[#F7F8FA] px-2 py-0.5 rounded border border-border break-all">
-                    a7f3c9d2...5d0b8264
-                  </span>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 2. SECTION 2: THE PROBLEM (Alternating background #F1EEE4) */}
-      <section className="py-[clamp(64px,7vw,110px)] bg-[#F1EEE4] border-b border-border">
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 space-y-12">
-          
-          <div className="text-center space-y-3 max-w-2xl mx-auto animate-fade-up">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-              THE PROBLEM
+    <div className="bg-white text-ink font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brand/20">
+      {/* SECTION 1 — NAV (sticky) */}
+      <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur-xs">
+        <div className="max-w-[1140px] mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg text-ink">
+            <span className="w-7 h-7 bg-brand text-white rounded-md flex items-center justify-center text-xs font-mono font-bold">
+              SG
             </span>
-            <h2 className="font-sans text-[clamp(28px,3.6vw,44px)] font-bold text-[#17200F] leading-[1.12]">
-              Everything vital has a system of record — except the thing that <span className="text-[#C9A227]">[steers]</span> it.
-            </h2>
-          </div>
+            <span className="font-bold tracking-tight text-ink text-base">SigmaGo</span>
+          </Link>
 
-          {/* Ledger Table Rows */}
-          <div className="max-w-3xl mx-auto bg-white border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden divide-y divide-border animate-fade-up" style={{ animationDelay: '60ms' }}>
-            
-            {/* Money Row */}
-            <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-3 items-center hover:bg-[#F7F8FA]/50 transition">
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#667085]">Money</span>
-              <span className="md:col-span-2 text-sm font-bold text-[#17200F] font-inter">The ledger: every rupee recorded, audited, permanent.</span>
-            </div>
+          <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-muted">
+            <Link href="/product" className="hover:text-ink transition">Product</Link>
+            <a href="#how-it-works" className="hover:text-ink transition">How it works</a>
+            <a href="#proof" className="hover:text-ink transition">Proof</a>
+            <Link href="/blog" className="hover:text-ink transition">Blog</Link>
+          </nav>
 
-            {/* Code Row */}
-            <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-3 items-center hover:bg-[#F7F8FA]/50 transition">
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#667085]">Code</span>
-              <span className="md:col-span-2 text-sm font-bold text-[#17200F] font-inter">Version control: every change tracked, with who and why.</span>
-            </div>
-
-            {/* People & Inventory Row */}
-            <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-3 items-center hover:bg-[#F7F8FA]/50 transition">
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#667085]">People & inventory</span>
-              <span className="md:col-span-2 text-sm font-bold text-[#17200F] font-inter">HRMS and ERP: counted, tracked, reconciled.</span>
-            </div>
-
-            {/* Decisions Row (Highlighted row with gold tint) */}
-            <div className="p-5 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-3 items-center bg-[#C9A227]/10 border-l-4 border-l-[#C9A227]">
-              <span className="font-mono text-xs font-bold uppercase tracking-[0.15em] text-[#C9A227]">Decisions</span>
-              <span className="md:col-span-2 text-sm font-extrabold text-[#17200F] font-inter">…an inbox. Thread #47 of 100. Gone when the people go.</span>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 3. SECTION 3: WHO CARRIES THE COST (Grid containing 4 cards) */}
-      <section className="py-[clamp(64px,7vw,110px)] border-b border-border bg-[#F7F8FA]">
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 space-y-12">
-          
-          <div className="text-center space-y-3 max-w-2xl mx-auto animate-fade-up">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-              WHO CARRIES THE COST
-            </span>
-            <h2 className="font-sans text-[clamp(28px,3.6vw,44px)] font-bold text-[#17200F] leading-[1.12]">
-              One missing record. <span className="text-[#C9A227]">[Four]</span> kinds of pain.
-            </h2>
-          </div>
-
-          {/* Cards Grid layout: 4 across >= 1080px, 2 across >= 700px, 1 below */}
-          <div className="grid grid-cols-1 min-[700px]:grid-cols-2 min-[1080px]:grid-cols-4 gap-8">
-            
-            {/* Card 1: The Leader */}
-            <div className="bg-white border border-border rounded-lg p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] hover:-translate-y-1 hover:shadow-lg transition duration-200 ease-out flex flex-col justify-between space-y-6 select-none animate-fade-up">
-              <div className="space-y-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-                  The Leader
-                </span>
-                <h4 className="font-sans text-base font-bold text-[#17200F] italic">
-                  "What's pending on me? Why did I approve that?"
-                </h4>
-              </div>
-              <p className="text-xs text-[#4B5347] leading-relaxed">
-                A hundred threads deep, approvals arrive as noise — and the reasoning behind their own past decisions is already gone.
-              </p>
-            </div>
-
-            {/* Card 2: The Employee */}
-            <div className="bg-white border border-border rounded-lg p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] hover:-translate-y-1 hover:shadow-lg transition duration-200 ease-out flex flex-col justify-between space-y-6 select-none animate-fade-up" style={{ animationDelay: '60ms' }}>
-              <div className="space-y-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-                  The Employee
-                </span>
-                <h4 className="font-sans text-base font-bold text-[#17200F] italic">
-                  "Is it approved? Can I tell the vendor yes?"
-                </h4>
-              </div>
-              <p className="text-xs text-[#4B5347] leading-relaxed">
-                Waiting in fog. "Approved" is a word in a thread; the scope and the conditions are left to guesswork.
-              </p>
-            </div>
-
-            {/* Card 3: Operations */}
-            <div className="bg-white border border-border rounded-lg p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] hover:-translate-y-1 hover:shadow-lg transition duration-200 ease-out flex flex-col justify-between space-y-6 select-none animate-fade-up" style={{ animationDelay: '120ms' }}>
-              <div className="space-y-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-                  HR · Procurement · Finance
-                </span>
-                <h4 className="font-sans text-base font-bold text-[#17200F] italic">
-                  "Do we act on a forwarded screenshot?"
-                </h4>
-              </div>
-              <p className="text-xs text-[#4B5347] leading-relaxed">
-                They execute fragments of decisions — and carry the risk when the fragment turns out to be wrong.
-              </p>
-            </div>
-
-            {/* Card 4: The Founder */}
-            <div className="bg-white border border-border rounded-lg p-6 shadow-[0_10px_28px_rgba(60,55,30,0.10)] hover:-translate-y-1 hover:shadow-lg transition duration-200 ease-out flex flex-col justify-between space-y-6 select-none animate-fade-up" style={{ animationDelay: '180ms' }}>
-              <div className="space-y-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-                  The Founder
-                </span>
-                <h4 className="font-sans text-base font-bold text-[#17200F] italic">
-                  "What's being decided in my company right now?"
-                </h4>
-              </div>
-              <p className="text-xs text-[#4B5347] leading-relaxed">
-                Past ~150 people the nod stops scaling: decisions happen unseen and authority gets improvised.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 4. SECTION 4: THE ANSWER (Dark Band background #101828) */}
-      <section className="py-[clamp(64px,7vw,110px)] bg-[#101828] text-[#F7F8FA] border-b border-border">
-        <div className="max-w-[1240px] mx-auto px-5 sm:px-8 space-y-16">
-          
-          <div className="text-center space-y-3 max-w-2xl mx-auto animate-fade-up">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-              THE ANSWER
-            </span>
-            <h2 className="font-sans text-[clamp(28px,3.6vw,44px)] font-bold text-[#F7F8FA] leading-[1.12]">
-              One system, three <span className="text-[#C9A227]">[promises.]</span>
-            </h2>
-          </div>
-
-          {/* Promise Cards: 3 across >= 860px */}
-          <div className="grid grid-cols-1 min-[860px]:grid-cols-3 gap-8">
-            
-            {/* Promise 1 */}
-            <div className="bg-white/5 border border-border rounded-lg p-6 hover:-translate-y-1 transition duration-200 space-y-4 animate-fade-up">
-              <span className="font-sans text-2xl font-bold text-[#C9A227]">01</span>
-              <h3 className="font-sans text-lg font-bold text-[#F7F8FA]">Moves at inbox speed</h3>
-              <p className="text-xs text-[#F7F8FA]/80 leading-relaxed">
-                Approvers act straight from email: Approve, Reject, or Discuss. One click, full context, no training, no per-approver licences.
-              </p>
-            </div>
-
-            {/* Promise 2 */}
-            <div className="bg-white/5 border border-border rounded-lg p-6 hover:-translate-y-1 transition duration-200 space-y-4 animate-fade-up" style={{ animationDelay: '60ms' }}>
-              <span className="font-sans text-2xl font-bold text-[#C9A227]">02</span>
-              <h3 className="font-sans text-lg font-bold text-[#F7F8FA]">Proven forever</h3>
-              <p className="text-xs text-[#F7F8FA]/80 leading-relaxed">
-                Every decision is sealed: who approved, in what sequence, within what scope, on what reasoning. Tamper-evident and permanent — still legible when everyone involved has moved on.
-              </p>
-            </div>
-
-            {/* Promise 3 */}
-            <div className="bg-white/5 border border-border rounded-lg p-6 hover:-translate-y-1 transition duration-200 space-y-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
-              <span className="font-sans text-2xl font-bold text-[#C9A227]">03</span>
-              <h3 className="font-sans text-lg font-bold text-[#F7F8FA]">Lands intact</h3>
-              <p className="text-xs text-[#F7F8FA]/80 leading-relaxed">
-                Every decision becomes a linkable object carrying its full context, so the teams executing it read the source instead of the rumour.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 5. SECTION 5: START NOW (Alt centered background #F1EEE4) */}
-      <section className="py-[clamp(64px,7vw,110px)] bg-[#F1EEE4] text-center">
-        <div className="max-w-xl mx-auto px-5 sm:px-8 space-y-6 animate-fade-up">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#C9A227]">
-            START NOW
-          </span>
-          
-          <h2 className="font-sans text-[clamp(28px,3.6vw,44px)] font-bold text-[#17200F] leading-[1.12]">
-            Your company is the sum of its decisions. Start <span className="text-[#C9A227]">[keeping]</span> them.
-          </h2>
-
-          <p className="text-sm font-medium leading-[1.7] text-[#667085]">
-            A 30-day pilot on a single approval flow. Priced per company, not per seat — every approver included.
-          </p>
-
-          <div className="pt-2">
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-bg rounded-md transition">
+              Log in
+            </Link>
             <a
               href={mailtoLink}
-              className="inline-flex items-center justify-center px-10 py-4 bg-[#C9A227] hover:bg-[#E3B02A] text-[#17200F] text-xs font-bold uppercase tracking-wider rounded-md shadow-[0_4px_12px_rgba(212,160,23,0.2)] hover:shadow-[0_6px_16px_rgba(212,160,23,0.3)] transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+              className="px-4 py-2 bg-brand hover:bg-brand-deep text-white text-xs font-semibold rounded-md transition shadow-xs"
             >
-              Book a pilot
+              Request a pilot
             </a>
           </div>
         </div>
-      </section>
+      </header>
 
+      <main className="flex-grow">
+        {/* SECTION 2 — HERO */}
+        <section className="pt-16 pb-12 px-6 text-center max-w-[760px] mx-auto space-y-6">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-[20px] bg-brand/10 text-brand border border-brand/20 text-xs font-semibold">
+            <span>For companies drowning in Decision Debt</span>
+          </div>
+
+          <h1 className="text-[44px] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
+            Every rupee is accounted for.<br />
+            Every <span className="text-brand">decision</span> should be too.
+          </h1>
+
+          <p className="text-[17px] text-muted leading-[1.65] max-w-[540px] mx-auto font-normal">
+            Where companies keep books for their money, SigmaGo keeps the books for their decisions. Capture who approved what, in what order, on what reasoning — sealed and provable years later.
+          </p>
+
+          <div className="flex items-center justify-center gap-3 pt-3">
+            <a
+              href={mailtoLink}
+              className="px-6.5 py-3 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs flex items-center gap-2"
+            >
+              <span>Request a pilot</span>
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="#how-it-works"
+              className="px-6.5 py-3 bg-white border border-border text-ink hover:bg-bg text-[15px] font-semibold rounded-md transition"
+            >
+              See how it works
+            </a>
+          </div>
+        </section>
+
+        {/* SECTION 3 — PRODUCT VISUAL */}
+        <section className="px-6 pb-20 max-w-[920px] mx-auto">
+          <div className="bg-white border border-border rounded-[10px] shadow-[0_1px_3px_rgba(16,24,40,0.05),0_12px_32px_rgba(16,24,40,0.08)] overflow-hidden">
+            {/* Browser Bar */}
+            <div className="bg-ink px-4 py-2.5 flex items-center justify-between text-xs font-mono border-b border-border">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+              </div>
+              <span className="text-white/60 font-medium">sigmago.co/meridian/decisions</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
+                <CheckCircle2 className="w-3.5 h-3.5" /> SECURED
+              </span>
+            </div>
+
+            {/* Product Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-border bg-bg text-muted font-mono font-bold uppercase text-[11.5px]">
+                    <th className="px-5 py-3">Reference</th>
+                    <th className="px-5 py-3">Decision Subject</th>
+                    <th className="px-5 py-3">Category</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Integrity Seal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border font-medium">
+                  <tr className="hover:bg-bg/40">
+                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0814</td>
+                    <td className="px-5 py-3.5 text-ink font-bold">Q3 Enterprise Procurement Vendor Waiver</td>
+                    <td className="px-5 py-3.5 text-muted">Transactional</td>
+                    <td className="px-5 py-3.5">
+                      <span className="px-2.5 py-0.5 rounded-[5px] bg-ok/10 text-ok font-semibold text-xs">Approved</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-seal shadow-[0_0_6px_rgba(201,162,39,0.5)]" />
+                      <span>SHA-256 Sealed</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-bg/40">
+                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0815</td>
+                    <td className="px-5 py-3.5 text-ink font-bold">Senior VP Engineering Offer Approval</td>
+                    <td className="px-5 py-3.5 text-muted">Structural</td>
+                    <td className="px-5 py-3.5">
+                      <span className="px-2.5 py-0.5 rounded-[5px] bg-ok/10 text-ok font-semibold text-xs">Approved</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-seal shadow-[0_0_6px_rgba(201,162,39,0.5)]" />
+                      <span>SHA-256 Sealed</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-bg/40">
+                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0816</td>
+                    <td className="px-5 py-3.5 text-ink font-bold">Out-of-cycle Salary Adjustments</td>
+                    <td className="px-5 py-3.5 text-muted">Exception</td>
+                    <td className="px-5 py-3.5">
+                      <span className="px-2.5 py-0.5 rounded-[5px] bg-brand/10 text-brand font-semibold text-xs">In Review</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-mono text-muted font-bold flex items-center justify-end gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full border border-muted" />
+                      <span>Unsealed</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 4 — THE PROBLEM (white bg) */}
+        <section className="py-24 px-6 border-t border-border bg-white">
+          <div className="max-w-[1140px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">THE PROBLEM</span>
+              <h2 className="text-[30px] font-bold leading-[1.2] text-ink">
+                Your decisions live in inboxes, threads, and the memory of people who leave.
+              </h2>
+              <p className="text-muted leading-[1.65] text-[16px]">
+                When an executive leaves or a dispute arises eighteen months later, companies spend weeks on email archaeology trying to reconstruct why a decision was made.
+              </p>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0 font-bold">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Email archaeology</h4>
+                    <p className="text-xs text-muted leading-relaxed mt-0.5">
+                      Searching Slack channels and inbox archives for weeks trying to figure out who agreed to what terms.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0 font-bold">
+                    2
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Re-debating settled calls</h4>
+                    <p className="text-xs text-muted leading-relaxed mt-0.5">
+                      Every new leader re-litigates decisions made six months ago because no institutional record exists.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0 font-bold">
+                    3
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Unmitigated decision risk</h4>
+                    <p className="text-xs text-muted leading-relaxed mt-0.5">
+                      Carrying personal or organizational risk when audits, disputes, or diligence reviews challenge prior calls.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Email Thread Visual */}
+            <div className="bg-surface border border-border rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-2 px-3 py-2 bg-bg border border-border rounded-md text-xs text-muted">
+                <Search className="w-3.5 h-3.5 text-muted" />
+                <span>Search: "vendor waiver approval Q3"</span>
+              </div>
+
+              <div className="space-y-3 font-sans text-xs">
+                <div className="bg-bg p-3 rounded-md space-y-1">
+                  <div className="text-[11px] font-bold text-muted">From: Arjun (Procurement) — Oct 14</div>
+                  <div className="text-ink">Can we get sign-off for the vendor exception before Friday?</div>
+                </div>
+
+                <div className="bg-brand/10 text-brand p-3 rounded-md space-y-1 ml-6 border border-brand/20">
+                  <div className="text-[11px] font-bold text-brand">From: CFO — Oct 15</div>
+                  <div className="font-semibold">Yes proceed, but make sure legal reviews the liability cap.</div>
+                </div>
+
+                <div className="bg-err/10 border border-err/20 text-err p-3 rounded-md space-y-1">
+                  <div className="text-[11px] font-bold">System Notice</div>
+                  <div>Mailbox purged: User left organization. Thread history unavailable.</div>
+                </div>
+              </div>
+
+              <div className="pt-2 text-center text-xs font-mono text-muted">
+                The decision happened. The record didn't survive.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 5 — HOW IT WORKS (section-alt bg) */}
+        <section id="how-it-works" className="py-24 px-6 border-t border-border bg-[#F9FAFB]">
+          <div className="max-w-[1140px] mx-auto space-y-12">
+            <div className="text-center space-y-3 max-w-xl mx-auto">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">THE FRAMEWORK</span>
+              <h2 className="text-[30px] font-bold text-ink tracking-tight">Record. Retrieve. Rely. Reuse.</h2>
+              <p className="text-muted text-sm leading-relaxed">
+                The four-step lifecycle that turns chaotic conversations into provable organizational assets.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand text-white flex items-center justify-center font-bold font-mono text-sm">
+                  R1
+                </div>
+                <h4 className="text-base font-bold text-ink">1. Record</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  Capture who approved what, in what order, on what reasoning — sealed automatically upon final sign-off.
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand text-white flex items-center justify-center font-bold font-mono text-sm">
+                  R2
+                </div>
+                <h4 className="text-base font-bold text-ink">2. Retrieve</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  Instant parameterized search and natural-language query assistant — zero email archaeology.
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand text-white flex items-center justify-center font-bold font-mono text-sm">
+                  R3
+                </div>
+                <h4 className="text-base font-bold text-ink">3. Rely</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  SHA-256 tamper-evident Approval Certificates legible years later, even after key personnel leave.
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand text-white flex items-center justify-center font-bold font-mono text-sm">
+                  R4
+                </div>
+                <h4 className="text-base font-bold text-ink">4. Reuse</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  Supply the missing 4th input: prior decision patterns so your company stops re-debating settled calls.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 6 — THE PROOF (white bg) */}
+        <section id="proof" className="py-24 px-6 border-t border-border bg-white">
+          <div className="max-w-[1140px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">THE PROOF</span>
+              <h2 className="text-[30px] font-bold text-ink leading-[1.2]">
+                An Approval Certificate that survives the people who made it.
+              </h2>
+              <p className="text-muted leading-[1.65] text-[16px]">
+                Every finalized decision generates an independent, tamper-evident certificate with cryptographic proof.
+              </p>
+
+              <div className="space-y-3 pt-2 text-xs font-semibold text-ink">
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-ok shrink-0" />
+                  <span><strong>Authority</strong>: Verifiable record of assigned approver and delegate sign-offs.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-ok shrink-0" />
+                  <span><strong>Sequence</strong>: Exact timestamped stage order and decision timestamps.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-ok shrink-0" />
+                  <span><strong>Reasoning</strong>: Mandatory circumstance notes and attached evidence files.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-ok shrink-0" />
+                  <span><strong>Authenticity</strong>: Cryptographic SHA-256 checksum seal locking document content.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-ok shrink-0" />
+                  <span><strong>Permanence</strong>: Independent certificate legible after employees leave.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Mini Certificate Preview */}
+            <div className="bg-white border border-border rounded-lg shadow-sm overflow-hidden">
+              <div className="bg-ink px-5 py-3 text-white flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 font-bold font-mono">
+                  <span className="w-2.5 h-2.5 rounded-full bg-seal" />
+                  <span>SigmaGo</span>
+                </div>
+                <span className="font-mono text-white/70 text-[11px] uppercase tracking-wider">APPROVAL CERTIFICATE</span>
+              </div>
+
+              <div className="p-5 space-y-3 text-xs font-medium">
+                <div className="flex justify-between py-1 border-b border-border">
+                  <span className="text-muted">Document Ref</span>
+                  <span className="font-mono font-bold text-ink">REQ-2026-0814</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-border">
+                  <span className="text-muted">Subject</span>
+                  <span className="font-bold text-ink">Vendor Liability Waiver</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-border">
+                  <span className="text-muted">Final Status</span>
+                  <span className="text-ok font-bold uppercase">APPROVED</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-border">
+                  <span className="text-muted">Finalized Date</span>
+                  <span className="font-mono text-ink">2026-07-25 14:30 UTC</span>
+                </div>
+
+                {/* Dashed Checksum Block */}
+                <div className="border border-dashed border-border rounded-md p-3 bg-bg space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted font-mono">
+                    <Shield className="w-3.5 h-3.5 text-brand" />
+                    <span>SHA-256 INTEGRITY SEAL</span>
+                  </div>
+                  <div className="font-mono text-[10px] text-muted break-all">
+                    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                  </div>
+                </div>
+
+                {/* Footer Seal Badge */}
+                <div className="pt-2 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full border-2 border-double border-seal flex items-center justify-center text-seal font-bold">
+                      <Check className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-mono font-bold text-ink">SigmaGo Verified</div>
+                      <div className="text-[11px] text-muted font-mono">Tamper-evident record</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 7 — STATS (section-alt bg) */}
+        <section className="py-16 px-6 border-t border-border bg-[#F9FAFB]">
+          <div className="max-w-[1140px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="space-y-1">
+              <div className="text-[40px] font-bold text-brand font-mono">4</div>
+              <div className="text-xs font-medium text-muted max-w-[200px] mx-auto">
+                Dimensions every decision travels: Sideways, Backward, Downward, Forward.
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[40px] font-bold text-brand font-mono">5</div>
+              <div className="text-xs font-medium text-muted max-w-[200px] mx-auto">
+                Levels of organizational decision maturity from Tribal to Evidenced.
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[40px] font-bold text-brand font-mono">1</div>
+              <div className="text-xs font-medium text-muted max-w-[200px] mx-auto">
+                Tamper-evident Approval Certificate for complete governance peace of mind.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 8 — BUILT FOR (white bg) */}
+        <section className="py-24 px-6 border-t border-border bg-white">
+          <div className="max-w-[1140px] mx-auto space-y-12">
+            <div className="text-center space-y-3 max-w-xl mx-auto">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand font-mono">FOR YOUR TEAM</span>
+              <h2 className="text-[30px] font-bold text-ink tracking-tight">
+                Four people in every company, one decision object.
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
+                  👔
+                </div>
+                <h4 className="text-base font-bold text-ink">Leader</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  "Inbox stops being your memory."
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
+                  🏃
+                </div>
+                <h4 className="text-base font-bold text-ink">Employee</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  "Facts, not vibes."
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
+                  ⚖️
+                </div>
+                <h4 className="text-base font-bold text-ink">Cross-functions</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  "Stop carrying others' risk."
+                </p>
+              </div>
+
+              <div className="bg-white border border-border rounded-lg p-6 space-y-3">
+                <div className="w-10 h-10 rounded-md bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
+                  🚀
+                </div>
+                <h4 className="text-base font-bold text-ink">Founder</h4>
+                <p className="text-xs text-muted leading-relaxed">
+                  "Letting go without losing grip."
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 9 — CTA (section-alt bg, top border) */}
+        <section className="py-20 px-6 border-t border-border bg-[#F9FAFB]">
+          <div className="max-w-2xl mx-auto text-center space-y-6">
+            <h2 className="text-[32px] font-bold text-ink tracking-tight">
+              Start keeping the other books.
+            </h2>
+            <p className="text-muted text-base max-w-lg mx-auto leading-relaxed">
+              Give your company's decisions the same permanence, clarity, and proof that financial transactions have enjoyed for 500 years.
+            </p>
+            <div>
+              <a
+                href={mailtoLink}
+                className="inline-flex items-center gap-2 px-7 py-3.5 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs"
+              >
+                <span>Request a pilot</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* SECTION 10 — FOOTER */}
+      <footer className="border-t border-border bg-white py-8 px-6">
+        <div className="max-w-[1140px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted font-medium">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-ink font-mono">SigmaGo</span>
+            <span>— The system of record for company decisions</span>
+          </div>
+          <div>
+            © {new Date().getFullYear()} SigmaGo. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
