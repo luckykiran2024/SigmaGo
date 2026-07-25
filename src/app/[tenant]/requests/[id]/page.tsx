@@ -92,9 +92,9 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
   if (request.archived && !hasAccessToArchived) {
     return (
-      <div className="p-8 text-center bg-paper border border-hair rounded-[14px] max-w-lg mx-auto mt-12 shadow-[0_10px_28px_rgba(60,55,30,0.10)] font-ibmsans text-ink">
+      <div className="p-8 text-center bg-surface border border-border rounded-lg max-w-lg mx-auto mt-12 shadow-[0_10px_28px_rgba(60,55,30,0.10)] font-sans text-ink">
         <AlertTriangle className="w-12 h-12 text-err mx-auto mb-3" />
-        <h2 className="text-xl font-bold font-ibmserif text-ink">Access Denied</h2>
+        <h2 className="text-xl font-bold font-sans text-ink">Access Denied</h2>
         <p className="text-sm text-muted mt-2">
           This approval request has been archived and is only accessible by administrators, assigned approvers, or explicitly authorized team members.
         </p>
@@ -225,12 +225,12 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="space-y-6 py-4 font-ibmsans text-ink">
+    <div className="space-y-6 py-4 font-sans text-ink">
       {/* Back Link */}
       <div>
         <Link 
           href={`/${resolvedParams.tenant}`}
-          className="inline-flex items-center text-sm font-semibold text-accent hover:text-accent-deep transition"
+          className="inline-flex items-center text-sm font-semibold text-brand hover:text-brand-deep transition"
         >
           <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -275,7 +275,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             }}>
               <button
                 type="submit"
-                className="shrink-0 bg-info hover:bg-info/90 text-white text-xs font-bold py-2 px-4 rounded-full transition shadow-sm"
+                className="shrink-0 bg-info hover:bg-info/90 text-white text-xs font-bold py-2 px-4 rounded-md transition shadow-sm"
               >
                 Resume & Review
               </button>
@@ -288,12 +288,12 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
         {/* Left column: Document details & Audit logs */}
         <div className="lg:col-span-2 space-y-8">
           {/* Main Document Details Card */}
-          <div className="bg-paper border border-hair rounded-[14px] shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
+          <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
             {/* Header info */}
-            <div className="px-6 py-6 border-b border-hair bg-panel/50">
+            <div className="px-6 py-6 border-b border-border bg-bg/50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-ibmserif font-extrabold text-ink leading-tight">{request.subject}</h1>
+                  <h1 className="text-2xl font-sans font-extrabold text-ink leading-tight">{request.subject}</h1>
               {/* Beneficiary Info */}
               {request.beneficiary && (
                 <div className="flex items-center gap-2 text-sm">
@@ -318,7 +318,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                       <span className="text-ink font-semibold">{request.users?.name || 'Unknown User'}</span>
                     </div>
                     <span>•</span>
-                    <div className="flex items-center gap-1 font-ibmmono">
+                    <div className="flex items-center gap-1 font-mono">
                       <span className="text-muted">Submitted at:</span>{' '}
                       <span className="text-ink font-semibold">{formatDate(request.created_at)}</span>
                     </div>
@@ -329,7 +329,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     <Link
                       href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}/certificate`}
                       target="_blank"
-                      className="inline-flex items-center justify-center rounded-full bg-accent px-4 py-2.5 text-xs font-bold text-ink shadow-md shadow-accent/10 hover:bg-accent/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+                      className="inline-flex items-center justify-center rounded-md bg-brand px-4 py-2.5 text-xs font-bold text-ink shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
                     >
                       <svg className="w-4 h-4 mr-1.5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -339,7 +339,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   )}
                   {/* Validity Badge */}
                   {validity.state !== 'NOT_APPLICABLE' && (
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border font-ibmmono ${validity.badgeClass}`}>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-bold border font-mono ${validity.badgeClass}`}>
                       {validity.label}
                     </span>
                   )}
@@ -347,7 +347,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   {request.status === 'approved' && (validity.isExpired || validity.isExpiringSoon || request.valid_until) && (
                     <Link
                       href={`/${resolvedParams.tenant}/requests/new?renewFrom=${request.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-accent text-white text-xs font-bold rounded-lg shadow-sm hover:bg-accent/90 transition"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-brand text-white text-xs font-bold rounded-lg shadow-sm hover:bg-brand/90 transition"
                     >
                       ↻ Renew
                     </Link>
@@ -361,7 +361,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                       approverName={userMap.get(pendingStep.approver_id) || 'Approver'}
                     />
                   )}
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border font-ibmmono ${
+                  <span className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider border font-mono ${
                     request.status === 'approved' ? 'bg-ok/10 text-ok border-ok/20' :
                     request.status === 'rejected' ? 'bg-err/10 text-err border-err/20' :
                     request.status === 'blocked' ? 'bg-err/10 text-err border-err/20 animate-pulse' :
@@ -375,7 +375,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
             </div>
             
             {/* Document Content (Rich Text) */}
-            <div className="px-6 py-8 prose max-w-none text-[#4B5347] font-ibmsans text-[19px] leading-[1.65] prose-headings:font-ibmserif prose-headings:text-ink prose-a:text-accent hover:prose-a:underline select-text">
+            <div className="px-6 py-8 prose max-w-none text-[#4B5347] font-sans text-[19px] leading-[1.65] prose-headings:font-sans prose-headings:text-ink prose-a:text-brand hover:prose-a:underline select-text">
               <RichTextEditor content={request.body_json} editable={false} />
 
               {/* Custom Fields */}
@@ -400,29 +400,29 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
             {/* Attachments Section */}
             {attachmentsWithUrls.length > 0 && (
-              <div className="px-6 pb-8 border-t border-hair pt-6">
-                <h4 className="text-sm font-bold text-ink uppercase tracking-wider mb-3 flex items-center gap-1.5 font-ibmmono">
-                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="px-6 pb-8 border-t border-border pt-6">
+                <h4 className="text-sm font-bold text-ink uppercase tracking-wider mb-3 flex items-center gap-1.5 font-mono">
+                  <svg className="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                   Supporting Attachments
                 </h4>
-                <ul className="divide-y divide-hair border border-hair rounded-[14px] bg-paper overflow-hidden shadow-sm">
+                <ul className="divide-y divide-border border border-border rounded-lg bg-surface overflow-hidden shadow-sm">
                   {attachmentsWithUrls.map((att: any) => (
-                    <li key={att.id} className="flex items-center justify-between p-4 hover:bg-panel/30 transition">
+                    <li key={att.id} className="flex items-center justify-between p-4 hover:bg-bg/30 transition">
                       <div className="flex items-center gap-3 min-w-0">
                         <svg className="w-5 h-5 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span className="text-sm font-bold text-ink truncate max-w-xs md:max-w-md">{att.filename}</span>
-                        <span className="text-xs text-muted font-medium shrink-0 font-ibmmono">({formatBytes(att.size_bytes)})</span>
+                        <span className="text-xs text-muted font-medium shrink-0 font-mono">({formatBytes(att.size_bytes)})</span>
                       </div>
                       <a
                         href={att.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         download={att.filename}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-hair hover:border-accent/40 rounded-full text-xs font-bold text-ink hover:text-accent hover:bg-panel transition"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-border hover:border-brand/40 rounded-md text-xs font-bold text-ink hover:text-brand hover:bg-bg transition"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -438,10 +438,10 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
           {/* Action Box */}
           {activeStep && request.status !== 'blocked' && (
-            <div className="bg-paper shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-accent rounded-[14px] p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
+            <div className="bg-surface shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-brand rounded-lg p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-md blur-xl pointer-events-none" />
               
-              <h3 className="text-lg font-ibmserif font-extrabold text-ink mb-2">
+              <h3 className="text-lg font-sans font-extrabold text-ink mb-2">
                 {isDelegatedStep ? 'Approval Required (Delegate)' : 'Your Approval Required'}
               </h3>
               <p className="text-xs text-muted font-medium mb-4">
@@ -457,7 +457,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   <textarea 
                     name="comment" 
                     rows={3} 
-                    className="block w-full rounded-xl border border-hair py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition sm:text-sm" 
+                    className="block w-full rounded-xl border border-border py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition sm:text-sm" 
                     placeholder="Add an optional comment..."
                   ></textarea>
                 </div>
@@ -466,7 +466,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="approve" 
-                    className="flex-1 inline-flex items-center justify-center bg-ok hover:bg-ok/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-ok/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-ok hover:bg-ok/90 text-white py-2.5 px-4 rounded-md text-sm font-bold shadow-md shadow-ok/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Approve
                   </button>
@@ -474,7 +474,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="reject" 
-                    className="flex-1 inline-flex items-center justify-center bg-err hover:bg-err/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-err/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-err hover:bg-err/90 text-white py-2.5 px-4 rounded-md text-sm font-bold shadow-md shadow-err/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Reject
                   </button>
@@ -482,7 +482,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     type="submit" 
                     name="action" 
                     value="discuss" 
-                    className="flex-1 inline-flex items-center justify-center bg-info hover:bg-info/90 text-white py-2.5 px-4 rounded-full text-sm font-bold shadow-md shadow-info/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
+                    className="flex-1 inline-flex items-center justify-center bg-info hover:bg-info/90 text-white py-2.5 px-4 rounded-md text-sm font-bold shadow-md shadow-info/10 transition transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Discuss
                   </button>
@@ -492,9 +492,9 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
           )}
 
           {/* Audit Log Card */}
-          <div className="bg-paper border border-hair rounded-[14px] shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
-            <div className="px-6 py-5 border-b border-hair bg-panel/50">
-              <h3 className="text-base font-bold text-ink font-ibmserif">Audit Log</h3>
+          <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
+            <div className="px-6 py-5 border-b border-border bg-bg/50">
+              <h3 className="text-base font-bold text-ink font-sans">Audit Log</h3>
             </div>
             <div className="px-6 py-6">
               <ul className="space-y-5">
@@ -502,7 +502,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                   <li key={log.id} className="text-sm flex items-start justify-between gap-4">
                     <div className="flex gap-2.5 items-start">
                       {/* Bullet icon */}
-                      <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted/40 shrink-0" />
+                      <div className="mt-1.5 w-1.5 h-1.5 rounded-md bg-muted/40 shrink-0" />
                       <div>
                         {log.metadata?.summary ? (
                           <span className="text-ink font-semibold">{log.metadata.summary}</span>
@@ -525,7 +525,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                         )}
                       </div>
                     </div>
-                    <span className="text-muted text-xs font-semibold shrink-0 font-ibmmono">{formatDate(log.created_at)}</span>
+                    <span className="text-muted text-xs font-semibold shrink-0 font-mono">{formatDate(log.created_at)}</span>
                   </li>
                 ))}
                 {(!auditLogs || auditLogs.length === 0) && (

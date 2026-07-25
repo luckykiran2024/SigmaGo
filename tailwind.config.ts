@@ -9,43 +9,69 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#17200F",
-        accent: { DEFAULT: "#D4A017", light: "#E3B02A", deep: "#A67C1A" },
-        // Legacy usage: mirrors accent
-        teal:   { DEFAULT: "#D4A017", light: "#E3B02A", deep: "#A67C1A" },
-        "go-mist": "#FBF6E6",
+        bg: "#F7F8FA",
+        surface: "#FFFFFF",
+        border: "#E4E7EC",
+        ink: "#101828",
+        muted: "#667085",
+        brand: {
+          DEFAULT: "#274C77",
+          deep: "#1B3757",
+        },
+        "brand-deep": "#1B3757",
+        seal: "#C9A227",
+        ok: "#0F7548",
+        warn: "#B54708",
+        err: "#B42318",
+
+        // Compatibility migration mappings (Phase 1 bridge)
+        canvas: "#F7F8FA",
         paper: "#FFFFFF",
-        panel: "#F1EEE4",
-        canvas: "#FAF8F2",      // app background
-        forest: "#1E2B1C",      // sidebar / dark surfaces
-        "forest-deep": "#141D13",
-        body: "#4B5347",
-        muted: "#5E6657",
-        hair: "rgba(30,43,28,.12)",
-        "seal-gold": "#D4A017",
-        ok: "#2E7D5B",
-        warn: "#C08A2E",
-        err: "#B4453C",
-        info: "#3B6B8F",
+        panel: "#F7F8FA",
+        hair: "#E4E7EC",
+        accent: {
+          DEFAULT: "#274C77",
+          deep: "#1B3757",
+          light: "#3A6394",
+        },
+        "accent-deep": "#1B3757",
+        teal: {
+          DEFAULT: "#274C77",
+          deep: "#1B3757",
+        },
+        "seal-gold": "#C9A227",
+        forest: "#101828",
+        "forest-deep": "#101828",
+        info: "#274C77",
+        body: "#101828",
+        "go-mist": "#F7F8FA",
       },
       fontFamily: {
-        display: ["var(--font-archivo)", "sans-serif"],
-        body: ["var(--font-inter)", "sans-serif"],
-        mono: ["var(--font-jetbrains)", "monospace"],
-        ibmserif: ["var(--font-ibm-serif)", "serif"],
-        ibmsans: ["var(--font-ibm-sans)", "sans-serif"],
+        sans: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-ibm-mono)", "monospace"],
+        // Compatibility font mappings mapped to IBM Plex
+        ibmsans: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
         ibmmono: ["var(--font-ibm-mono)", "monospace"],
-        fraunces: ["var(--font-fraunces)", "serif"],
-        inter: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+        body: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+        ibmserif: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+        fraunces: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+        inter: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
+      },
+      borderRadius: {
+        badge: "5px",
+        btn: "6px",
+        card: "8px",
+        container: "8px",
       },
       keyframes: {
         "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         }
       },
       animation: {
-        "fade-up": "fade-up 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "fade-up": "fade-up 300ms ease-out forwards",
       }
     },
   },

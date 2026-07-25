@@ -3,18 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAF8F2;
-  --foreground: #17200F;
+  --background: #F7F8FA;
+  --foreground: #101828;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-ibm-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-ibm-sans), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+table, td, th {
+  font-variant-numeric: tabular-nums;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Signature Interaction — Section 5 */
+  .signature-active {
+    border-left: 3px solid #274C77 !important;
+    background-color: rgba(39, 76, 119, 0.08) !important;
+    padding-left: calc(1rem - 3px) !important;
   }
 }

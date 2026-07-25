@@ -101,11 +101,11 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   const submittedCount = myRequests?.length || 0;
 
   return (
-    <div className="space-y-10 py-4 font-ibmsans">
+    <div className="space-y-10 py-4 font-sans">
       {/* Header section with Welcome text */}
-      <div className="md:flex md:items-center md:justify-between border-b border-hair pb-6">
+      <div className="md:flex md:items-center md:justify-between border-b border-border pb-6">
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-ibmserif font-extrabold tracking-tight text-ink">
+          <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
             Dashboard
           </h1>
           <p className="mt-2 text-sm text-muted font-medium">
@@ -115,7 +115,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         <div className="mt-4 flex md:ml-4 md:mt-0">
           <Link
             href={`/${resolvedParams.tenant}/requests/new`}
-            className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/35 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
+            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-accent/35 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
           >
             <svg className="w-5 h-5 mr-1.5 -ml-1 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -128,12 +128,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {/* Action Required Card */}
-        <div className="bg-paper overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-hair rounded-[14px] p-6 flex items-center justify-between">
+        <div className="bg-surface overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg p-6 flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-ibmmono">Action Required</p>
-            <p className="mt-2 text-3xl font-extrabold text-ink font-ibmserif">{pendingCount}</p>
+            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-mono">Action Required</p>
+            <p className="mt-2 text-3xl font-extrabold text-ink font-sans">{pendingCount}</p>
           </div>
-          <div className={`p-4 rounded-xl ${pendingCount > 0 ? 'bg-warn/10 text-warn border border-warn/20' : 'bg-panel text-muted'}`}>
+          <div className={`p-4 rounded-xl ${pendingCount > 0 ? 'bg-warn/10 text-warn border border-warn/20' : 'bg-bg text-muted'}`}>
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
@@ -141,12 +141,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         </div>
 
         {/* My Submissions Card */}
-        <div className="bg-paper overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-hair rounded-[14px] p-6 flex items-center justify-between">
+        <div className="bg-surface overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg p-6 flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-ibmmono">My Submissions</p>
-            <p className="mt-2 text-3xl font-extrabold text-ink font-ibmserif">{submittedCount}</p>
+            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-mono">My Submissions</p>
+            <p className="mt-2 text-3xl font-extrabold text-ink font-sans">{submittedCount}</p>
           </div>
-          <div className="p-4 rounded-xl bg-accent/10 text-accent border border-accent/20">
+          <div className="p-4 rounded-xl bg-brand/10 text-brand border border-brand/20">
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
@@ -158,19 +158,19 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         {/* Action Required List (Left 2 columns on large screen) */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-ink font-ibmserif">Action Required</h2>
+            <h2 className="text-xl font-bold tracking-tight text-ink font-sans">Action Required</h2>
             {pendingCount > 0 && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-warn/10 text-warn border border-warn/20 font-ibmmono">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-warn/10 text-warn border border-warn/20 font-mono">
                 {pendingCount} Pending Approval
               </span>
             )}
           </div>
           
-          <div className="bg-paper shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-hair rounded-[14px] overflow-hidden">
-            <ul className="divide-y divide-hair">
+          <div className="bg-surface shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg overflow-hidden">
+            <ul className="divide-y divide-border">
               {actionRequired.length === 0 ? (
                 <li className="px-6 py-12 text-center text-muted text-sm flex flex-col items-center justify-center gap-2">
-                  <div className="p-3 bg-panel rounded-full text-muted">
+                  <div className="p-3 bg-bg rounded-md text-muted">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -180,24 +180,24 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
                 </li>
               ) : (
                 actionRequired.map((req: any) => (
-                  <li key={req.id} className="transition hover:bg-panel/40">
+                  <li key={req.id} className="transition hover:bg-bg/40">
                     <Link href={`/${resolvedParams.tenant}/requests/${req.id}`} className="block px-6 py-5">
                       <div className="flex items-center justify-between gap-4">
                         <div className="space-y-1 min-w-0">
-                          <p className="text-base font-bold text-ink truncate hover:text-accent transition">{req.subject}</p>
+                          <p className="text-base font-bold text-ink truncate hover:text-brand transition">{req.subject}</p>
                           <div className="flex items-center gap-2 text-xs text-muted font-medium">
                             <span>Submitted by <span className="text-ink font-semibold">{req.owner?.name || 'Unknown'}</span></span>
                             <span>•</span>
-                            <span className="font-ibmmono">Created {formatDate(req.created_at)}</span>
+                            <span className="font-mono">Created {formatDate(req.created_at)}</span>
                           </div>
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
                           {req.delegatedFrom && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-extrabold bg-info/10 text-info border border-info/20 uppercase tracking-wider font-ibmmono">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-info/10 text-info border border-info/20 uppercase tracking-wider font-mono">
                               Delegated from {req.delegatedFrom}
                             </span>
                           )}
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-warn/10 text-warn border border-warn/20 uppercase tracking-wider font-ibmmono">
+                          <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold bg-warn/10 text-warn border border-warn/20 uppercase tracking-wider font-mono">
                             Needs Your Review
                           </span>
                         </div>
@@ -212,12 +212,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
 
         {/* My Requests List (Right 1 column on large screen) */}
         <div className="space-y-4">
-          <h2 className="text-xl font-bold tracking-tight text-ink font-ibmserif">My Submissions</h2>
-          <div className="bg-paper shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-hair rounded-[14px] overflow-hidden">
-            <ul className="divide-y divide-hair">
+          <h2 className="text-xl font-bold tracking-tight text-ink font-sans">My Submissions</h2>
+          <div className="bg-surface shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg overflow-hidden">
+            <ul className="divide-y divide-border">
               {(!myRequests || myRequests.length === 0) ? (
                 <li className="px-6 py-12 text-center text-muted text-sm flex flex-col items-center justify-center gap-2">
-                  <div className="p-3 bg-panel rounded-full text-muted">
+                  <div className="p-3 bg-bg rounded-md text-muted">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -227,12 +227,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
                 </li>
               ) : (
                 myRequests.map((req: any) => (
-                  <li key={req.id} className="transition hover:bg-panel/40">
+                  <li key={req.id} className="transition hover:bg-bg/40">
                     <Link href={`/${resolvedParams.tenant}/requests/${req.id}`} className="block px-6 py-4">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-bold text-ink truncate">{req.subject}</p>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider border ${
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider border ${
                             req.status === 'approved' ? 'bg-ok/10 text-ok border-ok/20' :
                             req.status === 'rejected' ? 'bg-err/10 text-err border-err/20' :
                             req.status === 'in_discussion' ? 'bg-info/10 text-info border-info/20' :
@@ -242,8 +242,8 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-2xs text-muted font-medium">
-                          <span className="font-ibmmono">{req.categories?.name || 'Uncategorized'}</span>
-                          <span className="font-ibmmono">{formatDate(req.created_at)}</span>
+                          <span className="font-mono">{req.categories?.name || 'Uncategorized'}</span>
+                          <span className="font-mono">{formatDate(req.created_at)}</span>
                         </div>
                       </div>
                     </Link>

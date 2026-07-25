@@ -125,7 +125,7 @@ export default function OrgAdminConsole({
     const hasChildren = node.children.length > 0;
 
     return (
-      <div className="select-none font-body">
+      <div className="select-none font-sans">
         <div 
           className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 rounded-xl transition cursor-pointer group"
           onClick={() => hasChildren && setIsExpanded(!isExpanded)}
@@ -135,12 +135,12 @@ export default function OrgAdminConsole({
             {hasChildren ? (
               isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
             ) : (
-              <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+              <div className="w-1.5 h-1.5 rounded-md bg-gray-300" />
             )}
           </div>
           <div className="flex-1 flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <span className="font-bold text-ink text-sm group-hover:text-accent transition">
+              <span className="font-bold text-ink text-sm group-hover:text-brand transition">
                 {node.name}
               </span>
               <span className="text-xs text-gray-400 ml-2 font-medium">
@@ -150,13 +150,13 @@ export default function OrgAdminConsole({
                 <span className="inline-flex text-[10px] font-bold rounded-md bg-gray-100 text-gray-500 uppercase tracking-wider px-1.5">
                   {node.designation}
                 </span>
-                <span className="inline-flex text-[10px] font-bold rounded-md bg-accent/5 text-accent uppercase tracking-wider px-1.5">
+                <span className="inline-flex text-[10px] font-bold rounded-md bg-brand/5 text-brand uppercase tracking-wider px-1.5">
                   {node.careerLevel}
                 </span>
               </div>
             </div>
             <div>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider ${
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider ${
                 node.status === 'active' || node.status === 'ACTIVE' 
                   ? 'bg-green-50 text-green-700 border border-green-100' 
                   : 'bg-red-50 text-red-700 border border-red-100'
@@ -455,7 +455,7 @@ export default function OrgAdminConsole({
         <button
           onClick={() => setActiveTab('chart')}
           className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'chart' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-ink'
+            activeTab === 'chart' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -464,7 +464,7 @@ export default function OrgAdminConsole({
         <button
           onClick={() => setActiveTab('import')}
           className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'import' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-ink'
+            activeTab === 'import' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
           }`}
         >
           <Upload className="w-4 h-4" />
@@ -473,7 +473,7 @@ export default function OrgAdminConsole({
         <button
           onClick={() => setActiveTab('api')}
           className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'api' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-ink'
+            activeTab === 'api' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
           }`}
         >
           <Settings className="w-4 h-4" />
@@ -494,13 +494,13 @@ export default function OrgAdminConsole({
 
       {/* Org Chart Tab */}
       {activeTab === 'chart' && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-4">
+        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
             <div>
-              <h2 className="text-lg font-display font-extrabold text-ink">SigmaGo Hierarchy</h2>
+              <h2 className="text-lg font-sans font-extrabold text-ink">SigmaGo Hierarchy</h2>
               <p className="text-xs text-gray-400 font-medium mt-1">Dynamically assembled reporting tree based on manager assignments.</p>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/5 text-accent border border-accent/10">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-brand/5 text-brand border border-brand/10">
               {initialUsers.length} total staff
             </span>
           </div>
@@ -521,15 +521,15 @@ export default function OrgAdminConsole({
       {/* Import Org Tab */}
       {activeTab === 'import' && (
         <div className="space-y-6">
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-4">
+          <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div>
-                <h2 className="text-lg font-display font-extrabold text-ink">Upload Hierarchy CSV</h2>
+                <h2 className="text-lg font-sans font-extrabold text-ink">Upload Hierarchy CSV</h2>
                 <p className="text-xs text-gray-400 font-medium mt-1">Upload your organization CSV to rebuild and sync reporting lines.</p>
               </div>
               <button
                 onClick={downloadTemplate}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:text-accent-light transition"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-light transition"
               >
                 <Download className="w-4 h-4" />
                 Download Template CSV
@@ -556,7 +556,7 @@ export default function OrgAdminConsole({
           </div>
 
           {previewRows.length > 0 && (
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-ink">Sync Preview</h3>
@@ -604,7 +604,7 @@ export default function OrgAdminConsole({
                         <td className="px-6 py-3.5 text-gray-400">{r.designation}</td>
                         <td className="px-6 py-3.5 text-gray-400">{r.manager_employee_id || '-'}</td>
                         <td className="px-6 py-3.5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-bold uppercase ${
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
                             r.status === 'active' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
                           }`}>
                             {r.status}
@@ -617,7 +617,7 @@ export default function OrgAdminConsole({
                               {r.error}
                             </span>
                           ) : (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-bold uppercase ${
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
                               r.actionType === 'new' ? 'bg-green-100 text-green-800' :
                               r.actionType === 'deactivate' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                             }`}>
@@ -641,7 +641,7 @@ export default function OrgAdminConsole({
                 <button
                   onClick={handleCommit}
                   disabled={isCommitting || summary.errorCount > 0}
-                  className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150"
+                  className="inline-flex items-center justify-center rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150"
                 >
                   {isCommitting ? 'Ingesting...' : 'Confirm Import'}
                 </button>
@@ -654,8 +654,8 @@ export default function OrgAdminConsole({
       {/* HRMS API Settings Tab */}
       {activeTab === 'api' && (
         <div className="space-y-6">
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-4">
-            <h2 className="text-lg font-display font-extrabold text-ink border-b border-gray-100 pb-4">
+          <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
+            <h2 className="text-lg font-sans font-extrabold text-ink border-b border-gray-100 pb-4">
               HRMS Integration Settings
             </h2>
 
@@ -700,7 +700,7 @@ export default function OrgAdminConsole({
             </div>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-base font-bold text-ink">Recent Sync Logs</h3>
               <p className="text-xs text-gray-400 font-medium">History of automated and manual sync occurrences.</p>
@@ -723,7 +723,7 @@ export default function OrgAdminConsole({
                     <tr key={log.id}>
                       <td className="px-6 py-3.5 whitespace-nowrap text-gray-400 font-semibold">{formatDate(log.applied_at)}</td>
                       <td className="px-6 py-3.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-bold uppercase ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
                           log.source === 'csv' ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'
                         }`}>
                           {log.source}

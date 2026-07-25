@@ -36,7 +36,7 @@ export default async function CustomFieldsPage({ params }: { params: Promise<{ t
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-display font-extrabold tracking-tight text-ink">
+        <h1 className="text-2xl font-sans font-extrabold tracking-tight text-ink">
           Custom Fields
         </h1>
         <p className="text-sm text-muted font-medium mt-1">

@@ -115,7 +115,7 @@ export default function AdminSettingsForm({
   };
 
   return (
-    <form onSubmit={handleSaveSettings} className="space-y-8 font-body">
+    <form onSubmit={handleSaveSettings} className="space-y-8 font-sans">
       {msg && (
         <div className={`p-4 rounded-xl border text-xs font-bold ${
           msg.type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'
@@ -125,10 +125,10 @@ export default function AdminSettingsForm({
       )}
 
       {/* SECTION 1 - ORGANIZATION PROFILE */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <Building className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <Building className="w-5 h-5 text-brand" />
             Organization Profile
           </h3>
           <p className="text-xs text-gray-400 mt-1">Configure company display names, branding, and details.</p>
@@ -136,7 +136,7 @@ export default function AdminSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Tenant Name
             </label>
             <input
@@ -149,7 +149,7 @@ export default function AdminSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Subdomain (Read-only)
             </label>
             <input
@@ -163,7 +163,7 @@ export default function AdminSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Branding Logo (PNG/JPG/SVG, max 2MB)
             </label>
             
@@ -172,7 +172,7 @@ export default function AdminSettingsForm({
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo preview" className="max-h-full max-w-full object-contain p-1" />
                 ) : (
-                  <span className="text-3xs font-extrabold text-gray-300 uppercase tracking-wider">No logo</span>
+                  <span className="text-xs font-extrabold text-gray-300 uppercase tracking-wider">No logo</span>
                 )}
               </div>
 
@@ -203,14 +203,14 @@ export default function AdminSettingsForm({
                   )}
                 </div>
                 {uploading && (
-                  <span className="text-4xs font-bold text-accent animate-pulse">Uploading file...</span>
+                  <span className="text-xs font-bold text-brand animate-pulse">Uploading file...</span>
                 )}
               </div>
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Created Date (Read-only)
             </label>
             <input
@@ -224,10 +224,10 @@ export default function AdminSettingsForm({
       </div>
 
       {/* SECTION 2 - NOTIFICATION & SLA POLICY */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <Clock className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <Clock className="w-5 h-5 text-brand" />
             Notification & SLA Policy
           </h3>
           <p className="text-xs text-gray-400 mt-1">Configure overdue reminders, cadence, and default limits.</p>
@@ -239,7 +239,7 @@ export default function AdminSettingsForm({
               type="checkbox"
               checked={remindersEnabled}
               onChange={(e) => setRemindersEnabled(e.target.checked)}
-              className="w-4 h-4 rounded text-accent border-gray-200 focus:ring-accent"
+              className="w-4 h-4 rounded text-brand border-gray-200 focus:ring-accent"
             />
             Send automated overdue reminders to pending approvers
           </label>
@@ -247,7 +247,7 @@ export default function AdminSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Send first reminder after (Hours)
             </label>
             <input
@@ -262,7 +262,7 @@ export default function AdminSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Repeat reminder interval (Hours)
             </label>
             <input
@@ -279,7 +279,7 @@ export default function AdminSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Blocked Request Alerts
             </label>
             <select
@@ -293,7 +293,7 @@ export default function AdminSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Default Category SLA (Hours)
             </label>
             <input
@@ -309,10 +309,10 @@ export default function AdminSettingsForm({
       </div>
 
       {/* SECTION 3 - APPROVAL POLICY */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-brand" />
             Approval Policy (Read-Only)
           </h3>
           <p className="text-xs text-gray-400 mt-1">Platform-enforced policies and business safety rules.</p>
@@ -324,7 +324,7 @@ export default function AdminSettingsForm({
               <Lock className="w-4 h-4 text-gray-400" />
               <span>Self-approvals: Requesters cannot approve their own requests</span>
             </div>
-            <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-md uppercase tracking-wider">Enforced</span>
+            <span className="text-[10px] bg-brand/10 text-brand px-2 py-0.5 rounded-md uppercase tracking-wider">Enforced</span>
           </div>
 
           <div className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-600">
@@ -334,7 +334,7 @@ export default function AdminSettingsForm({
             </div>
             <Link
               href={`/${tenantSubdomain}/admin/workflows`}
-              className="text-[10px] text-accent hover:underline flex items-center gap-1 font-extrabold"
+              className="text-[10px] text-brand hover:underline flex items-center gap-1 font-extrabold"
             >
               View Workflows
               <Eye className="w-3.5 h-3.5" />
@@ -344,9 +344,9 @@ export default function AdminSettingsForm({
       </div>
 
       {/* SECTION 4 - COMING SOON */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6 opacity-80">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6 opacity-80">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
             <Key className="w-5 h-5 text-gray-400" />
             Roadmap & Compliance
           </h3>
@@ -378,7 +378,7 @@ export default function AdminSettingsForm({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center justify-center px-6 py-3 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-6 py-3 bg-brand hover:bg-brand-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving changes...' : 'Save Configuration'}
         </button>

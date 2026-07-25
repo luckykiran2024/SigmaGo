@@ -42,10 +42,10 @@ export default function UserMenu({
     .substring(0, 2);
 
   return (
-    <div className="relative font-body" ref={dropdownRef}>
+    <div className="relative font-sans" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 rounded-xl bg-accent/5 hover:bg-accent/10 border border-accent/15 flex items-center justify-center font-bold text-accent shadow-sm transition active:scale-95 overflow-hidden"
+        className="w-10 h-10 rounded-xl bg-brand/5 hover:bg-brand/10 border border-brand/15 flex items-center justify-center font-bold text-brand shadow-sm transition active:scale-95 overflow-hidden"
       >
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
@@ -55,11 +55,11 @@ export default function UserMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 p-2 py-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-100 rounded-lg shadow-xl z-50 p-2 py-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="px-4 py-2 border-b border-gray-100 pb-3">
             <p className="text-sm font-bold text-ink leading-tight truncate">{name}</p>
             <p className="text-xs font-medium text-gray-400 truncate mt-0.5">{email}</p>
-            <p className="text-xs font-bold text-accent mt-2 bg-accent/5 px-2.5 py-1 rounded-lg inline-block">
+            <p className="text-xs font-bold text-brand mt-2 bg-brand/5 px-2.5 py-1 rounded-lg inline-block">
               {tenantName}
             </p>
           </div>

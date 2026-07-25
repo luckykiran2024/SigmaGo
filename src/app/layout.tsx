@@ -1,31 +1,6 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, JetBrains_Mono, IBM_Plex_Serif, IBM_Plex_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-archivo",
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
-
-const ibmSerif = IBM_Plex_Serif({
-  subsets: ["latin"],
-  weight: "700",
-  variable: "--font-ibm-serif",
-  display: "swap",
-});
 
 const ibmSans = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -41,20 +16,13 @@ const ibmMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "SigmaGo Workflow Portal",
-  description: "Enterprise approval workflow system for SigmaGo.",
+  title: "SigmaGo — Decision Governance Platform",
+  description: "Enterprise approval and decision-record platform.",
 };
 
 export const viewport = {
-  themeColor: "#1E2B1C",
+  themeColor: "#101828",
 };
 
 export default function RootLayout({
@@ -63,10 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-paper">
-      <body
-        className={`${inter.variable} ${outfit.variable} ${jetbrains.variable} ${ibmSerif.variable} ${ibmSans.variable} ${ibmMono.variable} ${fraunces.variable} font-body antialiased h-full text-ink`}
-      >
+    <html lang="en" className="h-full bg-bg text-ink font-sans">
+      <body className={`${ibmSans.variable} ${ibmMono.variable} font-sans antialiased h-full text-ink bg-bg`}>
         {children}
       </body>
     </html>

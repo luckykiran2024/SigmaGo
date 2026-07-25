@@ -38,22 +38,22 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-paper relative overflow-hidden font-body">
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-surface relative overflow-hidden font-sans">
       {/* Decorative background gradients */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <div className="flex justify-center items-center gap-2">
           {/* SigmaGo Brand Mark */}
           <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shadow-md shadow-ink/10">
-            <span className="text-white font-display font-extrabold text-base tracking-tight">SG</span>
+            <span className="text-white font-sans font-extrabold text-base tracking-tight">SG</span>
           </div>
-          <span className="font-display text-2xl font-extrabold tracking-tight text-ink">
-            Sigma<span className="text-accent font-extrabold">Go</span>
+          <span className="font-sans text-2xl font-extrabold tracking-tight text-ink">
+            Sigma<span className="text-brand font-extrabold">Go</span>
           </span>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-display font-extrabold tracking-tight text-ink">
+        <h2 className="mt-6 text-center text-3xl font-sans font-extrabold tracking-tight text-ink">
           {isResetMode ? 'Reset password' : 'Welcome back'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-500 font-medium">
@@ -62,7 +62,7 @@ function LoginForm() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
+        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-lg sm:px-10">
           
           {/* Query Param Message */}
           {message && !isResetMode && (
@@ -123,7 +123,7 @@ function LoginForm() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                   {isSubmitting ? 'Sending...' : 'Send reset link'}
                 </button>
@@ -176,7 +176,7 @@ function LoginForm() {
                       setStatusMsg(null);
                       setErrorMsg(null);
                     }}
-                    className="text-xs font-semibold text-accent hover:text-accent/90 transition"
+                    className="text-xs font-semibold text-brand hover:text-brand/90 transition"
                   >
                     Forgot password?
                   </button>
@@ -207,7 +207,7 @@ function LoginForm() {
               <div className="flex flex-col gap-3">
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Sign in
                 </button>
@@ -229,8 +229,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-paper">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-accent"></div>
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-md h-10 w-10 border-t-2 border-brand"></div>
       </div>
     }>
       <LoginForm />

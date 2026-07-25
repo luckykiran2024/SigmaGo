@@ -10,7 +10,7 @@ export default async function AdminLayout({
   const resolvedParams = await params;
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 font-body min-h-[500px]">
+    <div className="flex flex-col md:flex-row gap-8 font-sans min-h-[500px]">
       {/* Client Sidebar Component */}
       <AdminSidebar tenant={resolvedParams.tenant} />
 

@@ -14,10 +14,10 @@ export default async function AiPage({ params }: { params: Promise<{ tenant: str
   if (!profile) redirect('/login');
 
   return (
-    <div className="max-w-4xl mx-auto py-4 space-y-6 font-ibmsans">
+    <div className="max-w-4xl mx-auto py-4 space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-display font-extrabold tracking-tight text-ink flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-sm font-bold font-ibmmono">
+        <h1 className="text-2xl font-sans font-extrabold tracking-tight text-ink flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand text-sm font-bold font-mono">
             AI
           </span>
           Approval Intelligence Assistant

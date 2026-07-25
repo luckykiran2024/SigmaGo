@@ -52,10 +52,10 @@ export default async function OrgAdminPage({ params }: { params: Promise<{ tenan
     .limit(10);
 
   return (
-    <div className="space-y-6 font-body">
+    <div className="space-y-6 font-sans">
       <div className="md:flex md:items-center md:justify-between border-b border-gray-100 pb-6">
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+          <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
             Organization Console
           </h1>
           <p className="mt-2 text-sm text-gray-500">

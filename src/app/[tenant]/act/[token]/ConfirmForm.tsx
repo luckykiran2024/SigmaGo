@@ -58,13 +58,13 @@ export default function ConfirmForm({
     const Icon = intent === 'approve' ? CheckCircle : intent === 'reject' ? AlertTriangle : MessageSquare;
 
     return (
-      <div className="bg-white border border-gray-100 shadow-xl rounded-3xl p-8 max-w-lg mx-auto text-center space-y-6 animate-fade-in font-body">
+      <div className="bg-white border border-gray-100 shadow-xl rounded-lg p-8 max-w-lg mx-auto text-center space-y-6 animate-fade-in font-sans">
         <div className="flex justify-center">
-          <div className="p-4 rounded-full bg-gray-50 flex items-center justify-center">
+          <div className="p-4 rounded-md bg-gray-50 flex items-center justify-center">
             <Icon className={`w-16 h-16 ${successColor}`} />
           </div>
         </div>
-        <h2 className="text-2xl font-display font-black text-ink">{successTitle}</h2>
+        <h2 className="text-2xl font-sans font-black text-ink">{successTitle}</h2>
         <p className="text-sm text-gray-500 font-medium leading-relaxed">{successMessage}</p>
         <div className="pt-4">
           <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">You can safely close this window now.</p>
@@ -80,11 +80,11 @@ export default function ConfirmForm({
     : 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500';
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-100 shadow-xl rounded-3xl p-6 md:p-8 max-w-2xl mx-auto space-y-8 font-body">
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-100 shadow-xl rounded-lg p-6 md:p-8 max-w-2xl mx-auto space-y-8 font-sans">
       <div className="border-b pb-5">
-        <h2 className="text-xl font-display font-black text-ink">Confirm Decision</h2>
+        <h2 className="text-xl font-sans font-black text-ink">Confirm Decision</h2>
         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-1.5 flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-accent" />
+          <Clock className="w-3.5 h-3.5 text-brand" />
           Acting as: <span className="text-ink font-bold">{approverName} ({approverEmail})</span>
         </p>
       </div>
@@ -99,28 +99,28 @@ export default function ConfirmForm({
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
           <div className="bg-gray-50/50 p-3 rounded-xl">
-            <span className="block text-xxs text-gray-400 uppercase tracking-wider">Subject</span>
+            <span className="block text-xs text-gray-400 uppercase tracking-wider">Subject</span>
             <span className="text-ink mt-0.5 block">{requestSubject}</span>
           </div>
           <div className="bg-gray-50/50 p-3 rounded-xl">
-            <span className="block text-xxs text-gray-400 uppercase tracking-wider">Category</span>
+            <span className="block text-xs text-gray-400 uppercase tracking-wider">Category</span>
             <span className="text-ink mt-0.5 block">{categoryName}</span>
           </div>
           <div className="bg-gray-50/50 p-3 rounded-xl">
-            <span className="block text-xxs text-gray-400 uppercase tracking-wider">Raised By</span>
+            <span className="block text-xs text-gray-400 uppercase tracking-wider">Raised By</span>
             <span className="text-ink mt-0.5 block">{ownerName}</span>
           </div>
         </div>
 
         <div className="bg-gray-50/50 p-3.5 rounded-xl text-xs">
-          <span className="block text-xxs text-gray-400 font-bold uppercase tracking-wider mb-1.5">Justification Summary</span>
+          <span className="block text-xs text-gray-400 font-bold uppercase tracking-wider mb-1.5">Justification Summary</span>
           <div className="text-gray-600 leading-relaxed max-h-48 overflow-y-auto">{justification}</div>
         </div>
       </div>
 
       {/* Action Selector */}
       <div className="space-y-2">
-        <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
           Select Your Action
         </label>
         <div className="grid grid-cols-3 gap-3">
@@ -165,7 +165,7 @@ export default function ConfirmForm({
 
       {/* Comment Section */}
       <div className="space-y-1.5">
-        <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
           Decision Comment {intent === 'discuss' ? <span className="text-red-500 font-bold">*</span> : <span className="text-gray-400 font-medium">(Optional)</span>}
         </label>
         <textarea
@@ -177,7 +177,7 @@ export default function ConfirmForm({
           rows={3}
           className="block w-full rounded-xl border border-gray-200 py-2.5 px-3 text-ink text-xs focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-medium"
         />
-        <div className="flex justify-between items-center text-3xs text-gray-400 font-bold uppercase tracking-wider">
+        <div className="flex justify-between items-center text-xs text-gray-400 font-bold uppercase tracking-wider">
           <span>{comment.length} / 750 characters</span>
         </div>
       </div>

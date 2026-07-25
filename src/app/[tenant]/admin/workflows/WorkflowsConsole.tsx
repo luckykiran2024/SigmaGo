@@ -198,10 +198,10 @@ export default function WorkflowsConsole({
         <div className="space-y-6">
           {/* Header Action */}
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-ink font-display">Workflow Rules</h2>
+            <h2 className="text-xl font-bold text-ink font-sans">Workflow Rules</h2>
             <button
               onClick={startNewWorkflow}
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/15 hover:bg-accent/95 transition transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/15 hover:bg-brand/95 transition transform hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4" />
               New Workflow
@@ -210,7 +210,7 @@ export default function WorkflowsConsole({
 
           {/* Workflows List */}
           {workflows.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl bg-white shadow-sm">
+            <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-lg bg-white shadow-sm">
               <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <h3 className="text-base font-bold text-ink">No workflows defined</h3>
               <p className="text-sm text-gray-400 mt-1 max-w-sm mx-auto">
@@ -224,25 +224,25 @@ export default function WorkflowsConsole({
                 return (
                   <div
                     key={wf.id}
-                    className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:border-gray-200 transition duration-150 space-y-4"
+                    className="bg-white border border-gray-100 rounded-lg p-6 shadow-sm hover:border-gray-200 transition duration-150 space-y-4"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       {/* Left: Metadata */}
                       <div className="space-y-1">
                         <div className="flex items-center gap-2.5">
-                          <h3 className="text-lg font-bold text-ink font-display">{wf.name}</h3>
+                          <h3 className="text-lg font-bold text-ink font-sans">{wf.name}</h3>
                           {wf.is_locked ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
                               <Lock className="w-3 h-3" /> Locked
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
                               <Unlock className="w-3 h-3" /> Editable
                             </span>
                           )}
                         </div>
                         <p className="text-sm text-gray-500 font-semibold">
-                          Linked Category: <span className="text-accent">{categoryName}</span>
+                          Linked Category: <span className="text-brand">{categoryName}</span>
                         </p>
                       </div>
 
@@ -305,10 +305,10 @@ export default function WorkflowsConsole({
                                 <span className="text-xs font-bold text-ink truncate max-w-[150px]">
                                   {user ? user.name : 'Unknown User'}
                                 </span>
-                                <span className="text-3xs text-gray-400 font-semibold truncate max-w-[150px] mt-0.5">
+                                <span className="text-xs text-gray-400 font-semibold truncate max-w-[150px] mt-0.5">
                                   {user?.designation || 'Staff'}
                                 </span>
-                                <span className={`mt-1.5 text-4xs font-extrabold uppercase tracking-wider px-1.5 py-0.5 border rounded-full text-center ${roleBg}`}>
+                                <span className={`mt-1.5 text-xs font-extrabold uppercase tracking-wider px-1.5 py-0.5 border rounded-md text-center ${roleBg}`}>
                                   {roleLabel}
                                 </span>
                               </div>
@@ -325,9 +325,9 @@ export default function WorkflowsConsole({
         </div>
       ) : (
         /* Workflow Edit / Create Interface */
-        <form onSubmit={handleSave} className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        <form onSubmit={handleSave} className="bg-white border border-gray-100 rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
           <div className="border-b border-gray-100 pb-4">
-            <h2 className="text-xl font-bold text-ink font-display">
+            <h2 className="text-xl font-bold text-ink font-sans">
               {editingId ? 'Edit Workflow Template' : 'Create Approval Workflow'}
             </h2>
             <p className="text-xs text-gray-400 mt-1 font-semibold">
@@ -381,14 +381,14 @@ export default function WorkflowsConsole({
                 onClick={() => setIsLocked(false)}
                 className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
                   !isLocked 
-                    ? 'border-accent/40 bg-accent/5 shadow-2xs' 
+                    ? 'border-brand/40 bg-brand/5 shadow-2xs' 
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <div className={`mt-0.5 rounded-full w-4 h-4 border flex items-center justify-center ${
-                  !isLocked ? 'border-accent bg-accent text-white' : 'border-gray-300'
+                <div className={`mt-0.5 rounded-md w-4 h-4 border flex items-center justify-center ${
+                  !isLocked ? 'border-brand bg-brand text-white' : 'border-gray-300'
                 }`}>
-                  {!isLocked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  {!isLocked && <div className="w-1.5 h-1.5 rounded-md bg-white" />}
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm font-bold text-ink flex items-center gap-1.5">
@@ -406,14 +406,14 @@ export default function WorkflowsConsole({
                 onClick={() => setIsLocked(true)}
                 className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition ${
                   isLocked 
-                    ? 'border-accent/40 bg-accent/5 shadow-2xs' 
+                    ? 'border-brand/40 bg-brand/5 shadow-2xs' 
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <div className={`mt-0.5 rounded-full w-4 h-4 border flex items-center justify-center ${
-                  isLocked ? 'border-accent bg-accent text-white' : 'border-gray-300'
+                <div className={`mt-0.5 rounded-md w-4 h-4 border flex items-center justify-center ${
+                  isLocked ? 'border-brand bg-brand text-white' : 'border-gray-300'
                 }`}>
-                  {isLocked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  {isLocked && <div className="w-1.5 h-1.5 rounded-md bg-white" />}
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm font-bold text-ink flex items-center gap-1.5">
@@ -432,7 +432,7 @@ export default function WorkflowsConsole({
           <div className="space-y-4 border-t border-gray-100 pt-6">
             <div className="flex items-center justify-between pb-2">
               <div>
-                <h3 className="text-base font-bold text-ink font-display">Approval Steps Definition</h3>
+                <h3 className="text-base font-bold text-ink font-sans">Approval Steps Definition</h3>
                 <p className="text-xs text-gray-400 mt-0.5 font-semibold">
                   Specify the sequence of users and roles that compose this workflow template.
                 </p>
@@ -440,7 +440,7 @@ export default function WorkflowsConsole({
               <button
                 type="button"
                 onClick={addStepRow}
-                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-accent/40 rounded-xl text-xs font-bold text-accent hover:bg-accent/5 hover:border-accent transition"
+                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-brand/40 rounded-xl text-xs font-bold text-brand hover:bg-brand/5 hover:border-brand transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Approver
@@ -504,7 +504,7 @@ export default function WorkflowsConsole({
                         type="button"
                         onClick={() => moveStepUp(idx)}
                         disabled={idx === 0}
-                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        className="text-gray-400 hover:text-brand disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
                         title="Move Up"
                       >
                         <ArrowUp className="w-4 h-4" />
@@ -513,7 +513,7 @@ export default function WorkflowsConsole({
                         type="button"
                         onClick={() => moveStepDown(idx)}
                         disabled={idx === steps.length - 1}
-                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        className="text-gray-400 hover:text-brand disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
                         title="Move Down"
                       >
                         <ArrowDown className="w-4 h-4" />
@@ -546,7 +546,7 @@ export default function WorkflowsConsole({
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
+              className="inline-flex items-center justify-center rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
             >
               {isSaving ? 'Saving...' : 'Save Workflow'}
             </button>

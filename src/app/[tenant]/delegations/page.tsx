@@ -93,9 +93,9 @@ export default async function MyDelegationsPage({
   };
 
   return (
-    <div className="space-y-10 py-4 font-body max-w-6xl mx-auto">
+    <div className="space-y-10 py-4 font-sans max-w-6xl mx-auto">
       <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+        <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
           My Delegations
         </h1>
         <p className="mt-2 text-sm text-gray-500 font-medium">
@@ -105,10 +105,10 @@ export default async function MyDelegationsPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6 space-y-6">
+        <div className="bg-white shadow-sm border border-gray-100 rounded-lg p-6 space-y-6">
           <div>
-            <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-              <Clock className="w-5 h-5 text-accent" />
+            <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+              <Clock className="w-5 h-5 text-brand" />
               New Delegation
             </h3>
             <p className="text-xs text-gray-400 mt-1">Colleagues will be able to sign off on your behalf.</p>
@@ -116,7 +116,7 @@ export default async function MyDelegationsPage({
 
           <form action={handleCreateDelegation} className="space-y-4">
             <div className="space-y-1">
-              <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Delegate To
               </label>
               <PersonPicker
@@ -128,7 +128,7 @@ export default async function MyDelegationsPage({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
                 Duration Type
               </label>
               <div className="flex gap-4">
@@ -138,7 +138,7 @@ export default async function MyDelegationsPage({
                     name="durationType"
                     value="open"
                     defaultChecked
-                    className="w-4 h-4 text-accent border-gray-200 focus:ring-accent"
+                    className="w-4 h-4 text-brand border-gray-200 focus:ring-accent"
                   />
                   Open-Ended (Until turned off)
                 </label>
@@ -147,7 +147,7 @@ export default async function MyDelegationsPage({
                     type="radio"
                     name="durationType"
                     value="range"
-                    className="w-4 h-4 text-accent border-gray-200 focus:ring-accent"
+                    className="w-4 h-4 text-brand border-gray-200 focus:ring-accent"
                   />
                   Date Range
                 </label>
@@ -156,7 +156,7 @@ export default async function MyDelegationsPage({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
                   Starts At (Optional)
                 </label>
                 <input
@@ -166,7 +166,7 @@ export default async function MyDelegationsPage({
                 />
               </div>
               <div className="space-y-1">
-                <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
                   Ends At (Optional)
                 </label>
                 <input
@@ -179,7 +179,7 @@ export default async function MyDelegationsPage({
 
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center bg-accent hover:bg-accent-light text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-accent/10 hover:bg-accent-light focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+              className="w-full inline-flex items-center justify-center bg-brand hover:bg-brand-light text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow-md shadow-accent/10 hover:bg-brand-light focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
             >
               Activate Delegation
             </button>
@@ -187,13 +187,13 @@ export default async function MyDelegationsPage({
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold tracking-tight text-ink font-display">Active & Past Delegations</h2>
+          <h2 className="text-lg font-bold tracking-tight text-ink font-sans">Active & Past Delegations</h2>
           
-          <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
+          <div className="bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden">
             <ul className="divide-y divide-gray-100">
               {(!myDelegations || myDelegations.length === 0) ? (
                 <li className="px-6 py-12 text-center text-gray-400 text-sm flex flex-col items-center justify-center gap-2">
-                  <div className="p-3 bg-gray-50 rounded-full text-gray-300">
+                  <div className="p-3 bg-gray-50 rounded-md text-gray-300">
                     <User className="w-6 h-6" />
                   </div>
                   <span className="font-semibold text-gray-500">No delegations yet</span>
@@ -210,13 +210,13 @@ export default async function MyDelegationsPage({
                       <div className="space-y-1">
                         <div className="flex items-center gap-2.5">
                           <p className="text-sm font-bold text-ink">{del.delegate?.name || 'Colleague'}</p>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-bold uppercase tracking-wider border ${statusColor}`}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider border ${statusColor}`}>
                             {statusLabel}
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 font-semibold">{del.delegate?.designation || 'Staff'} ({del.delegate?.email})</p>
                         
-                        <div className="flex items-center gap-3 text-xxs text-gray-400 pt-2 font-medium">
+                        <div className="flex items-center gap-3 text-xs text-gray-400 pt-2 font-medium">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
                             Start: {formatDate(del.starts_at)}

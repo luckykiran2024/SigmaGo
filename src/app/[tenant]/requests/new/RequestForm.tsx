@@ -215,10 +215,10 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
   const selectedUserIds = approvalPath.map(x => x.userId).filter(Boolean);
 
   return (
-    <div className="space-y-6 font-body max-w-4xl mx-auto py-6">
+    <div className="space-y-6 font-sans max-w-4xl mx-auto py-6">
       <div className="md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+          <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
             Create Approval Request
           </h1>
           <p className="mt-2 text-sm text-gray-500 font-medium">
@@ -233,7 +233,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-sm border border-gray-100 rounded-2xl p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-sm border border-gray-100 rounded-lg p-6 sm:p-8">
         
         {/* Subject and Category */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -283,8 +283,8 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         <div className="space-y-6">
           <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-ink font-display flex items-center gap-2">
-                <Users className="w-5 h-5 text-accent" />
+              <h3 className="text-lg font-bold text-ink font-sans flex items-center gap-2">
+                <Users className="w-5 h-5 text-brand" />
                 Approval Path Definition
               </h3>
               <p className="text-xs text-gray-400 font-medium mt-1">
@@ -295,7 +295,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
               <button
                 type="button"
                 onClick={addPathRow}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-dashed border-accent/40 rounded-xl text-xs font-bold text-accent hover:bg-accent/5 hover:border-accent transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-dashed border-brand/40 rounded-xl text-xs font-bold text-brand hover:bg-brand/5 hover:border-brand transition"
               >
                 <Plus className="w-4 h-4" />
                 Add Approver
@@ -357,7 +357,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
                         type="button"
                         onClick={() => moveRowUp(idx)}
                         disabled={idx === 0}
-                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        className="text-gray-400 hover:text-brand disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
                         title="Move Up"
                       >
                         <ArrowUp className="w-4 h-4" />
@@ -366,7 +366,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
                         type="button"
                         onClick={() => moveRowDown(idx)}
                         disabled={idx === approvalPath.length - 1}
-                        className="text-gray-400 hover:text-accent disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
+                        className="text-gray-400 hover:text-brand disabled:opacity-30 disabled:hover:text-gray-400 p-1.5 rounded-lg transition hover:bg-gray-100"
                         title="Move Down"
                       >
                         <ArrowDown className="w-4 h-4" />
@@ -532,7 +532,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         <div className="space-y-4 border-t border-gray-100 pt-6">
           <div>
             <label className="block text-sm font-bold text-ink flex items-center gap-2">
-              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
               Attachments (Optional)
@@ -543,7 +543,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="relative border-2 border-dashed border-gray-200 hover:border-accent/40 rounded-xl p-6 text-center cursor-pointer transition bg-gray-50/10">
+            <div className="relative border-2 border-dashed border-gray-200 hover:border-brand/40 rounded-xl p-6 text-center cursor-pointer transition bg-gray-50/10">
               <input
                 type="file"
                 multiple
@@ -596,7 +596,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-accent/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
+            className="inline-flex items-center justify-center rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
           >
             {isSubmitting ? (
               <>

@@ -36,9 +36,9 @@ export default async function AdminSettingsPage({
   }
 
   return (
-    <div className="space-y-6 font-body">
+    <div className="space-y-6 font-sans">
       <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+        <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
           Global Settings
         </h1>
         <p className="mt-2 text-sm text-gray-500 font-medium">

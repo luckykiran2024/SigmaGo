@@ -68,10 +68,10 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   // Guard: Only finalized requests
   if (request.status !== 'approved' && request.status !== 'rejected') {
     return (
-      <div className="p-8 text-center space-y-4 font-ibmsans">
-        <div className="text-err font-bold text-lg font-ibmserif">Certificate Not Available</div>
+      <div className="p-8 text-center space-y-4 font-sans">
+        <div className="text-err font-bold text-lg font-sans">Certificate Not Available</div>
         <p className="text-muted text-sm">Approval Certificates are only generated for finalized (approved or rejected) requests.</p>
-        <Link href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}`} className="inline-flex items-center text-accent font-bold hover:underline">
+        <Link href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}`} className="inline-flex items-center text-brand font-bold hover:underline">
           Go back to request details
         </Link>
       </div>
@@ -90,13 +90,13 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   const generatedAt = formatDate(new Date().toISOString());
 
   return (
-    <div className="min-h-screen bg-canvas py-10 px-4 sm:px-6 print:bg-white print:py-0 print:px-0 font-ibmsans text-ink">
+    <div className="min-h-screen bg-bg py-10 px-4 sm:px-6 print:bg-white print:py-0 print:px-0 font-sans text-ink">
       
       {/* Top Navigation & Print Action Bar (Hidden during printing) */}
-      <div className="no-print print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 max-w-4xl mx-auto mb-8 p-4 bg-paper border border-hair rounded-[14px] shadow-[0_10px_28px_rgba(60,55,30,0.10)]">
+      <div className="no-print print:hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 max-w-4xl mx-auto mb-8 p-4 bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)]">
         <Link 
           href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}`}
-          className="inline-flex items-center text-sm font-bold text-accent hover:text-accent-deep transition"
+          className="inline-flex items-center text-sm font-bold text-brand hover:text-brand-deep transition"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Request details
@@ -104,14 +104,14 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
         <div className="flex gap-2.5">
           <button
             id="share-cert-btn"
-            className="inline-flex items-center justify-center rounded-full border border-hair px-4 py-2.5 text-sm font-bold text-ink hover:text-accent hover:bg-panel focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 shadow-sm"
+            className="inline-flex items-center justify-center rounded-md border border-border px-4 py-2.5 text-sm font-bold text-ink hover:text-brand hover:bg-bg focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 shadow-sm"
           >
             <Link2 className="w-4 h-4 mr-2" />
             Copy share link
           </button>
           <button
             id="print-cert-btn"
-            className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-accent/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
           >
             <Printer className="w-4 h-4 mr-2" />
             Print / Save PDF
@@ -120,23 +120,23 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
       </div>
 
       {/* Main Certificate Sheet */}
-      <div className="max-w-4xl mx-auto bg-paper border border-hair shadow-[0_10px_28px_rgba(60,55,30,0.10)] rounded-[14px] relative overflow-hidden text-ink print:border-0 print:shadow-none print:p-0 print:m-0">
+      <div className="max-w-4xl mx-auto bg-surface border border-border shadow-[0_10px_28px_rgba(60,55,30,0.10)] rounded-lg relative overflow-hidden text-ink print:border-0 print:shadow-none print:p-0 print:m-0">
         
         {/* Certificate Header - Dark Forest Background */}
-        <div className="bg-forest text-paper p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between border-b border-hair gap-6">
+        <div className="bg-ink text-paper p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between border-b border-border gap-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-2xl font-ibmserif font-bold tracking-tight">
-              <ShieldCheck className="w-6 h-6 text-accent" />
+            <div className="flex items-center gap-2 text-2xl font-sans font-bold tracking-tight">
+              <ShieldCheck className="w-6 h-6 text-brand" />
               <span>
-                <span className="text-[#FAF8F2]">Sigma</span>
-                <span className="text-accent">Go</span>
+                <span className="text-[#F7F8FA]">Sigma</span>
+                <span className="text-brand">Go</span>
               </span>
             </div>
-            <p className="text-3xs text-panel uppercase tracking-widest font-semibold font-ibmmono">{tenantName} Organization</p>
+            <p className="text-xs text-panel uppercase tracking-widest font-semibold font-mono">{tenantName} Organization</p>
           </div>
           <div className="sm:text-right space-y-1">
-            <h1 className="text-xl font-ibmserif font-extrabold tracking-wider text-[#FAF8F2] uppercase">Approval Certificate</h1>
-            <p className="text-3xs text-[#FAF8F2]/75 font-ibmmono">Ref: {request.ref || request.id}</p>
+            <h1 className="text-xl font-sans font-extrabold tracking-wider text-[#F7F8FA] uppercase">Approval Certificate</h1>
+            <p className="text-xs text-[#F7F8FA]/75 font-mono">Ref: {request.ref || request.id}</p>
           </div>
         </div>
 
@@ -144,28 +144,28 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
         <div className="p-8 sm:p-12 space-y-8">
 
           {/* Request Overview Block */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-hair">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-border">
             <div className="space-y-4">
               <div>
-                <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Subject / Document</span>
+                <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Subject / Document</span>
                 <h2 className="text-xl font-bold text-ink mt-1">{request.subject}</h2>
               </div>
               <div>
-                <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Workflow Category</span>
+                <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Workflow Category</span>
                 <p className="text-sm font-semibold text-ink mt-1">{request.categories?.name || 'Uncategorized'}</p>
               </div>
             </div>
             
-            <div className="space-y-4 md:border-l md:border-hair md:pl-8">
+            <div className="space-y-4 md:border-l md:border-border md:pl-8">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Submitted By</span>
+                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Submitted By</span>
                   <p className="text-sm font-bold text-ink mt-1 truncate">{request.users?.name || 'Unknown'}</p>
                   <p className="text-xs text-muted font-mono truncate">{request.users?.email || ''}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Submission Date</span>
-                  <p className="text-sm font-semibold text-ink mt-1 font-ibmmono">{formatDate(request.created_at)}</p>
+                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Submission Date</span>
+                  <p className="text-sm font-semibold text-ink mt-1 font-mono">{formatDate(request.created_at)}</p>
                 </div>
               {/* Beneficiary */}
               {request.beneficiary && (
@@ -181,16 +181,16 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Final Status</span>
+                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Final Status</span>
                   <div className="mt-1">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border bg-accent/15 text-accent border-accent/30 font-ibmmono">
+                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider border bg-brand/15 text-brand border-brand/30 font-mono">
                       {request.status}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-ibmmono">Finalized Date</span>
-                  <p className="text-sm font-semibold text-ink mt-1 font-ibmmono">{formatDate(request.finalized_at)}</p>
+                  <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Finalized Date</span>
+                  <p className="text-sm font-semibold text-ink mt-1 font-mono">{formatDate(request.finalized_at)}</p>
                 </div>
               </div>
             </div>
@@ -198,18 +198,18 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
 
           {/* Request Document Body */}
           <div className="page-break-inside-avoid">
-            <span className="text-xs text-muted font-bold uppercase tracking-wider block mb-3 font-ibmmono">Request Body & Content</span>
-            <div className="border border-hair rounded-[14px] bg-panel/30 p-6 print:p-0 print:border-0 prose max-w-none text-[#4B5347] font-ibmsans text-[19px] leading-[1.65] prose-headings:font-ibmserif prose-headings:text-ink prose-a:text-accent">
+            <span className="text-xs text-muted font-bold uppercase tracking-wider block mb-3 font-mono">Request Body & Content</span>
+            <div className="border border-border rounded-lg bg-bg/30 p-6 print:p-0 print:border-0 prose max-w-none text-[#4B5347] font-sans text-[19px] leading-[1.65] prose-headings:font-sans prose-headings:text-ink prose-a:text-brand">
               <RichTextEditor content={request.body_json} editable={false} />
             </div>
           </div>
 
           {/* Approval Steps Table */}
           <div className="page-break-inside-avoid">
-            <span className="text-xs text-muted font-bold uppercase tracking-wider block mb-3 font-ibmmono">Verification Steps & Sign-offs</span>
-            <div className="overflow-x-auto border border-hair rounded-[14px] print:border-0">
-              <table className="min-w-full divide-y divide-hair text-left text-sm print:divide-hair">
-                <thead className="bg-panel font-bold text-muted uppercase text-xxs tracking-wider font-ibmmono">
+            <span className="text-xs text-muted font-bold uppercase tracking-wider block mb-3 font-mono">Verification Steps & Sign-offs</span>
+            <div className="overflow-x-auto border border-border rounded-lg print:border-0">
+              <table className="min-w-full divide-y divide-border text-left text-sm print:divide-border">
+                <thead className="bg-bg font-bold text-muted uppercase text-xs tracking-wider font-mono">
                   <tr>
                     <th scope="col" className="px-4 py-3.5">Stage</th>
                     <th scope="col" className="px-4 py-3.5">Approver</th>
@@ -219,7 +219,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                     <th scope="col" className="px-4 py-3.5">Comment</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-hair bg-white font-medium text-ink">
+                <tbody className="divide-y divide-border bg-white font-medium text-ink">
                   {sortedSteps.map((step: any) => {
                     const roleBadgeText = 
                       step.type === 'GENERAL' ? 'Direct' : 
@@ -255,8 +255,8 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                     }
 
                     return (
-                      <tr key={step.id} className={isStepApproved ? 'bg-ok/5 hover:bg-ok/10 transition' : 'hover:bg-panel/30 transition'}>
-                        <td className="whitespace-nowrap px-4 py-4 font-mono font-bold text-muted text-xs font-ibmmono">
+                      <tr key={step.id} className={isStepApproved ? 'bg-ok/5 hover:bg-ok/10 transition' : 'hover:bg-bg/30 transition'}>
+                        <td className="whitespace-nowrap px-4 py-4 font-mono font-bold text-muted text-xs font-mono">
                           Stage {step.stage_index ?? '0'}
                         </td>
                         <td className="px-4 py-4">
@@ -264,7 +264,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                             {step.acted_by_id && step.acted_by_id !== step.approver_id ? (
                               <span>
                                 {step.users?.name || 'Unknown'}{' '}
-                                <span className="text-xxs text-accent font-semibold normal-case font-ibmsans">
+                                <span className="text-xs text-brand font-semibold normal-case font-sans">
                                   (Actioned by {step.acted_by?.name || 'Delegate'} as delegate)
                                 </span>
                               </span>
@@ -272,11 +272,11 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                               step.users?.name || 'Unknown'
                             )}
                           </div>
-                          <div className="text-xxs text-muted font-semibold uppercase tracking-wider pt-0.5 font-ibmmono">
+                          <div className="text-xs text-muted font-semibold uppercase tracking-wider pt-0.5 font-mono">
                             {step.users?.designation || 'Staff'} {step.users?.employee_id ? `• ${step.users?.employee_id}` : ''}
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-4 text-xs font-semibold text-muted font-ibmmono">
+                        <td className="whitespace-nowrap px-4 py-4 text-xs font-semibold text-muted font-mono">
                           {roleBadgeText}
                         </td>
                         <td className="whitespace-nowrap px-4 py-4 text-xs">
@@ -286,7 +286,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                             {decisionText}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-4 text-xs text-muted font-mono font-ibmmono">
+                        <td className="whitespace-nowrap px-4 py-4 text-xs text-muted font-mono font-mono">
                           {step.acted_at ? formatDate(step.acted_at) : 'N/A'}
                         </td>
                         <td className="px-4 py-4 text-xs text-muted italic max-w-xs break-words">
@@ -308,38 +308,38 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
           </div>
 
           {/* Integrity Checksum Block */}
-          <div className="p-6 border border-dashed border-hair bg-panel/30 rounded-[14px] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 page-break-inside-avoid">
+          <div className="p-6 border border-dashed border-border bg-bg/30 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 page-break-inside-avoid">
             <div className="space-y-1 max-w-xl">
-              <h4 className="text-xxs font-black uppercase tracking-wider text-muted flex items-center gap-1.5 font-ibmmono">
+              <h4 className="text-xs font-black uppercase tracking-wider text-muted flex items-center gap-1.5 font-mono">
                 <ShieldCheck className="w-4 h-4 text-ok" />
                 <span>Tamper-Evident Security Verification</span>
               </h4>
-              <p className="text-xxs text-muted font-semibold leading-relaxed">
+              <p className="text-xs text-muted font-semibold leading-relaxed">
                 This document contains an audit-defensible cryptographical checksum. Any modification to the contents of the approval requests, steps, or metadata invalidates the signature.
               </p>
             </div>
             <div className="shrink-0 space-y-1 w-full md:w-auto">
-              <span className="text-xxs text-muted font-bold uppercase tracking-wider font-ibmmono">Integrity checksum (SHA-256)</span>
-              <p className="text-xs font-mono font-bold bg-white border border-hair p-2.5 rounded-xl break-all text-ink select-all leading-tight font-ibmmono">
+              <span className="text-xs text-muted font-bold uppercase tracking-wider font-mono">Integrity checksum (SHA-256)</span>
+              <p className="text-xs font-mono font-bold bg-white border border-border p-2.5 rounded-xl break-all text-ink select-all leading-tight font-mono">
                 {sha256Checksum}
               </p>
             </div>
           </div>
 
           {/* Verification Gold Seal Ring & Signature Footer */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-hair page-break-inside-avoid">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-border page-break-inside-avoid">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-14 h-14 rounded-full border-2 border-double border-accent text-accent shrink-0">
-                <ShieldCheck className="w-7 h-7 text-accent" />
+              <div className="flex items-center justify-center w-14 h-14 rounded-md border-2 border-double border-brand text-brand shrink-0">
+                <ShieldCheck className="w-7 h-7 text-brand" />
               </div>
               <div>
-                <p className="text-xs font-bold text-ink uppercase tracking-wider font-ibmmono">SigmaGo Verified</p>
+                <p className="text-xs font-bold text-ink uppercase tracking-wider font-mono">SigmaGo Verified</p>
                 <p className="text-[10px] text-muted font-medium mt-0.5">Tamper-evident cryptographical record</p>
               </div>
             </div>
             <div className="text-center md:text-right">
-              <p className="text-4xs text-muted font-semibold tracking-wider font-ibmmono uppercase">Generated by SigmaGo</p>
-              <p className="text-3xs text-ink font-bold font-ibmmono mt-0.5">{generatedAt}</p>
+              <p className="text-xs text-muted font-semibold tracking-wider font-mono uppercase">Generated by SigmaGo</p>
+              <p className="text-xs text-ink font-bold font-mono mt-0.5">{generatedAt}</p>
             </div>
           </div>
 

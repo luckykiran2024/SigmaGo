@@ -182,9 +182,9 @@ export default async function ApprovalsPage({
   // Check if any filters are active
   const hasActiveFilters = !!(q || status !== 'all' || categoryId !== 'all' || ownerId || fromDate || toDate);
   return (
-    <div className="space-y-10 py-4 font-body max-w-7xl mx-auto">
+    <div className="space-y-10 py-4 font-sans max-w-7xl mx-auto">
       <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-display font-extrabold tracking-tight text-ink">
+        <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
           Approvals Dashboard
         </h1>
         <p className="mt-2 text-sm text-gray-500 font-medium">

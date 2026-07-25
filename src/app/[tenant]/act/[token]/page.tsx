@@ -35,18 +35,18 @@ export default async function ConfirmActionPage({
   if (tokenError || !isTokenValid) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white border border-gray-100 shadow-xl rounded-3xl p-8 max-w-md w-full text-center space-y-6 font-body">
+        <div className="bg-white border border-gray-100 shadow-xl rounded-lg p-8 max-w-md w-full text-center space-y-6 font-sans">
           <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-red-50 flex items-center justify-center">
+            <div className="p-4 rounded-md bg-red-50 flex items-center justify-center">
               <ShieldAlert className="w-16 h-16 text-red-600" />
             </div>
           </div>
-          <h2 className="text-xl font-display font-black text-ink">Action Link Invalid or Expired</h2>
+          <h2 className="text-xl font-sans font-black text-ink">Action Link Invalid or Expired</h2>
           <p className="text-sm text-gray-500 font-medium leading-relaxed">
             This request has already been acted upon, the token has expired, or it is no longer pending. Please log in to SigmaGo to view the status.
           </p>
           <div className="pt-2">
-            <a href={`/${tenantSubdomain}`} className="inline-flex items-center justify-center bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-accent-light transition">
+            <a href={`/${tenantSubdomain}`} className="inline-flex items-center justify-center bg-brand text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-brand-light transition">
               Open SigmaGo Dashboard
             </a>
           </div>
@@ -86,8 +86,8 @@ export default async function ConfirmActionPage({
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-display font-black text-ink tracking-tight uppercase">SigmaGo</h1>
-        <p className="text-xs font-bold text-accent uppercase tracking-widest mt-1">Tenant Approval Portal</p>
+        <h1 className="text-2xl font-sans font-black text-ink tracking-tight uppercase">SigmaGo</h1>
+        <p className="text-xs font-bold text-brand uppercase tracking-widest mt-1">Tenant Approval Portal</p>
       </div>
       <ConfirmForm
         tenantSubdomain={tenantSubdomain}

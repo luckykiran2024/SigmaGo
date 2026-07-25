@@ -29,9 +29,9 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
   });
 
   return (
-    <div className="space-y-6 font-ibmsans">
+    <div className="space-y-6 font-sans">
       <div>
-        <h1 className="text-2xl font-display font-extrabold tracking-tight text-ink">
+        <h1 className="text-2xl font-sans font-extrabold tracking-tight text-ink">
           Compliance Register
         </h1>
         <p className="text-sm text-muted font-medium mt-1">
@@ -39,9 +39,9 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
         </p>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted font-ibmmono">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
             {registerList.length} Active Records with Expiry
           </span>
         </div>
@@ -54,7 +54,7 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50 text-2xs font-extrabold text-muted uppercase tracking-wider font-ibmmono">
+                <tr className="border-b border-gray-100 bg-gray-50/50 text-2xs font-extrabold text-muted uppercase tracking-wider font-mono">
                   <th className="px-6 py-3">Ref & Subject</th>
                   <th className="px-6 py-3">Requester / For</th>
                   <th className="px-6 py-3">Category</th>
@@ -67,7 +67,7 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
                 {registerList.map(r => (
                   <tr key={r.id} className="hover:bg-gray-50/50 transition">
                     <td className="px-6 py-4 font-medium text-ink">
-                      <Link href={`/${tenant}/requests/${r.id}`} className="font-mono text-accent hover:underline font-bold mr-2">
+                      <Link href={`/${tenant}/requests/${r.id}`} className="font-mono text-brand hover:underline font-bold mr-2">
                         {r.ref}
                       </Link>
                       <span>{r.subject}</span>
@@ -85,14 +85,14 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
                       {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(r.valid_until!))}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-2xs font-bold border font-ibmmono ${r.validity.badgeClass}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-2xs font-bold border font-mono ${r.validity.badgeClass}`}>
                         {r.validity.label}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
                         href={`/${tenant}/requests/${r.id}/certificate`}
-                        className="text-accent hover:underline font-bold text-2xs"
+                        className="text-brand hover:underline font-bold text-2xs"
                       >
                         Certificate
                       </Link>

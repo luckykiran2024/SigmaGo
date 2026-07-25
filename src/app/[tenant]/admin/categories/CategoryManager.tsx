@@ -72,15 +72,15 @@ export default function CategoryManager({
   };
 
   return (
-    <div className="space-y-8 font-body">
+    <div className="space-y-8 font-sans">
       {/* Create New Category Form */}
-      <form onSubmit={handleCreate} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-4">
+      <form onSubmit={handleCreate} className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-ink font-display flex items-center gap-2">
-            <Plus className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-bold text-ink font-sans flex items-center gap-2">
+            <Plus className="w-4 h-4 text-brand" />
             Create Request Category
           </h3>
-          <p className="text-xxs text-gray-400 mt-0.5">Add a new workflow category with default SLA parameters.</p>
+          <p className="text-xs text-gray-400 mt-0.5">Add a new workflow category with default SLA parameters.</p>
         </div>
 
         {error && (
@@ -91,7 +91,7 @@ export default function CategoryManager({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Category Name
             </label>
             <input
@@ -105,7 +105,7 @@ export default function CategoryManager({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Default SLA (Hours)
             </label>
             <input
@@ -122,7 +122,7 @@ export default function CategoryManager({
         
         {/* Validity & Duration Rules */}
         <div className="border-t border-gray-100 pt-4 space-y-3">
-          <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
             Validity & Duration Settings
           </label>
           <p className="text-2xs text-gray-500 font-medium">
@@ -176,7 +176,7 @@ export default function CategoryManager({
                 type="checkbox"
                 checked={reviewOnly}
                 onChange={(e) => setReviewOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent"
+                className="w-4 h-4 rounded border-gray-300 text-brand focus:ring-accent"
               />
               <span className="text-xs font-semibold text-ink">Review date only (does not expire approval)</span>
             </label>
@@ -187,7 +187,7 @@ export default function CategoryManager({
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-xl shadow-md transition transform hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-brand hover:bg-brand-light text-white text-xs font-bold rounded-xl shadow-md transition transform hover:-translate-y-0.5 active:translate-y-0"
           >
             {submitting ? 'Creating...' : 'Create Category'}
           </button>
@@ -195,13 +195,13 @@ export default function CategoryManager({
       </form>
 
       {/* Category List */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-4">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-ink font-display flex items-center gap-2">
-            <Tag className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-bold text-ink font-sans flex items-center gap-2">
+            <Tag className="w-4 h-4 text-brand" />
             Active Categories
           </h3>
-          <p className="text-xxs text-gray-400 mt-0.5">List of all active workflow categories configured for this tenant.</p>
+          <p className="text-xs text-gray-400 mt-0.5">List of all active workflow categories configured for this tenant.</p>
         </div>
 
         <div className="overflow-hidden border border-gray-100 rounded-xl">

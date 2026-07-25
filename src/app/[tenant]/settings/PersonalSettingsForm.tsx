@@ -139,12 +139,12 @@ export default function PersonalSettingsForm({
   };
 
   return (
-    <div className="space-y-8 font-body max-w-4xl mx-auto">
+    <div className="space-y-8 font-sans max-w-4xl mx-auto">
       {/* SECTION 1 - PROFILE SETTINGS */}
-      <form onSubmit={handleSaveProfile} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <form onSubmit={handleSaveProfile} className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <User className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <User className="w-5 h-5 text-brand" />
             My Profile
           </h3>
           <p className="text-xs text-gray-400 mt-1">Manage your identity, job info, and notification preferences.</p>
@@ -159,7 +159,7 @@ export default function PersonalSettingsForm({
         )}
 
         <div className="flex flex-col sm:flex-row items-center gap-6 pb-4 border-b border-gray-50">
-          <div className="w-20 h-20 rounded-full bg-accent/5 border border-accent/15 flex items-center justify-center font-bold text-accent text-2xl overflow-hidden shrink-0">
+          <div className="w-20 h-20 rounded-md bg-brand/5 border border-brand/15 flex items-center justify-center font-bold text-brand text-2xl overflow-hidden shrink-0">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar preview" className="w-full h-full object-cover" />
             ) : (
@@ -194,14 +194,14 @@ export default function PersonalSettingsForm({
               )}
             </div>
             {uploading && (
-              <span className="text-4xs font-bold text-accent animate-pulse">Uploading photo...</span>
+              <span className="text-xs font-bold text-brand animate-pulse">Uploading photo...</span>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Display Name
             </label>
             <input
@@ -214,7 +214,7 @@ export default function PersonalSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Email Address (Read-only)
             </label>
             <input
@@ -228,7 +228,7 @@ export default function PersonalSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Designation (Read-only)
             </label>
             <input
@@ -240,7 +240,7 @@ export default function PersonalSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Employee ID (Read-only)
             </label>
             <input
@@ -255,11 +255,11 @@ export default function PersonalSettingsForm({
         {/* SECTION 3 - NOTIFICATION PREFERENCES */}
         <div className="border-t border-gray-100 pt-6 space-y-4">
           <div>
-            <h4 className="text-sm font-bold text-ink font-display flex items-center gap-2">
-              <Bell className="w-4 h-4 text-accent" />
+            <h4 className="text-sm font-bold text-ink font-sans flex items-center gap-2">
+              <Bell className="w-4 h-4 text-brand" />
               Email Notification Preferences
             </h4>
-            <p className="text-xxs text-gray-400 mt-0.5">Control when you receive transactional system notifications.</p>
+            <p className="text-xs text-gray-400 mt-0.5">Control when you receive transactional system notifications.</p>
           </div>
 
           <div className="space-y-3">
@@ -269,7 +269,7 @@ export default function PersonalSettingsForm({
                   type="checkbox"
                   checked={actionNeededEmails}
                   onChange={(e) => setActionNeededEmails(e.target.checked)}
-                  className="w-4 h-4 rounded text-accent border-gray-200 focus:ring-accent"
+                  className="w-4 h-4 rounded text-brand border-gray-200 focus:ring-accent"
                 />
                 Receive "Action Needed" approval requests
               </label>
@@ -286,7 +286,7 @@ export default function PersonalSettingsForm({
                 type="checkbox"
                 checked={fyiEmails}
                 onChange={(e) => setFyiEmails(e.target.checked)}
-                className="w-4 h-4 rounded text-accent border-gray-200 focus:ring-accent"
+                className="w-4 h-4 rounded text-brand border-gray-200 focus:ring-accent"
               />
               Receive FYI / Reference notifications
             </label>
@@ -296,7 +296,7 @@ export default function PersonalSettingsForm({
                 type="checkbox"
                 checked={overdueReminders}
                 onChange={(e) => setOverdueReminders(e.target.checked)}
-                className="w-4 h-4 rounded text-accent border-gray-200 focus:ring-accent"
+                className="w-4 h-4 rounded text-brand border-gray-200 focus:ring-accent"
               />
               Receive overdue pending SLA reminders
             </label>
@@ -307,7 +307,7 @@ export default function PersonalSettingsForm({
           <button
             type="submit"
             disabled={savingProfile}
-            className="inline-flex items-center justify-center px-5 py-2.5 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50"
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-brand hover:bg-brand-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50"
           >
             {savingProfile ? 'Saving profile...' : 'Save Profile & Preferences'}
           </button>
@@ -315,10 +315,10 @@ export default function PersonalSettingsForm({
       </form>
 
       {/* SECTION 2 - CHANGE PASSWORD */}
-      <form onSubmit={handleChangePassword} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <form onSubmit={handleChangePassword} className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <Key className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <Key className="w-5 h-5 text-brand" />
             Security & Password
           </h3>
           <p className="text-xs text-gray-400 mt-1">Keep your account credentials updated.</p>
@@ -334,7 +334,7 @@ export default function PersonalSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Current Password
             </label>
             <input
@@ -347,7 +347,7 @@ export default function PersonalSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               New Password
             </label>
             <input
@@ -360,7 +360,7 @@ export default function PersonalSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xxs font-bold text-gray-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
               Confirm New Password
             </label>
             <input
@@ -377,7 +377,7 @@ export default function PersonalSettingsForm({
           <button
             type="submit"
             disabled={changingPassword}
-            className="inline-flex items-center justify-center px-5 py-2.5 bg-accent hover:bg-accent-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50"
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-brand hover:bg-brand-light text-white text-xs font-bold rounded-xl shadow-md shadow-accent/15 transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150 disabled:opacity-50"
           >
             {changingPassword ? 'Updating password...' : 'Update Password'}
           </button>
@@ -385,10 +385,10 @@ export default function PersonalSettingsForm({
       </form>
 
       {/* SECTION 4 - MY DELEGATIONS LINK */}
-      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 space-y-6">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
-          <h3 className="text-base font-bold text-ink font-display flex items-center gap-2">
-            <Shield className="w-5 h-5 text-accent" />
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <Shield className="w-5 h-5 text-brand" />
             Approval Authority & Delegations
           </h3>
           <p className="text-xs text-gray-400 mt-1">Delegate your signing authority to another coworker.</p>

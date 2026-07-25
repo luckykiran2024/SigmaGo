@@ -63,14 +63,14 @@ export default function RecordOfflineModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 font-ibmsans">
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 font-sans">
+      <div className="bg-white border border-gray-100 rounded-lg shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-150">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-amber-50/50">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-amber-600" />
-            <h3 className="text-sm font-bold text-ink font-display">Record Offline Approval</h3>
+            <h3 className="text-sm font-bold text-ink font-sans">Record Offline Approval</h3>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-gray-400 hover:text-ink hover:bg-gray-100 transition">
             <X className="w-4 h-4" />
@@ -98,7 +98,7 @@ export default function RecordOfflineModal({
 
           {/* Readonly Approver Name */}
           <div>
-            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-ibmmono">
+            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-mono">
               Assigned Approver (On behalf of)
             </label>
             <input
@@ -112,7 +112,7 @@ export default function RecordOfflineModal({
           {/* Source & Occurrence Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-ibmmono">
+              <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-mono">
                 Communication Source *
               </label>
               <select
@@ -129,7 +129,7 @@ export default function RecordOfflineModal({
             </div>
 
             <div>
-              <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-ibmmono">
+              <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-mono">
                 When Occurred *
               </label>
               <input
@@ -145,7 +145,7 @@ export default function RecordOfflineModal({
 
           {/* Circumstances Note */}
           <div>
-            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-ibmmono">
+            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-mono">
               Circumstances & Note * <span className="font-normal text-gray-400">(Min 20 chars)</span>
             </label>
             <textarea
@@ -160,7 +160,7 @@ export default function RecordOfflineModal({
 
           {/* Evidence File Attachment */}
           <div>
-            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-ibmmono">
+            <label className="block text-2xs font-extrabold text-muted uppercase tracking-wider mb-1 font-mono">
               Evidence Attachment <span className="font-normal text-gray-400">(Email screenshot, call record, etc.)</span>
             </label>
             <div className="relative border border-dashed border-gray-200 rounded-xl p-3 text-center bg-gray-50/50 hover:bg-gray-50 transition">
@@ -170,7 +170,7 @@ export default function RecordOfflineModal({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
               <div className="flex items-center justify-center gap-2 text-gray-500 font-semibold">
-                <Upload className="w-4 h-4 text-accent" />
+                <Upload className="w-4 h-4 text-brand" />
                 <span>{file ? file.name : 'Choose file or screenshot...'}</span>
               </div>
             </div>

@@ -133,12 +133,12 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
       )}
 
       {/* Field List */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
         <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-ink">Field Definitions</h2>
           <button
             onClick={() => { resetForm(); setShowForm(true); }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent text-white text-xs font-bold shadow-sm hover:bg-accent/90 transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand text-white text-xs font-bold shadow-sm hover:bg-brand/90 transition"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Field
@@ -184,11 +184,11 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
                     <ArrowDown className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => startEdit(field)}
-                    className="p-1.5 text-gray-400 hover:text-accent rounded-lg hover:bg-gray-50 transition" title="Edit">
+                    className="p-1.5 text-gray-400 hover:text-brand rounded-lg hover:bg-gray-50 transition" title="Edit">
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => toggleActive(field)}
-                    className="p-1.5 text-gray-400 hover:text-accent rounded-lg hover:bg-gray-50 transition"
+                    className="p-1.5 text-gray-400 hover:text-brand rounded-lg hover:bg-gray-50 transition"
                     title={field.active ? 'Deactivate' : 'Activate'}>
                     {field.active
                       ? <ToggleRight className="w-4 h-4 text-green-500" />
@@ -204,7 +204,7 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
 
       {/* Create/Edit Form Modal */}
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-5">
+        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-5">
           <h3 className="text-sm font-bold text-ink">
             {editingId ? 'Edit Field' : 'New Custom Field'}
           </h3>
@@ -257,7 +257,7 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
               <div className="flex items-end">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={required} onChange={e => setRequired(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 text-accent focus:ring-accent" />
+                    className="w-4 h-4 rounded border-gray-300 text-brand focus:ring-accent" />
                   <span className="text-sm font-semibold text-ink">Required field</span>
                 </label>
               </div>
@@ -288,7 +288,7 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
                     </div>
                   ))}
                   <button type="button" onClick={() => setOptions([...options, ''])}
-                    className="text-xs font-bold text-accent hover:text-accent/80 transition">
+                    className="text-xs font-bold text-brand hover:text-brand/80 transition">
                     + Add option
                   </button>
                 </div>
@@ -297,7 +297,7 @@ export default function CustomFieldsManager({ tenant, fields: initialFields, cat
 
             <div className="flex items-center gap-3 pt-2">
               <button type="submit" disabled={loading}
-                className="px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold shadow-sm hover:bg-accent/90 disabled:opacity-50 transition">
+                className="px-4 py-2.5 rounded-xl bg-brand text-white text-xs font-bold shadow-sm hover:bg-brand/90 disabled:opacity-50 transition">
                 {loading ? 'Saving...' : editingId ? 'Update Field' : 'Create Field'}
               </button>
               <button type="button" onClick={resetForm}

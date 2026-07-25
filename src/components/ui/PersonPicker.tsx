@@ -104,7 +104,7 @@ export default function PersonPicker({
   const hasMore = results.length > 8;
 
   return (
-    <div className="relative w-full font-body" ref={containerRef}>
+    <div className="relative w-full font-sans" ref={containerRef}>
       {name && (
         <input type="hidden" name={name} value={selectedUser ? selectedUser.id : ''} />
       )}
