@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, Suspense } from 'react';
+import Link from 'next/link';
 import { signIn, signUp, resetPassword } from './actions';
-import { Eye, EyeOff, Lock, Mail, ChevronLeft } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 function LoginForm() {
@@ -39,39 +40,52 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-surface relative overflow-hidden font-sans">
+      {/* Top Left Back to Home Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-3.5 py-2 text-[14px] font-semibold text-muted hover:text-ink bg-white border border-border rounded-[6px] shadow-xs transition hover:bg-section-alt"
+        >
+          <ArrowLeft className="w-4 h-4 text-brand" />
+          <span>Home</span>
+        </Link>
+      </div>
+
       {/* Decorative background gradients */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <div className="flex justify-center items-center gap-2">
+        <Link href="/" className="flex justify-center items-center gap-2 group hover:opacity-90 transition">
           {/* SigmaGo Brand Mark */}
           <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shadow-md shadow-ink/10">
             <span className="text-white font-sans font-extrabold text-base tracking-tight">SG</span>
           </div>
-          <span className="font-sans text-2xl font-extrabold tracking-tight text-ink">
-            Sigma<span className="text-brand font-extrabold">Go</span>
+          <span className="font-sans text-2xl font-bold tracking-tight text-ink select-none">
+            Sigma<span className="text-brand">Go</span>
           </span>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-sans font-extrabold tracking-tight text-ink">
+        </Link>
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-ink">
           {isResetMode ? 'Reset password' : 'Welcome back'}
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-500 font-medium">
-          {isResetMode ? 'Enter your email to request a reset link' : 'Enter your credentials to access your tenant workspace'}
+        <p className="mt-2 text-center text-sm font-medium text-muted">
+          {isResetMode
+            ? 'Enter your email to receive a password reset link'
+            : 'Enter your credentials to access your tenant workspace'}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-lg sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="bg-surface py-8 px-4 border border-border shadow-card sm:rounded-card sm:px-10">
           
-          {/* Query Param Message */}
-          {message && !isResetMode && (
-            <div className={`mb-6 p-4 rounded-xl flex gap-3 items-start border ${
-              message.toLowerCase().includes('success') || message.toLowerCase().includes('created')
-                ? 'bg-green-50 border-green-100 text-green-700'
-                : 'bg-red-50 border-red-100 text-red-700'
+          {/* Global URL Message Banner */}
+          {message && (
+            <div className={`mb-6 p-4 rounded-xl text-sm font-semibold flex items-start gap-3 border ${
+              message.includes('success') || message.includes('confirmed')
+                ? 'bg-green-50 text-green-800 border-green-200'
+                : 'bg-red-50 text-red-800 border-red-200'
             }`}>
-              {message.toLowerCase().includes('success') || message.toLowerCase().includes('created') ? (
+              {message.includes('success') || message.includes('confirmed') ? (
                 <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
