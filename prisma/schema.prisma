@@ -27,6 +27,8 @@ model ActionToken {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model approval_requests {
+  outgoing_refs decision_references[] @relation("SourceRefs")
+  incoming_refs decision_references[] @relation("TargetRefs")
   id                                                                           String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   ref                                                                          String                   @unique @default(dbgenerated("((('REQ-'::text || to_char(now(), 'YYYY'::text)) || '-'::text) || lpad((nextval('request_seq'::regclass))::text, 4, '0'::text))"))
   tenant_id                                                                    String                   @db.Uuid
@@ -231,6 +233,7 @@ model org_nodes {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model tenants {
+  decision_references decision_references[]
   id                   String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name                 String
   subdomain            String                 @unique
@@ -262,6 +265,7 @@ model tenants {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
+  created_references decision_references[]
   id                                                        String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id                                                 String              @db.Uuid
   auth_user_id                                              String?             @unique @db.Uuid
@@ -383,4 +387,25 @@ model tenant_custom_fields {
 
   @@unique([tenant_id, key])
   @@index([tenant_id], map: "idx_custom_fields_tenant")
+}
+
+model decision_references {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id      String            @db.Uuid
+  source_id      String            @db.Uuid
+  target_id      String            @db.Uuid
+  relationship   String
+  note           String?
+  created_by     String            @db.Uuid
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+
+  tenant         tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  source         approval_requests @relation("SourceRefs", fields: [source_id], references: [id], onDelete: Cascade)
+  target         approval_requests @relation("TargetRefs", fields: [target_id], references: [id], onDelete: Cascade)
+  creator        users             @relation(fields: [created_by], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, source_id, target_id, relationship])
+  @@index([tenant_id, source_id])
+  @@index([tenant_id, target_id])
+  @@map("decision_references")
 }

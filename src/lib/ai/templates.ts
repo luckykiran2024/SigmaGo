@@ -242,6 +242,87 @@ export async function executeTemplateQuery(
       };
     }
 
+    
+    case 'T13': {
+      // What decisions are based on / referencing existing decisions
+      const { data } = await adminClient
+        .from('decision_references')
+        .select(`
+          id,
+          relationship,
+          created_at,
+          source_request:approval_requests!decision_references_source_id_fkey(ref, subject, status),
+          target_request:approval_requests!decision_references_target_id_fkey(ref, subject)
+        `)
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const rows = (data || []).map((r: any) => ({
+        sourceRef: r.source_request?.ref || 'N/A',
+        sourceSubject: r.source_request?.subject || 'N/A',
+        relationship: r.relationship.replace('_', ' '),
+        targetRef: r.target_request?.ref || 'N/A',
+        targetSubject: r.target_request?.subject || 'N/A',
+        status: r.source_request?.status || 'N/A',
+      }));
+
+      return {
+        templateId: 'T13',
+        summary: `Found ${rows.length} decision references in institutional memory.`,
+        resolvedRange: 'All Time',
+        count: rows.length,
+        data: rows,
+        columns: [
+          { key: 'sourceRef', label: 'Decision Ref' },
+          { key: 'sourceSubject', label: 'Decision Subject' },
+          { key: 'relationship', label: 'Relationship' },
+          { key: 'targetRef', label: 'Referenced Basis' },
+          { key: 'status', label: 'Status' }
+        ],
+        deepLink: `/${tenantSubdomain}/approvals`
+      };
+    }
+
+    case 'T14': {
+      // Exceptions count and policy deviations
+      const { data } = await adminClient
+        .from('decision_references')
+        .select(`
+          id,
+          note,
+          created_at,
+          source_request:approval_requests!decision_references_source_id_fkey(ref, subject, status),
+          target_request:approval_requests!decision_references_target_id_fkey(ref, subject)
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('relationship', 'exception_to')
+        .order('created_at', { ascending: false });
+
+      const rows = (data || []).map((r: any) => ({
+        exceptionRef: r.source_request?.ref || 'N/A',
+        exceptionSubject: r.source_request?.subject || 'N/A',
+        policyRef: r.target_request?.ref || 'N/A',
+        policySubject: r.target_request?.subject || 'N/A',
+        reason: r.note || 'No note provided',
+      }));
+
+      return {
+        templateId: 'T14',
+        summary: `Identified ${rows.length} active policy exception references across the organization.`,
+        resolvedRange: 'All Time',
+        count: rows.length,
+        data: rows,
+        columns: [
+          { key: 'exceptionRef', label: 'Exception Ref' },
+          { key: 'exceptionSubject', label: 'Exception Subject' },
+          { key: 'policyRef', label: 'Policy Ref' },
+          { key: 'reason', label: 'Reason' }
+        ],
+        deepLink: `/${tenantSubdomain}/approvals`
+      };
+    }
+
     default: {
       // Fallback summary (T12 top categories)
       const { data } = await adminClient

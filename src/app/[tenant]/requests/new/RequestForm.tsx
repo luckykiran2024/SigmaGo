@@ -585,6 +585,34 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
           </div>
         </div>
 
+        
+        {/* Optional References Section */}
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-ink">Does this decision reference an existing one?</h3>
+              <p className="text-xs text-muted font-normal mt-0.5">Optional. Link to previous decisions it is based on, replaces, or deviates from.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const targetRefPrompt = prompt("Enter the reference number or decision ID to link (e.g., REQ-2026-0001):");
+                if (targetRefPrompt && targetRefPrompt.trim()) {
+                  const currentRefs = (document.getElementById('initial_references_input') as HTMLInputElement)?.value || '[]';
+                  const parsed = JSON.parse(currentRefs);
+                  parsed.push({ targetRef: targetRefPrompt.trim(), relationship: 'based_on' });
+                  (document.getElementById('initial_references_input') as HTMLInputElement).value = JSON.stringify(parsed);
+                  alert(`Added reference to ${targetRefPrompt.trim()}.`);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-section-alt rounded-md border border-border transition"
+            >
+              + Add reference
+            </button>
+          </div>
+          <input type="hidden" id="initial_references_input" name="initial_references" defaultValue="[]" />
+        </div>
+
         {/* Submit Actions */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
           <Link

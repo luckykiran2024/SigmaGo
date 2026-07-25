@@ -1,3 +1,4 @@
+import { getOutgoingReferences } from '@/lib/db/references';
 import { computeRequestChecksum } from '@/lib/utils/checksum';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';

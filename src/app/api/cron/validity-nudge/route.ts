@@ -54,6 +54,40 @@ export async function GET(request: Request) {
       }
     }
 
+    
+    // Forward Basis Expiry Check: Notify decisions whose 'based_on' target decision has expired
+    const { data: basisRefs } = await adminClient
+      .from('decision_references')
+      .select(`
+        id,
+        tenant_id,
+        source_id,
+        target_id,
+        source_request:approval_requests!decision_references_source_id_fkey(id, ref, subject, owner_id),
+        target_request:approval_requests!decision_references_target_id_fkey(id, ref, subject, valid_until, status)
+      `)
+      .eq('relationship', 'based_on');
+
+    for (const ref of basisRefs || []) {
+      const target = ref.target_request as any;
+      const source = ref.source_request as any;
+      if (target && target.valid_until && new Date(target.valid_until) <= now) {
+        nudgedCount++;
+        await adminClient.from('audit_log').insert({
+          tenant_id: ref.tenant_id,
+          request_id: source.id,
+          actor_id: null,
+          action_type: 'basis_expired_nudge',
+          metadata: {
+            action_source: 'system_cron',
+            basis_ref: target.ref,
+            basis_subject: target.subject,
+            message: `Decision ${target.ref} which this decision is based on has expired. Review whether this decision is still valid.`
+          }
+        });
+      }
+    }
+
     return NextResponse.json({ success: true, nudgedCount, timestamp: now.toISOString() });
   } catch (err: any) {
     console.error("Validity Nudge Cron Error:", err);

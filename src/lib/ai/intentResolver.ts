@@ -49,6 +49,25 @@ export async function resolveUserIntent(
   }
 
   // 3. Pattern Matching Templates
+  
+  if (q.includes('based on') || q.includes('citing') || q.includes('authority') || q.includes('references')) {
+    return {
+      matched: true,
+      templateId: 'T13',
+      params: { question },
+      confidence: 0.92
+    };
+  }
+
+  if (q.includes('exceptions to') || q.includes('deviations from') || q.includes('exception basis') || q.includes('how many times')) {
+    return {
+      matched: true,
+      templateId: 'T14',
+      params: { question },
+      confidence: 0.92
+    };
+  }
+
   if (q.includes('pending') && (q.includes('longest') || q.includes('oldest'))) {
     return {
       matched: true,
