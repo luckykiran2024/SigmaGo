@@ -63,14 +63,14 @@ export default function MarketingLandingPage() {
           <div className="flex items-center justify-center gap-3 pt-3">
             <a
               href={mailtoLink}
-              className="px-6.5 py-3 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs flex items-center gap-2"
+              className="px-6 py-3 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs flex items-center gap-2"
             >
               <span>Request a pilot</span>
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
               href="#how-it-works"
-              className="px-6.5 py-3 bg-white border border-border text-ink hover:bg-bg text-[15px] font-semibold rounded-md transition"
+              className="px-6 py-3 bg-white border border-border text-ink hover:bg-bg text-[15px] font-semibold rounded-md transition"
             >
               See how it works
             </a>
@@ -107,37 +107,37 @@ export default function MarketingLandingPage() {
                 </thead>
                 <tbody className="divide-y divide-border font-medium">
                   <tr className="hover:bg-bg/40">
-                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0814</td>
-                    <td className="px-5 py-3.5 text-ink font-bold">Q3 Enterprise Procurement Vendor Waiver</td>
-                    <td className="px-5 py-3.5 text-muted">Transactional</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3 font-mono font-bold text-brand">REQ-2026-0814</td>
+                    <td className="px-5 py-3 text-ink font-bold">Q3 Enterprise Procurement Vendor Waiver</td>
+                    <td className="px-5 py-3 text-muted">Transactional</td>
+                    <td className="px-5 py-3">
                       <span className="px-2.5 py-0.5 rounded-[5px] bg-ok/10 text-ok font-semibold text-xs">Approved</span>
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
+                    <td className="px-5 py-3 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-seal shadow-[0_0_6px_rgba(201,162,39,0.5)]" />
                       <span>SHA-256 Sealed</span>
                     </td>
                   </tr>
                   <tr className="hover:bg-bg/40">
-                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0815</td>
-                    <td className="px-5 py-3.5 text-ink font-bold">Senior VP Engineering Offer Approval</td>
-                    <td className="px-5 py-3.5 text-muted">Structural</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3 font-mono font-bold text-brand">REQ-2026-0815</td>
+                    <td className="px-5 py-3 text-ink font-bold">Senior VP Engineering Offer Approval</td>
+                    <td className="px-5 py-3 text-muted">Structural</td>
+                    <td className="px-5 py-3">
                       <span className="px-2.5 py-0.5 rounded-[5px] bg-ok/10 text-ok font-semibold text-xs">Approved</span>
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
+                    <td className="px-5 py-3 text-right font-mono text-seal font-bold flex items-center justify-end gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-seal shadow-[0_0_6px_rgba(201,162,39,0.5)]" />
                       <span>SHA-256 Sealed</span>
                     </td>
                   </tr>
                   <tr className="hover:bg-bg/40">
-                    <td className="px-5 py-3.5 font-mono font-bold text-brand">REQ-2026-0816</td>
-                    <td className="px-5 py-3.5 text-ink font-bold">Out-of-cycle Salary Adjustments</td>
-                    <td className="px-5 py-3.5 text-muted">Exception</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3 font-mono font-bold text-brand">REQ-2026-0816</td>
+                    <td className="px-5 py-3 text-ink font-bold">Out-of-cycle Salary Adjustments</td>
+                    <td className="px-5 py-3 text-muted">Exception</td>
+                    <td className="px-5 py-3">
                       <span className="px-2.5 py-0.5 rounded-[5px] bg-brand/10 text-brand font-semibold text-xs">In Review</span>
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono text-muted font-bold flex items-center justify-end gap-1.5">
+                    <td className="px-5 py-3 text-right font-mono text-muted font-bold flex items-center justify-end gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full border border-muted" />
                       <span>Unsealed</span>
                     </td>
@@ -469,7 +469,7 @@ export default function MarketingLandingPage() {
             <div>
               <a
                 href={mailtoLink}
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-brand hover:bg-brand-deep text-white text-[15px] font-semibold rounded-md transition shadow-xs"
               >
                 <span>Request a pilot</span>
                 <ArrowRight className="w-4 h-4" />
