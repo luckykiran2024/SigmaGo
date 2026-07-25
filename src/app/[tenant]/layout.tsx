@@ -85,7 +85,7 @@ export default async function TenantLayout({
             <div className="flex items-center gap-4">
               <Link
                 href={`/${resolvedParams.tenant}/requests/new`}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-ink hover:bg-brand/90 rounded-md text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-white hover:bg-brand/90 rounded-md text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 <Plus className="w-4 h-4" />
                 New Request

@@ -115,9 +115,9 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         <div className="mt-4 flex md:ml-4 md:mt-0">
           <Link
             href={`/${resolvedParams.tenant}/requests/new`}
-            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-accent/35 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
+            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-accent/35 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
           >
-            <svg className="w-5 h-5 mr-1.5 -ml-1 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-5 h-5 mr-1.5 -ml-1 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
             New Request

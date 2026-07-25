@@ -112,7 +112,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
           </button>
           <button
             id="print-cert-btn"
-            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-ink shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
+            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none transition transform hover:-translate-y-0.5 active:translate-y-0 duration-150"
           >
             <Printer className="w-4 h-4 mr-2" />
             Print / Save PDF
