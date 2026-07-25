@@ -1,31 +1,15 @@
-import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
-import { getProfileForAuthUser } from '@/lib/db/users';
+import { requireTenantAdmin } from '@/lib/auth/guards';
 import { getValidityInfo } from '@/lib/utils/validity';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export default async function ComplianceRegisterPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  
+  // C2 Fix: Shared tenant admin guard checks session, membership, and role
+  const { tenantId } = await requireTenantAdmin(tenant);
 
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
-  const role = (profile?.role || '').toLowerCase();
-  if (role !== 'admin' && role !== 'super_admin') {
-    redirect(`/${tenant}`);
-  }
-
-  const { data: tenantData } = await adminClient
-    .from('tenants')
-    .select('id')
-    .eq('subdomain', tenant)
-    .single();
-
-  if (!tenantData) redirect(`/${tenant}`);
-
-  // Fetch all approved requests in force (with valid_until set)
+  // Fetch all approved requests in force for THIS tenant
   const { data: requests } = await adminClient
     .from('approval_requests')
     .select(`
@@ -34,7 +18,7 @@ export default async function ComplianceRegisterPage({ params }: { params: Promi
       users!owner_id ( name, email ),
       beneficiary:users!beneficiary_id ( name )
     `)
-    .eq('tenant_id', tenantData.id)
+    .eq('tenant_id', tenantId)
     .eq('status', 'approved')
     .not('valid_until', 'is', null)
     .order('valid_until', { ascending: true });

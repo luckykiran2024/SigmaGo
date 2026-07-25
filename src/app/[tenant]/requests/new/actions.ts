@@ -1,127 +1,131 @@
 'use server';
 
-import { adminClient } from '@/lib/supabase/admin';
-
-
 import { createRequest, submitRequest, uploadAttachment } from '@/lib/db/requests';
 import { createClient } from '@/lib/supabase/server';
+import { adminClient } from '@/lib/supabase/admin';
 import { getProfileForAuthUser } from '@/lib/db/users';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export async function submitNewRequest(
   formData: FormData,
-  contentJson: any,
+  content: any,
   tenant: string,
-  approvalPath: Array<{ userId: string; role: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>,
+  approvalPath: Array<any>,
   beneficiaryId?: string | null,
   customFieldValues?: Record<string, any>,
   validityData?: { validUntil?: string | null; reviewDate?: string | null; renewedFromId?: string | null }
 ) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  const profile = await getProfileForAuthUser(user.id, user.email || '');
+  if (!profile) {
+    throw new Error('Public profile not found for user');
+  }
+
+  // 1. Resolve tenant details by subdomain
+  const { data: tenantData } = await adminClient
+    .from('tenants')
+    .select('id')
+    .eq('subdomain', tenant)
+    .single();
+
+  if (!tenantData) {
+    throw new Error('Tenant not found');
+  }
+
+  // H7 Fix: Assert submitter profile tenant_id matches target tenant_id
+  if (profile.tenant_id !== tenantData.id) {
+    throw new Error('Forbidden: User does not belong to this tenant');
+  }
+
   const subject = formData.get('subject') as string;
   const categoryId = formData.get('category') as string;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error('You must be logged in to create a request');
+  if (!subject || !subject.trim()) {
+    throw new Error('Subject is required');
   }
 
-  // Fetch the public.user record using our getProfileForAuthUser helper
-  const publicUser = await getProfileForAuthUser(user.id, user.email || '');
-
-  if (!publicUser) {
-    throw new Error("User profile not found in public.users");
-  }
-
-  const ownerId = publicUser.id;
-
-  if (!subject) {
-    throw new Error("Subject is required");
-  }
-
-  if (!categoryId) {
-    throw new Error("Please select a category");
-  }
-
-
-  // Validate category validity constraints
+  // H7 Fix: Verify category belongs to submitter's tenant
   if (categoryId) {
     const { data: cat } = await adminClient
       .from('categories')
-      .select('validity_mode, max_validity_days, review_only')
+      .select('id, validity_mode, max_validity_days, review_only, tenant_id')
       .eq('id', categoryId)
-      .single();
+      .eq('tenant_id', tenantData.id) // H7 Fix: Ensure category belongs to THIS tenant
+      .maybeSingle();
 
-    if (cat) {
-      if (cat.validity_mode === 'REQUIRED' && !validityData?.validUntil && !validityData?.reviewDate) {
-        throw new Error("This category requires a Valid Until end date.");
-      }
-      if (cat.max_validity_days && validityData?.validUntil) {
-        const until = new Date(validityData.validUntil);
-        const now = new Date();
-        const maxMs = Number(cat.max_validity_days) * 24 * 60 * 60 * 1000;
-        if (until.getTime() - now.getTime() > maxMs + 86400000) {
-          throw new Error(`Validity duration exceeds maximum allowed limit of ${cat.max_validity_days} days.`);
-        }
+    if (!cat) {
+      throw new Error('Category not found or does not belong to this tenant');
+    }
+
+    if (cat.validity_mode === 'REQUIRED' && !validityData?.validUntil && !validityData?.reviewDate) {
+      throw new Error("This category requires a Valid Until end date.");
+    }
+    if (cat.max_validity_days && validityData?.validUntil) {
+      const until = new Date(validityData.validUntil);
+      const now = new Date();
+      const maxMs = Number(cat.max_validity_days) * 24 * 60 * 60 * 1000;
+      if (until.getTime() - now.getTime() > maxMs + 86400000) {
+        throw new Error(`Validity duration exceeds maximum allowed limit of ${cat.max_validity_days} days.`);
       }
     }
   }
 
   if (!approvalPath || approvalPath.length === 0) {
-    throw new Error("Approval path is empty");
+    throw new Error('Approval path must contain at least one step');
   }
 
-  // 1. Owner exclusion check
-  const includesOwner = approvalPath.some(item => item.userId === ownerId);
-  if (includesOwner) {
-    throw new Error("You cannot include yourself in the approval path.");
-  }
+  // H7 Fix: Verify all approver IDs in path are active users of THIS tenant
+  const approverIds = approvalPath.map(s => s.approver_id || s.approverId);
+  const { data: validApprovers } = await adminClient
+    .from('users')
+    .select('id')
+    .eq('tenant_id', tenantData.id)
+    .eq('status', 'active')
+    .in('id', approverIds);
 
-  // 2. Validate path constraints
-  const hasDirect = approvalPath.some(item => item.role === 'GENERAL');
-  if (!hasDirect) {
-    throw new Error("At least one Direct Approver is required.");
-  }
-
-  const firstDirectIndex = approvalPath.findIndex(item => item.role === 'GENERAL');
-  const firstParallelIndex = approvalPath.findIndex(item => item.role === 'PARALLEL');
-  if (firstParallelIndex !== -1 && (firstDirectIndex === -1 || firstParallelIndex < firstDirectIndex)) {
-    throw new Error("A Parallel Approver cannot be placed before the first Direct Approver.");
-  }
-
-  // 3. Map path items to database steps and auto-derive stageIndex and orderIndex
-  let currentDirectStage = -1;
-  const steps = approvalPath.map(item => {
-    let stageIndex = 0;
-    let orderIndex = 0;
-
-    if (item.role === 'GENERAL') {
-      currentDirectStage++;
-      stageIndex = currentDirectStage;
-      orderIndex = 0;
-    } else if (item.role === 'PARALLEL') {
-      stageIndex = Math.max(0, currentDirectStage);
-      orderIndex = 1;
-    } else if (item.role === 'REFERENCE') {
-      stageIndex = 0;
-      orderIndex = 2;
+  const validApproverSet = new Set((validApprovers || []).map(u => u.id));
+  for (const step of approvalPath) {
+    const appValId = step.approver_id || step.approverId;
+    if (!validApproverSet.has(appValId)) {
+      throw new Error(`Approver ID "${appValId}" is not an active member of this tenant.`);
     }
+  }
 
-    return {
-      approverId: item.userId,
-      type: item.role,
-      orderIndex: orderIndex,
-      stageIndex: stageIndex
-    };
-  });
+  // H7 Fix: Verify beneficiary belongs to THIS tenant if provided
+  if (beneficiaryId) {
+    const { data: benUser } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('id', beneficiaryId)
+      .eq('tenant_id', tenantData.id)
+      .maybeSingle();
 
+    if (!benUser) {
+      throw new Error('Beneficiary user not found or does not belong to this tenant');
+    }
+  }
+
+  // 2. Map steps
+  const steps = approvalPath.map(step => ({
+    approverId: step.approver_id || step.approverId,
+    type: step.type,
+    orderIndex: step.order_index ?? step.orderIndex ?? 0,
+    stageIndex: step.stage_index ?? step.stageIndex ?? 0
+  }));
+
+  // 3. Create request
   const request = await createRequest({
-    tenantId: publicUser.tenant_id,
-    ownerId: publicUser.id,
+    tenantId: tenantData.id,
+    ownerId: profile.id,
     categoryId: categoryId,
-    subject: subject,
-    bodyJson: contentJson || {},
+    subject: subject.trim(),
+    bodyJson: content,
     visibility: 'public',
     beneficiaryId: beneficiaryId || null,
     customFields: customFieldValues || {},
@@ -131,26 +135,20 @@ export async function submitNewRequest(
     steps: steps
   });
 
-  // Auto-submit the request to advance it from 'draft' to 'pending'
-  await submitRequest(request.id, publicUser.id, publicUser.tenant_id);
+  // 4. Handle attachment files
+  const attachmentEntries = Array.from(formData.entries())
+    .filter(([key]) => key.startsWith('attachment_'));
 
-  // Extract, validate and upload attachments
-  const files = formData.getAll('attachments') as File[];
-  const validFiles = files.filter((f) => f && f.name && f.size > 0);
-  const MAX_SIZE = 50 * 1024 * 1024; // 50MB
-  for (const file of validFiles) {
-    if (file.size > MAX_SIZE) {
-      throw new Error(`File "${file.name}" exceeds the maximum allowed size of 50MB.`);
+  for (const [_, value] of attachmentEntries) {
+    const file = value as File;
+    if (file && file.name && file.size > 0) {
+      await uploadAttachment(file, request.id, tenantData.id, profile.id);
     }
   }
 
-  if (validFiles.length > 0) {
-    await Promise.all(
-      validFiles.map(async (file) => {
-        await uploadAttachment(file, request.id, publicUser.tenant_id, publicUser.id);
-      })
-    );
-  }
+  // 5. Submit request
+  await submitRequest(request.id, profile.id, tenantData.id);
 
-  redirect(`/${tenant}/requests/${request.id}`);
+  revalidatePath(`/${tenant}/approvals`);
+  return { success: true, requestId: request.id };
 }

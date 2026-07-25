@@ -23,7 +23,7 @@ export async function recordOfflineAction(formData: FormData) {
     throw new Error('Note must be at least 20 characters explaining the circumstances.');
   }
 
-  // 1. Authenticate user
+  // 1. Authenticate user session
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -50,7 +50,7 @@ export async function recordOfflineAction(formData: FormData) {
     throw new Error('Only the request owner or tenant administrator can record offline approvals.');
   }
 
-  // 3. Upload evidence file if present
+  // H1 Fix: Upload evidence file and use EXACT schema column names (filename, size_bytes, uploaded_by)
   let evidenceFileId: string | null = null;
   if (evidenceFile && evidenceFile.name && evidenceFile.size > 0) {
     const fileExt = evidenceFile.name.split('.').pop();
@@ -61,30 +61,39 @@ export async function recordOfflineAction(formData: FormData) {
       .from('attachments')
       .upload(storagePath, arrayBuffer, { contentType: evidenceFile.type });
 
-    if (!uploadErr) {
-      const { data: att } = await adminClient
-        .from('attachments')
-        .insert({
-          tenant_id: step.tenant_id,
-          request_id: requestId,
-          uploader_id: profile.id,
-          file_name: evidenceFile.name,
-          file_size_bytes: evidenceFile.size,
-          mime_type: evidenceFile.type,
-          storage_path: storagePath
-        })
-        .select('id')
-        .single();
-
-      if (att) evidenceFileId = att.id;
+    if (uploadErr) {
+      console.error("Storage upload error:", uploadErr);
+      throw new Error(`Failed to upload evidence file: ${uploadErr.message}`);
     }
+
+    // H1 Fix: Insert using EXACT Prisma/DB column names (filename, size_bytes, uploaded_by)
+    const { data: att, error: attInsertErr } = await adminClient
+      .from('attachments')
+      .insert({
+        tenant_id: step.tenant_id,
+        request_id: requestId,
+        filename: evidenceFile.name,            // Exact column name in schema
+        size_bytes: evidenceFile.size,           // Exact column name in schema
+        mime_type: evidenceFile.type,
+        storage_path: storagePath,
+        uploaded_by: profile.id                  // Exact column name in schema
+      })
+      .select('id')
+      .single();
+
+    if (attInsertErr || !att) {
+      console.error("Attachment insert DB error:", attInsertErr);
+      throw new Error(`Failed to record evidence file metadata: ${attInsertErr?.message || 'Database error'}`);
+    }
+
+    evidenceFileId = att.id;
   }
 
-  // 4. Update step as approved offline
+  // 3. Update step as approved offline
   const ratificationDue = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
   const actedTime = occurredAt ? new Date(occurredAt).toISOString() : new Date().toISOString();
 
-  await adminClient
+  const { error: stepUpdateErr } = await adminClient
     .from('approval_steps')
     .update({
       status: 'approved',
@@ -99,8 +108,11 @@ export async function recordOfflineAction(formData: FormData) {
     })
     .eq('id', stepId);
 
-  // 5. Log audit entry
-  const evidenceText = evidenceFileId ? 'evidence attached' : 'no evidence attached';
+  if (stepUpdateErr) {
+    throw new Error(`Failed to update step status: ${stepUpdateErr.message}`);
+  }
+
+  // 4. Log audit entry
   await adminClient.from('audit_log').insert({
     tenant_id: step.tenant_id,
     request_id: requestId,
@@ -116,7 +128,7 @@ export async function recordOfflineAction(formData: FormData) {
     }
   });
 
-  // 6. Advance workflow chain
+  // 5. Advance workflow chain
   await advanceChain(requestId, step.tenant_id);
 
   revalidatePath(`/${tenant}/requests/${requestId}`);

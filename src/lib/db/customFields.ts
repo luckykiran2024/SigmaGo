@@ -1,22 +1,22 @@
-import { adminClient } from '../supabase/admin'
+import { adminClient } from '../supabase/admin';
 
 export interface CustomFieldDefinition {
-  id: string
-  tenant_id: string
-  label: string
-  key: string
-  type: 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'PERSON'
-  options: string[] | null
-  required: boolean
-  category_id: string | null
-  sort_order: number
-  active: boolean
-  created_at: string
-  updated_at: string
-  categories?: { name: string } | null
+  id: string;
+  tenant_id: string;
+  label: string;
+  key: string;
+  type: 'TEXT' | 'NUMBER' | 'DATE' | 'SELECT' | 'PERSON';
+  options: string[] | null;
+  required: boolean;
+  category_id: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  categories?: { name: string } | null;
 }
 
-/** Get active custom fields for a tenant, optionally scoped to a category */
+/** Get active custom fields for a tenant */
 export async function getCustomFieldsForTenant(
   tenantId: string,
   categoryId?: string | null
@@ -26,19 +26,17 @@ export async function getCustomFieldsForTenant(
     .select('*, categories ( name )')
     .eq('tenant_id', tenantId)
     .eq('active', true)
-    .order('sort_order', { ascending: true })
+    .order('sort_order', { ascending: true });
 
   if (categoryId) {
-    // Get fields scoped to this category OR global (no category)
-    query = query.or(`category_id.eq.${categoryId},category_id.is.null`)
+    query = query.or(`category_id.eq.${categoryId},category_id.is.null`);
   } else {
-    // Only global fields
-    query = query.is('category_id', null)
+    query = query.is('category_id', null);
   }
 
-  const { data, error } = await query
-  if (error) throw error
-  return (data || []) as CustomFieldDefinition[]
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as CustomFieldDefinition[];
 }
 
 /** Get ALL custom field definitions for admin management */
@@ -49,22 +47,22 @@ export async function getCustomFieldDefinitions(
     .from('tenant_custom_fields')
     .select('*, categories ( name )')
     .eq('tenant_id', tenantId)
-    .order('sort_order', { ascending: true })
+    .order('sort_order', { ascending: true });
 
-  if (error) throw error
-  return (data || []) as CustomFieldDefinition[]
+  if (error) throw error;
+  return (data || []) as CustomFieldDefinition[];
 }
 
 /** Create a new custom field definition */
 export async function createCustomField(data: {
-  tenantId: string
-  label: string
-  key: string
-  type: string
-  options?: string[] | null
-  required?: boolean
-  categoryId?: string | null
-  sortOrder?: number
+  tenantId: string;
+  label: string;
+  key: string;
+  type: string;
+  options?: string[] | null;
+  required?: boolean;
+  categoryId?: string | null;
+  sortOrder?: number;
 }) {
   const { data: field, error } = await adminClient
     .from('tenant_custom_fields')
@@ -79,60 +77,62 @@ export async function createCustomField(data: {
       sort_order: data.sortOrder || 0,
     })
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return field
+  if (error) throw error;
+  return field;
 }
 
-/** Update a custom field definition */
+/** Update a custom field definition (C3 Fix: Always scoped by tenantId) */
 export async function updateCustomField(
+  tenantId: string,
   id: string,
   data: {
-    label?: string
-    type?: string
-    options?: string[] | null
-    required?: boolean
-    categoryId?: string | null
-    sortOrder?: number
-    active?: boolean
+    label?: string;
+    type?: string;
+    options?: string[] | null;
+    required?: boolean;
+    categoryId?: string | null;
+    sortOrder?: number;
+    active?: boolean;
   }
 ) {
-  const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() }
-  if (data.label !== undefined) updatePayload.label = data.label
-  if (data.type !== undefined) updatePayload.type = data.type
-  if (data.options !== undefined) updatePayload.options = data.options
-  if (data.required !== undefined) updatePayload.required = data.required
-  if (data.categoryId !== undefined) updatePayload.category_id = data.categoryId
-  if (data.sortOrder !== undefined) updatePayload.sort_order = data.sortOrder
-  if (data.active !== undefined) updatePayload.active = data.active
+  const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() };
+  if (data.label !== undefined) updatePayload.label = data.label;
+  if (data.type !== undefined) updatePayload.type = data.type;
+  if (data.options !== undefined) updatePayload.options = data.options;
+  if (data.required !== undefined) updatePayload.required = data.required;
+  if (data.categoryId !== undefined) updatePayload.category_id = data.categoryId;
+  if (data.sortOrder !== undefined) updatePayload.sort_order = data.sortOrder;
+  if (data.active !== undefined) updatePayload.active = data.active;
 
   const { data: field, error } = await adminClient
     .from('tenant_custom_fields')
     .update(updatePayload)
     .eq('id', id)
+    .eq('tenant_id', tenantId) // C3 Fix: Scope by tenantId
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return field
+  if (error) throw error;
+  return field;
 }
 
-/** Bulk reorder custom fields */
-export async function reorderCustomFields(orderedIds: string[]) {
+/** Bulk reorder custom fields (C3 Fix: Always scoped by tenantId) */
+export async function reorderCustomFields(tenantId: string, orderedIds: string[]) {
   for (let i = 0; i < orderedIds.length; i++) {
     await adminClient
       .from('tenant_custom_fields')
       .update({ sort_order: i, updated_at: new Date().toISOString() })
       .eq('id', orderedIds[i])
+      .eq('tenant_id', tenantId); // C3 Fix: Scope by tenantId
   }
 }
 
-/** Generate a URL-safe slug from a label */
 export function slugify(label: string): string {
   return label
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
-    .substring(0, 50)
+    .substring(0, 50);
 }

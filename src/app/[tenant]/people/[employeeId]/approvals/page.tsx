@@ -1,8 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
-import { getProfileForAuthUser } from '@/lib/db/users';
+import { requireHRorAdmin } from '@/lib/auth/guards';
 import { getValidityInfo } from '@/lib/utils/validity';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ShieldAlert, User, CheckCircle2, Clock, XCircle, FileText, Lock } from 'lucide-react';
 
@@ -12,30 +10,18 @@ export default async function PerPersonRollupPage({
   params: Promise<{ tenant: string; employeeId: string }>;
 }) {
   const { tenant, employeeId } = await params;
-  const supabase = await createClient();
 
-  // 1. Authenticate user
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
-  if (!profile) redirect('/login');
-
-  // 2. Access Control: Admin or HR only
-  const role = (profile.role || '').toLowerCase();
-  const department = ((profile as any).department || '').toLowerCase();
-  const designation = ((profile as any).designation || '').toLowerCase();
-
-  const isAdmin = role === 'admin' || role === 'super_admin';
-  const isHR = department.includes('hr') || department.includes('human resources') || designation.includes('hr') || role === 'hr';
-
-  if (!isAdmin && !isHR) {
+  // C2 Fix: Guard verifies authenticated session, tenant membership, and HR/Admin role
+  let ctx;
+  try {
+    ctx = await requireHRorAdmin(tenant);
+  } catch (err: any) {
     return (
       <div className="p-8 text-center bg-white border border-red-100 rounded-2xl max-w-lg mx-auto mt-12 shadow-sm font-ibmsans text-ink space-y-4">
         <ShieldAlert className="w-12 h-12 text-red-500 mx-auto" />
         <h2 className="text-xl font-bold font-ibmserif text-ink">Access Restricted (403)</h2>
         <p className="text-xs text-muted font-medium">
-          The Per-Person Rollup Dashboard contains confidential personnel data and is restricted exclusively to Tenant Administrators and Human Resources personnel.
+          {err.message || 'The Per-Person Rollup Dashboard is restricted exclusively to Tenant Administrators and HR personnel.'}
         </p>
         <Link
           href={`/${tenant}`}
@@ -47,21 +33,14 @@ export default async function PerPersonRollupPage({
     );
   }
 
-  // 3. Resolve Tenant ID
-  const { data: tenantData } = await adminClient
-    .from('tenants')
-    .select('id')
-    .eq('subdomain', tenant)
-    .single();
+  const { tenantId } = ctx;
 
-  if (!tenantData) redirect(`/${tenant}`);
-
-  // 4. Resolve Target Employee by employee_id or UUID
+  // Resolve Target Employee by employee_id or UUID within THIS tenant
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(employeeId);
   let targetUserQuery = adminClient
     .from('users')
     .select('id, name, email, designation, department, employee_id, career_level')
-    .eq('tenant_id', tenantData.id);
+    .eq('tenant_id', tenantId);
 
   if (isUuid) {
     targetUserQuery = targetUserQuery.or(`employee_id.eq.${employeeId},id.eq.${employeeId}`);
@@ -83,7 +62,7 @@ export default async function PerPersonRollupPage({
     );
   }
 
-  // 5. Fetch all requests where targetUser is owner OR beneficiary
+  // Fetch all requests for targetUser within THIS tenant
   const { data: requests } = await adminClient
     .from('approval_requests')
     .select(`
@@ -92,13 +71,12 @@ export default async function PerPersonRollupPage({
       owner:users!owner_id ( name, email, designation ),
       beneficiary:users!beneficiary_id ( name, email, designation )
     `)
-    .eq('tenant_id', tenantData.id)
+    .eq('tenant_id', tenantId)
     .or(`owner_id.eq.${targetUser.id},beneficiary_id.eq.${targetUser.id}`)
     .order('created_at', { ascending: false });
 
   const allRequests = requests || [];
 
-  // Metrics
   const totalCount = allRequests.length;
   const approvedCount = allRequests.filter(r => r.status === 'approved').length;
   const pendingCount = allRequests.filter(r => r.status === 'pending').length;
@@ -107,7 +85,6 @@ export default async function PerPersonRollupPage({
   const asBeneficiaryCount = allRequests.filter(r => r.beneficiary_id === targetUser.id).length;
   const asRequesterCount = allRequests.filter(r => r.owner_id === targetUser.id).length;
 
-  // Category breakdown
   const categoryCounts: Record<string, number> = {};
   for (const r of allRequests) {
     const catName = (r.categories as any)?.name || 'Uncategorized';

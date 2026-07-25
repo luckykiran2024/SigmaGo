@@ -1,3 +1,4 @@
+import { computeRequestChecksum } from '@/lib/utils/checksum';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getRequestDetail } from '@/lib/db/requests';
@@ -43,6 +44,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
   // Resolve request details
   const request = await getRequestDetail(resolvedParams.id);
   const validity = getValidityInfo(request as any);
+  const sha256Checksum = request.checksum_sha256 || computeRequestChecksum(request as any);
   if (!request) {
     return <div className="p-8 text-center text-err font-bold">Request not found.</div>;
   }
@@ -319,7 +321,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
             <div className="shrink-0 space-y-1 w-full md:w-auto">
               <span className="text-xxs text-muted font-bold uppercase tracking-wider font-ibmmono">Integrity checksum (SHA-256)</span>
               <p className="text-xs font-mono font-bold bg-white border border-hair p-2.5 rounded-xl break-all text-ink select-all leading-tight font-ibmmono">
-                {request.checksum_sha256 || 'N/A'}
+                {sha256Checksum}
               </p>
             </div>
           </div>
