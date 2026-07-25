@@ -237,8 +237,14 @@ export default async function CertificatePage({ params }: { params: Promise<{ id
                       decisionText = `${verb} by ${step.acted_by?.name || 'Delegate'}`;
                       decisionColorClass = isStepApproved ? 'text-ok font-bold' : 'text-err font-bold';
                     } else if (step.status === 'approved') {
-                      decisionText = 'Approved';
-                      decisionColorClass = 'text-ok font-bold';
+                      if (step.recorded_offline) {
+                        const ratStr = step.ratification_status ? ` [${step.ratification_status.toUpperCase()}]` : '';
+                        decisionText = `Approved (Offline: ${step.offline_source || 'Recorded'}${ratStr})`;
+                        decisionColorClass = 'text-amber-800 font-bold';
+                      } else {
+                        decisionText = 'Approved';
+                        decisionColorClass = 'text-ok font-bold';
+                      }
                     } else if (step.status === 'rejected') {
                       decisionText = 'Rejected';
                       decisionColorClass = 'text-err font-bold';

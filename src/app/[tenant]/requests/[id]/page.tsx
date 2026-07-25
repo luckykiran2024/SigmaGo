@@ -1,3 +1,4 @@
+import RecordOfflineButton from './RecordOfflineButton';
 import Link from 'next/link';
 import { getRequestDetail, getSignedUrl } from '@/lib/db/requests';
 import { getValidityInfo } from '@/lib/utils/validity';
@@ -10,6 +11,7 @@ import RichTextEditor from '@/components/ui/RichTextEditor';
 import { AlertTriangle, MessageSquare } from 'lucide-react';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import TimelineEditor from './TimelineEditor';
+import RecordOfflineModal from '@/components/ui/RecordOfflineModal';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -122,6 +124,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
   const delegatorName = isDelegatedStep ? (userMap.get(activeStep.approver_id) || 'Assigned Approver') : '';
 
   let activeDirectApproverId = null;
+  const pendingStep = request.approval_steps?.find((s: any) => s.status === 'pending');
   const activeDirectStep = request.approval_steps?.find(
     (s: any) => s.status === 'pending' && s.type === 'GENERAL'
   );
@@ -348,6 +351,15 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                     >
                       ↻ Renew
                     </Link>
+                  )}
+                  {/* Record Offline Button */}
+                  {pendingStep && (isOwner || isAdmin) && (
+                    <RecordOfflineButton
+                      tenant={resolvedParams.tenant}
+                      requestId={request.id}
+                      stepId={pendingStep.id}
+                      approverName={userMap.get(pendingStep.approver_id) || 'Approver'}
+                    />
                   )}
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border font-ibmmono ${
                     request.status === 'approved' ? 'bg-ok/10 text-ok border-ok/20' :
