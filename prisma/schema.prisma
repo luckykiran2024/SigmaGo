@@ -170,7 +170,8 @@ model categories {
   governing_policy_id   String?                @db.Uuid
   default_validity_days Int?
   max_validity_days     Int?
-  review_only           Boolean                @default(false)
+  review_only               Boolean                @default(false)
+  exclude_from_intelligence Boolean                @default(false)
   governing_policy      policies?              @relation("GoverningPolicy", fields: [governing_policy_id], references: [id], onDelete: SetNull)
   policies              policies[]
   approval_requests     approval_requests[]
@@ -263,6 +264,7 @@ model tenants {
   org_nodes            org_nodes[]
   tenant_custom_fields tenant_custom_fields[]
   policies             policies[]
+  intelligence_grants  intelligence_grants[]
   users                users[]
   webhook_endpoints    webhook_endpoints[]
   workflows            workflows[]
@@ -440,4 +442,30 @@ model policies {
 
   @@index([tenant_id, status])
   @@map("policies")
+}
+
+model intelligence_grants {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String    @db.Uuid
+  email            String    // normalised: lowercased, trimmed
+  scope            String    @default("AGGREGATE_ONLY") // AGGREGATE_ONLY | FULL
+
+  granted_by       String    @db.Uuid
+  granted_at       DateTime  @default(now()) @db.Timestamptz(6)
+  grant_request_id String?   @db.Uuid
+  reason           String?
+
+  expires_at       DateTime? @db.Timestamptz(6)
+  revoked_at       DateTime? @db.Timestamptz(6)
+  revoked_by       String?   @db.Uuid
+  revoke_reason    String?
+
+  last_accessed_at DateTime? @db.Timestamptz(6)
+  access_count     Int       @default(0)
+
+  tenant           tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, email])
+  @@index([tenant_id, revoked_at, expires_at])
+  @@map("intelligence_grants")
 }
