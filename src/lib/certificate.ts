@@ -8,9 +8,34 @@ export interface FinalizeResult {
   finalizedAt: string;
 }
 
+export interface CertificateAuthorityStep {
+  stage: number;
+  approverName: string;
+  approverEmail: string;
+  status: string;
+  actedAt?: string | null;
+  isAuthoritative: true;
+}
+
+export interface CertificateParticipantEntry {
+  role: string;
+  email: string;
+  isExternal: boolean;
+  state: string;
+  respondedAt?: string | null;
+  comment?: string | null;
+  isAuthoritative: false;
+  disclaimer: 'Non-authoritative';
+}
+
+export interface CertificateBlocks {
+  authority: CertificateAuthorityStep[];
+  participation: CertificateParticipantEntry[];
+}
+
 /**
  * Calculates a canonical SHA-256 checksum for an approved request payload
- * and records finalized_at and checksum_sha256 in the database.
+ * incorporating both Authority steps and Non-authoritative Participants.
  */
 export async function generateChecksumAndFinalize(
   requestId: string,
@@ -30,14 +55,20 @@ export async function generateChecksumAndFinalize(
       return null;
     }
 
-    // 2. Fetch associated steps for complete audit trail checksum
+    // 2. Fetch associated steps (Authority Chain)
     const { data: steps } = await adminClient
       .from('approval_steps')
-      .select('id, step_order, approver_id, status, acted_at')
+      .select('id, order_index, approver_id, status, acted_at')
       .eq('request_id', requestId)
-      .order('step_order', { ascending: true });
+      .order('order_index', { ascending: true });
 
-    // 3. Compute deterministic canonical payload representation
+    // 3. Fetch associated participants (Non-authoritative Participation)
+    const { data: participants } = await adminClient
+      .from('request_participants')
+      .select('id, email, role, is_external, state, responded_at, comment')
+      .eq('request_id', requestId);
+
+    // 4. Compute deterministic canonical payload representation
     const canonicalPayload = JSON.stringify({
       id: request.id,
       tenantId: request.tenant_id,
@@ -48,24 +79,33 @@ export async function generateChecksumAndFinalize(
       beneficiaryId: request.beneficiary_id || '',
       ownerId: request.owner_id || '',
       version: request.version || 1,
-      steps: (steps || []).map(s => ({
+      authoritySteps: (steps || []).map((s) => ({
         id: s.id,
-        order: s.step_order,
+        order: s.order_index,
         approver: s.approver_id,
         status: s.status,
-        actedAt: s.acted_at
-      }))
+        actedAt: s.acted_at,
+      })),
+      participationRecords: (participants || []).map((p) => ({
+        id: p.id,
+        email: p.email,
+        role: p.role,
+        isExternal: p.is_external,
+        state: p.state,
+        comment: p.comment,
+        isAuthoritative: false,
+      })),
     });
 
     const checksum = createHash('sha256').update(canonicalPayload, 'utf8').digest('hex');
     const finalizedAt = new Date().toISOString();
 
-    // 4. Update approval_requests table in database
+    // 5. Update approval_requests table in database
     const { error: updateErr } = await adminClient
       .from('approval_requests')
       .update({
         checksum_sha256: checksum,
-        finalized_at: finalizedAt
+        finalized_at: finalizedAt,
       })
       .eq('id', requestId)
       .eq('tenant_id', tenantId);
@@ -79,7 +119,7 @@ export async function generateChecksumAndFinalize(
       requestId,
       tenantId,
       checksum,
-      finalizedAt
+      finalizedAt,
     };
   } catch (err) {
     console.error('generateChecksumAndFinalize error:', err);
@@ -87,3 +127,43 @@ export async function generateChecksumAndFinalize(
   }
 }
 
+/**
+ * Returns clearly separated Authority and Participation certificate blocks.
+ */
+export async function getCertificateBlocks(
+  requestId: string,
+  tenantId: string
+): Promise<CertificateBlocks> {
+  const { data: steps } = await adminClient
+    .from('approval_steps')
+    .select('order_index, status, acted_at, users_approval_steps_approver_idTousers(name, email)')
+    .eq('request_id', requestId)
+    .order('order_index', { ascending: true });
+
+  const { data: participants } = await adminClient
+    .from('request_participants')
+    .select('role, email, is_external, state, responded_at, comment')
+    .eq('request_id', requestId);
+
+  const authority: CertificateAuthorityStep[] = (steps || []).map((s: any) => ({
+    stage: s.order_index + 1,
+    approverName: s.users_approval_steps_approver_idTousers?.name || 'Approver',
+    approverEmail: s.users_approval_steps_approver_idTousers?.email || '',
+    status: s.status,
+    actedAt: s.acted_at,
+    isAuthoritative: true,
+  }));
+
+  const participation: CertificateParticipantEntry[] = (participants || []).map((p) => ({
+    role: p.role,
+    email: p.email,
+    isExternal: p.is_external,
+    state: p.state,
+    respondedAt: p.responded_at,
+    comment: p.comment,
+    isAuthoritative: false,
+    disclaimer: 'Non-authoritative',
+  }));
+
+  return { authority, participation };
+}
