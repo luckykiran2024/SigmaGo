@@ -6,6 +6,44 @@ datasource db {
   provider = "postgresql"
 }
 
+enum DecisionRelationship {
+  BASED_ON
+  EXCEPTION_TO
+  REPLACES
+  RENEWAL_OF
+}
+
+enum StepType {
+  STRUCTURAL
+  TRANSACTIONAL
+  EXCEPTION
+  PROCESS
+}
+
+enum IntelligenceScope {
+  AGGREGATE_ONLY
+  FULL
+}
+
+enum ParticipantRole {
+  REFERENCE
+  CONSULTED
+  INFORMED
+}
+
+enum ParticipantState {
+  PENDING
+  RESPONDED
+  DECLINED
+  EXPIRED
+}
+
+enum DirectoryStatus {
+  ACTIVE
+  INACTIVE
+  DEPARTED
+}
+
 model ActionToken {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   token       String            @unique
@@ -24,11 +62,9 @@ model ActionToken {
   @@map("action_tokens")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model approval_requests {
-  outgoing_refs decision_references[] @relation("SourceRefs")
-  incoming_refs decision_references[] @relation("TargetRefs")
+  outgoing_refs                                                                decision_references[]    @relation("SourceRefs")
+  incoming_refs                                                                decision_references[]    @relation("TargetRefs")
   id                                                                           String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   ref                                                                          String                   @unique @default(dbgenerated("((('REQ-'::text || to_char(now(), 'YYYY'::text)) || '-'::text) || lpad((nextval('request_seq'::regclass))::text, 4, '0'::text))"))
   tenant_id                                                                    String                   @db.Uuid
@@ -41,6 +77,9 @@ model approval_requests {
   version                                                                      Int                      @default(1)
   parent_id                                                                    String?                  @db.Uuid
   checksum_sha256                                                              String?
+  sealed_at                                                                    DateTime?                @db.Timestamptz(6)
+  seal_algorithm                                                               String?                  @default("SHA-256")
+  canonical_form_version                                                       String?                  @default("1.0")
   conditions                                                                   Json                     @default("[]")
   created_at                                                                   DateTime                 @default(now()) @db.Timestamptz(6)
   finalized_at                                                                 DateTime?                @db.Timestamptz(6)
@@ -58,8 +97,8 @@ model approval_requests {
   users                                                                        users                    @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   approval_requests                                                            approval_requests?       @relation("approval_requestsToapproval_requests", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   other_approval_requests                                                      approval_requests[]      @relation("approval_requestsToapproval_requests")
-  approval_requests_approval_requests_renewed_from_idToapproval_requests       approval_requests?       @relation("approval_requests_renewed_from_idToapproval_requests", fields: [renewed_from_id], references: [id], onUpdate: NoAction)
   other_approval_requests_approval_requests_renewed_from_idToapproval_requests approval_requests[]      @relation("approval_requests_renewed_from_idToapproval_requests")
+  approval_requests_approval_requests_renewed_from_idToapproval_requests       approval_requests?       @relation("approval_requests_renewed_from_idToapproval_requests", fields: [renewed_from_id], references: [id], onUpdate: NoAction)
   tenants                                                                      tenants                  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   approval_steps                                                               approval_steps[]
   attachments                                                                  attachments[]
@@ -77,8 +116,6 @@ model approval_requests {
   @@index([valid_until], map: "idx_approval_requests_valid_until")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model approval_steps {
   id                                         String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   request_id                                 String            @db.Uuid
@@ -109,19 +146,17 @@ model approval_steps {
   attachments                                attachments?      @relation(fields: [evidence_file_id], references: [id], onUpdate: NoAction)
   users_approval_steps_recorded_by_idTousers users?            @relation("approval_steps_recorded_by_idTousers", fields: [recorded_by_id], references: [id], onUpdate: NoAction)
   approval_requests                          approval_requests @relation(fields: [request_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  delegations                                delegations?      @relation(fields: [delegation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_delegation")
+  delegations                                delegations?      @relation(fields: [delegation_id], references: [id], onUpdate: NoAction)
 
-  @@index([approver_id, status])
-  @@index([request_id, status])
-  @@index([approver_id, status], map: "idx_steps_approver_status")
-  @@index([request_id], map: "idx_steps_request")
+  @@index([approver_id])
+  @@index([request_id, order_index])
+  @@index([status])
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model attachments {
   id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  request_id        String            @db.Uuid
   tenant_id         String            @db.Uuid
+  request_id        String            @db.Uuid
   filename          String
   storage_path      String
   size_bytes        BigInt?
@@ -134,7 +169,6 @@ model attachments {
   users             users             @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model audit_log {
   id                String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id         String             @db.Uuid
@@ -156,40 +190,36 @@ model audit_log {
   @@index([request_id], map: "idx_audit_request")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model categories {
-  id                    String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  tenant_id             String                 @db.Uuid
-  name                  String
-  default_chain         Json                   @default("[]")
-  default_sla_hours     Int                    @default(72)
-  default_visibility    String                 @default("private")
-  created_at            DateTime               @default(now()) @db.Timestamptz(6)
-  validity_mode         String                 @default("NONE")
-  step_type             String                 @default("TRANSACTIONAL")
-  governing_policy_id   String?                @db.Uuid
-  default_validity_days Int?
-  max_validity_days     Int?
-  review_only               Boolean                @default(false)
-  exclude_from_intelligence Boolean                @default(false)
-  who_can_raise             String                 @default("ANYONE") // ANYONE | DEPARTMENT_ONLY | APPROVERS_ONLY
-  allow_participants        Boolean                @default(true)
-  allow_external_participants Boolean              @default(false)
-  governing_policy      policies?              @relation("GoverningPolicy", fields: [governing_policy_id], references: [id], onDelete: SetNull)
-  policies              policies[]
-  approver_authorities  approver_authorities[]
-  approval_requests     approval_requests[]
-  tenants               tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  tenant_custom_fields  tenant_custom_fields[]
-  webhook_endpoints     webhook_endpoints[]
-  workflows             workflows[]
+  id                          String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenant_id                   String                 @db.Uuid
+  name                        String
+  default_chain               Json                   @default("[]")
+  default_sla_hours           Int                    @default(72)
+  default_visibility          String                 @default("private")
+  created_at                  DateTime               @default(now()) @db.Timestamptz(6)
+  validity_mode               String                 @default("NONE")
+  step_type                   StepType               @default(TRANSACTIONAL)
+  governing_policy_id         String?                @db.Uuid
+  default_validity_days       Int?
+  max_validity_days           Int?
+  review_only                 Boolean                @default(false)
+  exclude_from_intelligence   Boolean                @default(false)
+  who_can_raise               String                 @default("ANYONE")
+  allow_participants          Boolean                @default(true)
+  allow_external_participants Boolean                @default(false)
+  governing_policy            policies?              @relation("GoverningPolicy", fields: [governing_policy_id], references: [id], onDelete: SetNull)
+  policies                    policies[]
+  approver_authorities        approver_authorities[]
+  approval_requests           approval_requests[]
+  tenants                     tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenant_custom_fields        tenant_custom_fields[]
+  webhook_endpoints           webhook_endpoints[]
+  workflows                   workflows[]
 
   @@unique([tenant_id, name])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model delegations {
   id                                    String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id                             String           @db.Uuid
@@ -207,23 +237,25 @@ model delegations {
   users_delegations_delegate_idTousers  users            @relation("delegations_delegate_idTousers", fields: [delegate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_delegations_delegator_idTousers users            @relation("delegations_delegator_idTousers", fields: [delegator_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                               tenants          @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([delegator_id, status])
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model hrms_sync_log {
-  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  tenant_id  String   @db.Uuid
-  source     String
-  changes    Json     @default("{}")
-  applied_at DateTime @default(now()) @db.Timestamptz(6)
-  applied_by String?  @db.Uuid
-  users      users?   @relation(fields: [applied_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants    tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenant_id         String    @db.Uuid
+  records_processed Int       @default(0)
+  users_created     Int       @default(0)
+  users_updated     Int       @default(0)
+  status            String
+  error_details     String?
+  started_at        DateTime  @default(now()) @db.Timestamptz(6)
+  completed_at      DateTime? @db.Timestamptz(6)
+  triggered_by_id   String?   @db.Uuid
+  users             users?    @relation(fields: [triggered_by_id], references: [id], onUpdate: NoAction)
+  tenants           tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenant_id, started_at(sort: Desc)])
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model org_nodes {
   id              String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id       String      @db.Uuid
@@ -241,10 +273,8 @@ model org_nodes {
   @@index([tenant_id, parent_id])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model tenants {
-  decision_references decision_references[]
+  decision_references  decision_references[]
   id                   String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name                 String
   subdomain            String                 @unique
@@ -272,26 +302,28 @@ model tenants {
   intelligence_grants  intelligence_grants[]
   directory_persons    directory_persons[]
   approvers            approvers[]
+  approver_authorities approver_authorities[]
   request_participants request_participants[]
+  maturity_baselines   maturity_baselines[]
   users                users[]
   webhook_endpoints    webhook_endpoints[]
   workflows            workflows[]
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
-  created_references decision_references[]
-  id                                                        String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  tenant_id                                                 String              @db.Uuid
-  auth_user_id                                              String?             @unique @db.Uuid
+  created_references                                        decision_references[]
+  created_policies                                          policies[]            @relation("PolicyCreator")
+  granted_intelligence                                      intelligence_grants[] @relation("GrantedBy")
+  id                                                        String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenant_id                                                 String                @db.Uuid
+  auth_user_id                                              String?               @unique @db.Uuid
   email                                                     String
   name                                                      String
-  role                                                      String              @default("member")
-  status                                                    String              @default("active")
+  role                                                      String                @default("member")
+  status                                                    String                @default("active")
   hrms_employee_id                                          String?
   avatar_url                                                String?
-  created_at                                                DateTime            @default(now()) @db.Timestamptz(6)
+  created_at                                                DateTime              @default(now()) @db.Timestamptz(6)
   designation                                               String?
   career_level                                              String?
   department                                                String?
@@ -299,21 +331,21 @@ model users {
   employee_id                                               String?
   user_settings                                             Json?
   action_tokens                                             ActionToken[]
-  approval_requests_approval_requests_beneficiary_idTousers approval_requests[] @relation("approval_requests_beneficiary_idTousers")
+  approval_requests_approval_requests_beneficiary_idTousers approval_requests[]   @relation("approval_requests_beneficiary_idTousers")
   approval_requests                                         approval_requests[]
-  approval_steps_approval_steps_acted_by_idTousers          approval_steps[]    @relation("approval_steps_acted_by_idTousers")
-  approval_steps_approval_steps_approver_idTousers          approval_steps[]    @relation("approval_steps_approver_idTousers")
-  approval_steps_approval_steps_recorded_by_idTousers       approval_steps[]    @relation("approval_steps_recorded_by_idTousers")
+  approval_steps_approval_steps_acted_by_idTousers          approval_steps[]      @relation("approval_steps_acted_by_idTousers")
+  approval_steps_approval_steps_approver_idTousers          approval_steps[]      @relation("approval_steps_approver_idTousers")
+  approval_steps_approval_steps_recorded_by_idTousers       approval_steps[]      @relation("approval_steps_recorded_by_idTousers")
   attachments                                               attachments[]
   audit_log                                                 audit_log[]
-  delegations_delegations_created_byTousers                 delegations[]       @relation("delegations_created_byTousers")
-  delegations_delegations_delegate_idTousers                delegations[]       @relation("delegations_delegate_idTousers")
-  delegations_delegations_delegator_idTousers               delegations[]       @relation("delegations_delegator_idTousers")
+  delegations_delegations_created_byTousers                 delegations[]         @relation("delegations_created_byTousers")
+  delegations_delegations_delegate_idTousers                delegations[]         @relation("delegations_delegate_idTousers")
+  delegations_delegations_delegator_idTousers               delegations[]         @relation("delegations_delegator_idTousers")
   hrms_sync_log                                             hrms_sync_log[]
   org_nodes                                                 org_nodes[]
-  tenants                                                   tenants             @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  view_grants_view_grants_granted_by_idTousers              view_grants[]       @relation("view_grants_granted_by_idTousers")
-  view_grants_view_grants_grantee_idTousers                 view_grants[]       @relation("view_grants_grantee_idTousers")
+  tenants                                                   tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  view_grants_view_grants_granted_by_idTousers              view_grants[]         @relation("view_grants_granted_by_idTousers")
+  view_grants_view_grants_grantee_idTousers                 view_grants[]         @relation("view_grants_grantee_idTousers")
 
   @@unique([tenant_id, email])
   @@index([auth_user_id], map: "idx_users_auth")
@@ -321,8 +353,6 @@ model users {
   @@index([tenant_id, employee_id], map: "users_employee_id_idx")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model view_grants {
   id                                     String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   request_id                             String            @db.Uuid
@@ -339,8 +369,6 @@ model view_grants {
   @@index([request_id, status])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model webhook_deliveries {
   id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   endpoint_id       String            @db.Uuid
@@ -355,7 +383,6 @@ model webhook_deliveries {
   approval_requests approval_requests @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model webhook_endpoints {
   id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id          String               @db.Uuid
@@ -370,7 +397,6 @@ model webhook_endpoints {
   tenants            tenants              @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model workflows {
   id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   tenant_id   String      @db.Uuid
@@ -383,8 +409,6 @@ model workflows {
   tenants     tenants     @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model tenant_custom_fields {
   id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id   String      @db.Uuid
@@ -406,72 +430,78 @@ model tenant_custom_fields {
 }
 
 model decision_references {
-  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id      String            @db.Uuid
-  source_id      String            @db.Uuid
-  target_id      String?           @db.Uuid
-  to_policy_id   String?           @db.Uuid
-  relationship   String
-  note           String?
-  created_by     String            @db.Uuid
-  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id    String               @db.Uuid
+  source_id    String               @db.Uuid
+  target_id    String?              @db.Uuid
+  to_policy_id String?              @db.Uuid
+  relationship DecisionRelationship
+  note         String?
+  created_by   String               @db.Uuid
+  created_at   DateTime             @default(now()) @db.Timestamptz(6)
 
-  tenant         tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  source         approval_requests @relation("SourceRefs", fields: [source_id], references: [id], onDelete: Cascade)
-  target         approval_requests? @relation("TargetRefs", fields: [target_id], references: [id], onDelete: Cascade)
-  policy         policies?         @relation(fields: [to_policy_id], references: [id], onDelete: Cascade)
-  creator        users             @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  tenant  tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  source  approval_requests  @relation("SourceRefs", fields: [source_id], references: [id], onDelete: Cascade)
+  target  approval_requests? @relation("TargetRefs", fields: [target_id], references: [id], onDelete: Cascade)
+  policy  policies?          @relation(fields: [to_policy_id], references: [id], onDelete: Cascade)
+  creator users              @relation(fields: [created_by], references: [id], onDelete: Restrict)
 
   @@index([tenant_id, source_id])
   @@index([tenant_id, target_id])
-  @@index([tenant_id, to_policy_id, relationship])
+  @@index([tenant_id, to_policy_id, relationship, created_at])
   @@map("decision_references")
 }
 
 model policies {
-  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id               String                @db.Uuid
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id               String    @db.Uuid
   title                   String
+  statement               String    @db.Text
   reasoning               String?
-  category_id             String?               @db.Uuid
-  status                  String                @default("ACTIVE")
-  effective_from          DateTime              @default(now()) @db.Timestamptz(6)
-  effective_to            DateTime?             @db.Timestamptz(6)
-  supersedes_id           String?               @db.Uuid
-  created_from_request_id String?               @db.Uuid
-  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  owning_department       String?
+  category_id             String?   @db.Uuid
+  status                  String    @default("ACTIVE")
+  effective_from          DateTime  @default(now()) @db.Timestamptz(6)
+  effective_to            DateTime? @db.Timestamptz(6)
+  supersedes_id           String?   @db.Uuid
+  created_from_request_id String?   @db.Uuid
+  created_by              String?   @db.Uuid
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
 
-  tenant                  tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  category                categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  superseded_by           policies?             @relation("PolicyVersionChain", fields: [supersedes_id], references: [id], onDelete: SetNull)
-  superseding_policies    policies[]            @relation("PolicyVersionChain")
-  governing_categories    categories[]          @relation("GoverningPolicy")
-  decision_references     decision_references[]
+  tenant               tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category             categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  creator              users?                @relation("PolicyCreator", fields: [created_by], references: [id], onDelete: Restrict)
+  supersedes           policies?             @relation("PolicyVersionChain", fields: [supersedes_id], references: [id], onDelete: Restrict)
+  superseded_by        policies[]            @relation("PolicyVersionChain")
+  governing_categories categories[]          @relation("GoverningPolicy")
+  decision_references  decision_references[]
 
   @@index([tenant_id, status])
+  @@index([tenant_id, effective_from, effective_to])
   @@map("policies")
 }
 
 model intelligence_grants {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id        String    @db.Uuid
-  email            String    // normalised: lowercased, trimmed
-  scope            String    @default("AGGREGATE_ONLY") // AGGREGATE_ONLY | FULL
+  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id String            @db.Uuid
+  email     String // normalised: lowercased, trimmed
+  scope     IntelligenceScope @default(AGGREGATE_ONLY)
 
-  granted_by       String    @db.Uuid
-  granted_at       DateTime  @default(now()) @db.Timestamptz(6)
-  grant_request_id String?   @db.Uuid
+  granted_by       String   @db.Uuid
+  granted_at       DateTime @default(now()) @db.Timestamptz(6)
+  grant_request_id String?  @db.Uuid
   reason           String?
 
-  expires_at       DateTime? @db.Timestamptz(6)
-  revoked_at       DateTime? @db.Timestamptz(6)
-  revoked_by       String?   @db.Uuid
-  revoke_reason    String?
+  expires_at    DateTime? @db.Timestamptz(6)
+  revoked_at    DateTime? @db.Timestamptz(6)
+  revoked_by    String?   @db.Uuid
+  revoke_reason String?
 
   last_accessed_at DateTime? @db.Timestamptz(6)
   access_count     Int       @default(0)
 
-  tenant           tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  tenant  tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  grantor users?  @relation("GrantedBy", fields: [granted_by], references: [id])
 
   @@unique([tenant_id, email])
   @@index([tenant_id, revoked_at, expires_at])
@@ -479,41 +509,40 @@ model intelligence_grants {
 }
 
 model directory_persons {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id          String    @db.Uuid
-  email              String    // normalised lowercase
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id          String          @db.Uuid
+  email              String // normalised lowercase
   full_name          String
   job_title          String?
   grade              String?
   department         String?
   location           String?
   manager_email      String?
-  status             String    @default("ACTIVE") // ACTIVE | INACTIVE
-  is_service_account Boolean   @default(false)
+  status             DirectoryStatus @default(ACTIVE)
+  is_service_account Boolean         @default(false)
   external_id        String?
-  synced_at          DateTime  @default(now()) @db.Timestamptz(6)
+  synced_at          DateTime        @default(now()) @db.Timestamptz(6)
 
-  tenant             tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@unique([tenant_id, email])
   @@index([tenant_id, status])
   @@index([tenant_id, manager_email])
-  @@index([tenant_id, department])
   @@map("directory_persons")
 }
 
 model approvers {
-  id           String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id    String                 @db.Uuid
-  email        String
-  added_by     String                 @db.Uuid
-  added_at     DateTime               @default(now()) @db.Timestamptz(6)
-  removed_at   DateTime?              @db.Timestamptz(6)
-  removed_by   String?                @db.Uuid
-  note         String?
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String    @db.Uuid
+  email      String
+  added_by   String    @db.Uuid
+  added_at   DateTime  @default(now()) @db.Timestamptz(6)
+  removed_at DateTime? @db.Timestamptz(6)
+  removed_by String?   @db.Uuid
+  note       String?
 
-  tenant       tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  authorities  approver_authorities[]
+  tenant      tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  authorities approver_authorities[]
 
   @@unique([tenant_id, email])
   @@index([tenant_id, removed_at])
@@ -521,17 +550,18 @@ model approvers {
 }
 
 model approver_authorities {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id    String     @db.Uuid
-  approver_id  String     @db.Uuid
-  category_id  String     @db.Uuid
-  stage        Int
-  min_value    Decimal?   @db.Decimal
-  max_value    Decimal?   @db.Decimal
-  is_required  Boolean    @default(true)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id   String   @db.Uuid
+  approver_id String   @db.Uuid
+  category_id String   @db.Uuid
+  stage       Int
+  min_value   Decimal? @db.Decimal
+  max_value   Decimal? @db.Decimal
+  is_required Boolean  @default(true)
 
-  approver     approvers  @relation(fields: [approver_id], references: [id], onDelete: Cascade)
-  category     categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  tenant   tenants    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  approver approvers  @relation(fields: [approver_id], references: [id], onDelete: Cascade)
+  category categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
 
   @@unique([tenant_id, category_id, stage, approver_id])
   @@index([tenant_id, category_id])
@@ -539,24 +569,37 @@ model approver_authorities {
 }
 
 model request_participants {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id    String            @db.Uuid
-  request_id   String            @db.Uuid
-  email        String            // normalised lowercase
-  role         String            // REFERENCE | CONSULTED | INFORMED
-  is_external  Boolean           @default(false)
-  added_by     String            @db.Uuid
-  added_at     DateTime          @default(now()) @db.Timestamptz(6)
-  reason       String?
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id   String          @db.Uuid
+  request_id  String          @db.Uuid
+  email       String // normalised lowercase
+  role        ParticipantRole
+  is_external Boolean         @default(false)
+  added_by    String          @db.Uuid
+  added_at    DateTime        @default(now()) @db.Timestamptz(6)
+  reason      String?
 
-  state        String            @default("PENDING") // PENDING | RESPONDED | DECLINED | NO_RESPONSE
-  responded_at DateTime?         @db.Timestamptz(6)
+  state        ParticipantState @default(PENDING)
+  responded_at DateTime?        @db.Timestamptz(6)
   comment      String?
 
-  tenant       tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  request      approval_requests @relation(fields: [request_id], references: [id], onDelete: Cascade)
+  tenant  tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  request approval_requests @relation(fields: [request_id], references: [id], onDelete: Cascade)
 
   @@unique([tenant_id, request_id, email, role])
   @@index([tenant_id, request_id])
   @@map("request_participants")
+}
+
+model maturity_baselines {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  step_type  StepType
+  score      Float
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, step_type])
+  @@map("maturity_baselines")
 }

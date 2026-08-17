@@ -259,10 +259,10 @@ export async function advanceChain(requestId: string, tenantId: string) {
     // A. General step is not approved
     if (generalStep.status !== 'approved') {
       if (generalStep.status === 'waiting') {
-        // Activate General step
+        // Activate General step with fresh entered_at (§4)
         await adminClient
           .from('approval_steps')
-          .update({ status: 'pending' })
+          .update({ status: 'pending', entered_at: new Date().toISOString() })
           .eq('id', generalStep.id);
 
         triggerStepEmail(generalStep.id, tenantId).catch(console.error);
@@ -279,10 +279,10 @@ export async function advanceChain(requestId: string, tenantId: string) {
         const waitingParallels = parallelSteps.filter(s => s.status === 'waiting');
         if (waitingParallels.length > 0) {
           const ids = waitingParallels.map(s => s.id);
-          // Activate all waiting parallel steps in this stage
+          // Activate all waiting parallel steps in this stage with fresh entered_at (§4)
           await adminClient
             .from('approval_steps')
-            .update({ status: 'pending' })
+            .update({ status: 'pending', entered_at: new Date().toISOString() })
             .in('id', ids);
 
           // Trigger emails
