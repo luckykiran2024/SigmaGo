@@ -89,10 +89,10 @@ export async function submitRequest(requestId: string, userId: string, tenantId:
 
   if (lockError) throw lockError;
 
-  // activate all REFERENCE steps -> pending
+  // activate all REFERENCE steps -> pending with fresh entered_at (§4)
   const { error: refError } = await adminClient
     .from('approval_steps')
-    .update({ status: 'pending' })
+    .update({ status: 'pending', entered_at: new Date().toISOString() })
     .eq('request_id', requestId)
     .eq('type', 'REFERENCE');
 

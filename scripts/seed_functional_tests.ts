@@ -111,14 +111,17 @@ async function seed() {
     console.log('✓ Categories seeded');
 
     // 7. Seed Requests, Steps & Decision References (§0)
+    const hashA = require('crypto').createHash('sha256').update('REQ-2026-0001-meridian-sealed').digest('hex');
+    const hashB = require('crypto').createHash('sha256').update('REQ-2026-N001-northgate-sealed').digest('hex');
+
     await client.query(`
       INSERT INTO approval_requests (id, ref, tenant_id, owner_id, category_id, subject, status, checksum_sha256, finalized_at)
       VALUES 
-        ('13000000-0000-0000-0000-000000000001', 'REQ-2026-0001', '${tA}', 'a1000000-0000-0000-0000-000000000004', '12000000-0000-0000-0000-000000000001', 'Vendor Price Hike Exception Request', 'approved', 'sha256-sealed-checksum-001', now()),
+        ('13000000-0000-0000-0000-000000000001', 'REQ-2026-0001', '${tA}', 'a1000000-0000-0000-0000-000000000004', '12000000-0000-0000-0000-000000000001', 'Vendor Price Hike Exception Request', 'approved', '${hashA}', now()),
         ('13000000-0000-0000-0000-000000000002', 'REQ-2026-0002', '${tA}', 'a1000000-0000-0000-0000-000000000005', '12000000-0000-0000-0000-000000000003', 'Mid-flight Software License Renewal', 'pending', NULL, NULL),
         ('13000000-0000-0000-0000-000000000003', 'REQ-2026-0003', '${tA}', 'a1000000-0000-0000-0000-000000000004', '12000000-0000-0000-0000-000000000001', 'Unjustified Equipment Purchase', 'rejected', NULL, now()),
-        ('23000000-0000-0000-0000-000000000001', 'REQ-2026-N001', '${tB}', 'b2000000-0000-0000-0000-000000000003', '22000000-0000-0000-0000-000000000002', 'Northgate Secret Server Expansion', 'approved', 'sha256-northgate-sealed-01', now())
-      ON CONFLICT (id) DO NOTHING;
+        ('23000000-0000-0000-0000-000000000001', 'REQ-2026-N001', '${tB}', 'b2000000-0000-0000-0000-000000000003', '22000000-0000-0000-0000-000000000002', 'Northgate Secret Server Expansion', 'approved', '${hashB}', now())
+      ON CONFLICT (id) DO UPDATE SET checksum_sha256 = EXCLUDED.checksum_sha256;
     `);
 
     // Seed decision_references for EXCEPTION_TO policy
