@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { getProfileForAuthUser } from '@/lib/db/users';
-import { getDecisionRecordList } from '@/lib/db/decisions';
+import { getDecisionRecordList, DecisionRecordListResult } from '@/lib/db/decisions';
 import DecisionRecordRegister from './DecisionRecordRegister';
 
 export default async function DecisionsPage({
@@ -54,19 +54,32 @@ export default async function DecisionsPage({
     .order('name', { ascending: true });
 
   // Query decision record list with timing and permission scoping (§4 & §5)
-  const result = await getDecisionRecordList({
-    tenantId,
-    userId: loggedInPublicUser.id,
-    userEmail: loggedInPublicUser.email || user.email || '',
-    query: resolvedSearchParams.q,
-    scope: resolvedSearchParams.scope,
-    state: resolvedSearchParams.state,
-    types: resolvedSearchParams.types ? resolvedSearchParams.types.split(',') : undefined,
-    categoryId: resolvedSearchParams.category,
-    dateRange: resolvedSearchParams.date,
-    cursorId: resolvedSearchParams.cursorId,
-    limit: 50,
-  });
+  let result: DecisionRecordListResult = {
+    items: [],
+    totalCount: 0,
+    retrievalDurationSeconds: 0.1,
+    nextCursorFinalizedAt: null,
+    nextCursorId: null,
+    hasMore: false,
+  };
+
+  try {
+    result = await getDecisionRecordList({
+      tenantId,
+      userId: loggedInPublicUser.id,
+      userEmail: loggedInPublicUser.email || user.email || '',
+      query: resolvedSearchParams.q,
+      scope: resolvedSearchParams.scope,
+      state: resolvedSearchParams.state,
+      types: resolvedSearchParams.types ? resolvedSearchParams.types.split(',') : undefined,
+      categoryId: resolvedSearchParams.category,
+      dateRange: resolvedSearchParams.date,
+      cursorId: resolvedSearchParams.cursorId,
+      limit: 50,
+    });
+  } catch (err) {
+    console.error('Error in getDecisionRecordList:', err);
+  }
 
   return (
     <div className="max-w-[1240px] mx-auto px-4 py-8">

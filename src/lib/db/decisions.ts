@@ -109,7 +109,7 @@ export async function getDecisionRecordList(
       body_json,
       categories!category_id (id, name, step_type, default_visibility),
       users!owner_id (id, name, email),
-      approval_steps (id, approver_id, status, type, acted_at, comment, users_approval_steps_approver_idTousers(id, name)),
+      approval_steps (id, approver_id, status, type, acted_at, comment, users!approver_id(id, name)),
       request_participants (email)
     `
     )
@@ -132,7 +132,7 @@ export async function getDecisionRecordList(
 
   // Apply state filter
   if (params.state === 'sealed') {
-    query = query.or('checksum_sha256.neq.null,status.eq.approved');
+    query = query.or('checksum_sha256.not.is.null,status.eq.approved');
   } else if (params.state === 'in_flight') {
     query = query.in('status', ['pending', 'draft', 'in_discussion']);
   } else if (params.state === 'rejected') {
@@ -238,7 +238,7 @@ export async function getDecisionRecordList(
       ?.filter((s: any) => s.status === 'approved')
       ?.sort((a: any, b: any) => new Date(b.acted_at || 0).getTime() - new Date(a.acted_at || 0).getTime())[0];
 
-    const finalApproverName = lastApprovedStep?.users_approval_steps_approver_idTousers?.name;
+    const finalApproverName = lastApprovedStep?.users?.name;
     const commentsList = req.approval_steps?.map((s: any) => s.comment).filter(Boolean) || [];
 
     return {
