@@ -35,12 +35,12 @@ export default async function AdminIntelligencePage({
     .single();
 
   return (
-    <div className="space-y-6 font-sans">
-      <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
+    <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
+      <div className="border-b border-[#E4E7EC] pb-6">
+        <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
           Organizational Intelligence Access
         </h1>
-        <p className="mt-2 text-sm text-gray-500 font-medium">
+        <p className="text-[14px] text-[#667085] mt-0.5">
           Decoupled Access Control: Intelligence access is an explicit, audited grant issued to normalized email addresses. Admin and HR roles do not confer intelligence visibility.
         </p>
       </div>

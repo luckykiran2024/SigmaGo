@@ -93,13 +93,13 @@ export default async function MyDelegationsPage({
   };
 
   return (
-    <div className="space-y-10 py-4 font-sans max-w-6xl mx-auto">
-      <div className="border-b border-gray-100 pb-6">
-        <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
-          My Delegations
+    <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
+      <div className="border-b border-[#E4E7EC] pb-6">
+        <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
+          Delegations
         </h1>
-        <p className="mt-2 text-sm text-gray-500 font-medium">
-          Delegate your approval authority to trusted colleagues during vacations or absences.
+        <p className="text-[14px] text-[#667085] mt-0.5">
+          Delegate your decision authority to trusted colleagues during leave or absences.
         </p>
       </div>
 
