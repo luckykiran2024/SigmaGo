@@ -1,11 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { getProfileForAuthUser } from '@/lib/db/users';
-import TopNav from '@/components/ui/TopNav';
-import UserMenu from '@/components/ui/UserMenu';
-import { Plus } from 'lucide-react';
+import Navbar from '@/components/ui/Navbar';
 
 export default async function TenantLayout({
   children,
@@ -37,22 +34,24 @@ export default async function TenantLayout({
 
   const tenantName = tenant ? tenant.name : 'Workspace';
 
-  const isAdmin = profile && (
-    profile.role === 'admin' ||
-    profile.role === 'super_admin' ||
-    profile.role === 'ADMIN' ||
-    profile.role === 'SUPER_ADMIN'
-  );
-
-  const signOut = async () => {
-    'use server';
-    const supabaseClient = await createClient();
-    await supabaseClient.auth.signOut();
-    redirect('/login');
-  };
+  // Fetch pending approval count for Navbar pip
+  const { count: pendingCount } = await adminClient
+    .from('approval_steps')
+    .select('id', { count: 'exact', head: true })
+    .eq('approver_id', profile.id)
+    .eq('status', 'pending');
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-sans text-ink">
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-sans text-[#101828]">
+      {/* Single Prompt #11 Navbar rendered across all tenant routes */}
+      <Navbar
+        tenantSubdomain={resolvedParams.tenant}
+        tenantName={tenantName}
+        pendingApprovalsCount={pendingCount || 0}
+        userName={profile.name || user.email?.split('@')[0] || 'User'}
+        userAvatarUrl={(profile as any).avatar_url}
+      />
+      
       {/* Main Content Area */}
       <main className="flex-grow w-full mx-auto">
         {children}

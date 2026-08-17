@@ -125,16 +125,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#101828]">
-      {/* 56px Navigation Header */}
-      <Navbar
-        tenantSubdomain={resolvedParams.tenant}
-        tenantName={tenantData.name}
-        pendingApprovalsCount={pendingCards.length}
-        userName={userName}
-      />
-
-      <main className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
+    <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
         {/* Application-Scale Page Heading (23px/700) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -229,7 +220,6 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
             </div>
           </div>
         </div>
-      </main>
     </div>
   );
 }
