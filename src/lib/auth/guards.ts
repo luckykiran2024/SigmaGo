@@ -20,19 +20,22 @@ export async function requireTenantAdmin(tenantSubdomain: string): Promise<Guard
     throw new Error('Unauthorized: Authentication required');
   }
 
-  // Resolve tenant by subdomain
-  const { data: tenantData } = await adminClient
-    .from('tenants')
-    .select('id, subdomain')
-    .eq('subdomain', tenantSubdomain)
-    .single();
+  // Concurrently resolve tenant data and user profile to eliminate DB query waterfalls
+  const [tenantRes, profile] = await Promise.all([
+    adminClient
+      .from('tenants')
+      .select('id, subdomain')
+      .eq('subdomain', tenantSubdomain)
+      .single(),
+    getProfileForAuthUser(user.id, user.email || '')
+  ]);
+
+  const tenantData = tenantRes.data;
 
   if (!tenantData) {
     throw new Error('Tenant not found');
   }
 
-  // Resolve profile for authenticated user
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) {
     throw new Error('Unauthorized: User profile not found');
   }
@@ -66,17 +69,22 @@ export async function requireTenantMember(tenantSubdomain: string): Promise<Guar
     throw new Error('Unauthorized: Authentication required');
   }
 
-  const { data: tenantData } = await adminClient
-    .from('tenants')
-    .select('id, subdomain')
-    .eq('subdomain', tenantSubdomain)
-    .single();
+  // Concurrently resolve tenant data and user profile
+  const [tenantRes, profile] = await Promise.all([
+    adminClient
+      .from('tenants')
+      .select('id, subdomain')
+      .eq('subdomain', tenantSubdomain)
+      .single(),
+    getProfileForAuthUser(user.id, user.email || '')
+  ]);
+
+  const tenantData = tenantRes.data;
 
   if (!tenantData) {
     throw new Error('Tenant not found');
   }
 
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) {
     throw new Error('Unauthorized: User profile not found');
   }

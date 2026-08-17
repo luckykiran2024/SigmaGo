@@ -200,14 +200,13 @@ async function triggerFyiEmails(requestId: string, tenantId: string) {
       .eq('request_id', requestId)
       .eq('type', 'REFERENCE');
 
-    if (refSteps) {
+    if (refSteps && refSteps.length > 0) {
       const { sendFyiEmail } = await import('../email/outbound');
-      for (const step of refSteps) {
+      const emailPromises = refSteps.map(step => {
         const email = (step.approver as any)?.email;
-        if (email) {
-          await sendFyiEmail(tenant.subdomain, step.id, email);
-        }
-      }
+        return email ? sendFyiEmail(tenant.subdomain, step.id, email) : Promise.resolve();
+      });
+      await Promise.allSettled(emailPromises);
     }
   } catch (err) {
     console.error("Error triggering FYI emails:", err);

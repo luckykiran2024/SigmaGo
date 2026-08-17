@@ -44,17 +44,20 @@ async function main() {
   });
 
   // 3. Create Categories
-  await prisma.categories.create({
-    data: {
-      tenant_id: tenant.id,
-      name: 'Budget Approval',
-      default_chain: [
-        { type: 'DIRECT', approver_email: 'manager@meridiantech.local', order: 1 },
-        { type: 'DIRECT', approver_email: 'ceo@meridiantech.local', order: 2 }
-      ],
-      default_sla_hours: 72
-    }
-  });
+  const defaultCategories = ['Structural', 'Transactional', 'Exception', 'Process'];
+  for (const catName of defaultCategories) {
+    await prisma.categories.create({
+      data: {
+        tenant_id: tenant.id,
+        name: catName,
+        default_chain: [
+          { type: 'DIRECT', approver_email: 'manager@meridiantech.local', order: 1 },
+          { type: 'DIRECT', approver_email: 'ceo@meridiantech.local', order: 2 }
+        ],
+        default_sla_hours: 72
+      }
+    });
+  }
 
   console.log("Seeding complete! Tenant: Meridian Tech created.");
 }
