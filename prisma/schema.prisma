@@ -85,6 +85,7 @@ model approval_steps {
   type                                       String
   order_index                                Int               @default(0)
   status                                     String            @default("pending")
+  entered_at                                 DateTime          @default(now()) @db.Timestamptz(6)
   acted_at                                   DateTime?         @db.Timestamptz(6)
   comment                                    String?
   condition_text                             String?
@@ -165,9 +166,13 @@ model categories {
   default_visibility    String                 @default("private")
   created_at            DateTime               @default(now()) @db.Timestamptz(6)
   validity_mode         String                 @default("NONE")
+  step_type             String                 @default("TRANSACTIONAL")
+  governing_policy_id   String?                @db.Uuid
   default_validity_days Int?
   max_validity_days     Int?
   review_only           Boolean                @default(false)
+  governing_policy      policies?              @relation("GoverningPolicy", fields: [governing_policy_id], references: [id], onDelete: SetNull)
+  policies              policies[]
   approval_requests     approval_requests[]
   tenants               tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   tenant_custom_fields  tenant_custom_fields[]
@@ -257,6 +262,7 @@ model tenants {
   hrms_sync_log        hrms_sync_log[]
   org_nodes            org_nodes[]
   tenant_custom_fields tenant_custom_fields[]
+  policies             policies[]
   users                users[]
   webhook_endpoints    webhook_endpoints[]
   workflows            workflows[]
@@ -393,7 +399,8 @@ model decision_references {
   id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   tenant_id      String            @db.Uuid
   source_id      String            @db.Uuid
-  target_id      String            @db.Uuid
+  target_id      String?           @db.Uuid
+  to_policy_id   String?           @db.Uuid
   relationship   String
   note           String?
   created_by     String            @db.Uuid
@@ -401,11 +408,36 @@ model decision_references {
 
   tenant         tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   source         approval_requests @relation("SourceRefs", fields: [source_id], references: [id], onDelete: Cascade)
-  target         approval_requests @relation("TargetRefs", fields: [target_id], references: [id], onDelete: Cascade)
+  target         approval_requests? @relation("TargetRefs", fields: [target_id], references: [id], onDelete: Cascade)
+  policy         policies?         @relation(fields: [to_policy_id], references: [id], onDelete: Cascade)
   creator        users             @relation(fields: [created_by], references: [id], onDelete: Cascade)
 
-  @@unique([tenant_id, source_id, target_id, relationship])
   @@index([tenant_id, source_id])
   @@index([tenant_id, target_id])
+  @@index([tenant_id, to_policy_id, relationship])
   @@map("decision_references")
+}
+
+model policies {
+  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id               String                @db.Uuid
+  title                   String
+  reasoning               String?
+  category_id             String?               @db.Uuid
+  status                  String                @default("ACTIVE")
+  effective_from          DateTime              @default(now()) @db.Timestamptz(6)
+  effective_to            DateTime?             @db.Timestamptz(6)
+  supersedes_id           String?               @db.Uuid
+  created_from_request_id String?               @db.Uuid
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+
+  tenant                  tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category                categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  superseded_by           policies?             @relation("PolicyVersionChain", fields: [supersedes_id], references: [id], onDelete: SetNull)
+  superseding_policies    policies[]            @relation("PolicyVersionChain")
+  governing_categories    categories[]          @relation("GoverningPolicy")
+  decision_references     decision_references[]
+
+  @@index([tenant_id, status])
+  @@map("policies")
 }
