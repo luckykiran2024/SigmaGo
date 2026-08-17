@@ -61,24 +61,24 @@ export async function getDecisionRecordList(
   const startTime = performance.now();
   const limit = params.limit || 50;
 
-  // 1. Resolve category permissions for user
-  // User can see categories with default_visibility = 'open'
-  const { data: openCategories } = await adminClient
-    .from('categories')
-    .select('id')
-    .eq('tenant_id', params.tenantId)
-    .eq('default_visibility', 'open');
+  // 1. Resolve category permissions and approver record concurrently via Promise.all (§4)
+  const [openCategoriesRes, approverRecRes] = await Promise.all([
+    adminClient
+      .from('categories')
+      .select('id')
+      .eq('tenant_id', params.tenantId)
+      .eq('default_visibility', 'open'),
+    adminClient
+      .from('approvers')
+      .select('id')
+      .eq('tenant_id', params.tenantId)
+      .eq('email', params.userEmail)
+      .is('removed_at', null)
+      .maybeSingle(),
+  ]);
 
-  const openCategoryIds = openCategories?.map((c) => c.id) || [];
-
-  // Find approver record for this user to check authorities
-  const { data: approverRec } = await adminClient
-    .from('approvers')
-    .select('id')
-    .eq('tenant_id', params.tenantId)
-    .eq('email', params.userEmail)
-    .is('removed_at', null)
-    .maybeSingle();
+  const openCategoryIds = openCategoriesRes.data?.map((c) => c.id) || [];
+  const approverRec = approverRecRes.data;
 
   let authorityCategoryIds: string[] = [];
   if (approverRec) {
