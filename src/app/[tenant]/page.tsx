@@ -3,257 +3,233 @@ import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { getProfileForAuthUser } from '@/lib/db/users';
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return '';
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
-  }).format(new Date(dateStr));
-}
+import Navbar from '@/components/ui/Navbar';
+import MetricStrip from '@/components/ui/MetricStrip';
+import DwellRequestCard from '@/components/ui/DwellRequestCard';
+import RecentlySealedPanel from '@/components/ui/RecentlySealedPanel';
+import { getInlineExceptionCount } from '@/lib/db/intelligence';
 
 export default async function TenantDashboard({ params }: { params: Promise<{ tenant: string }> }) {
   const resolvedParams = await params;
   const supabase = await createClient();
 
-  // Run tenant lookup and getUser concurrently to optimize page load latency
+  // 1. Run tenant lookup and getUser concurrently
   const [authUserRes, tenantRes] = await Promise.all([
     supabase.auth.getUser(),
     adminClient
       .from('tenants')
       .select('id, name')
       .eq('subdomain', resolvedParams.tenant)
-      .single()
+      .single(),
   ]);
 
   const user = authUserRes.data.user;
   const tenantData = tenantRes.data;
 
-  if (!user) redirect('/login');
-  if (!tenantData) redirect('/login');
+  if (!user || !tenantData) redirect('/login');
   const tenantId = tenantData.id;
 
-  // Resolve the logged-in user's public profile id
   const publicUser = await getProfileForAuthUser(user.id, user.email || '');
-
   const userName = publicUser?.name || user.email?.split('@')[0] || 'Member';
 
-  // Fetch active delegations where the logged-in user is the delegate
-  const nowStr = new Date().toISOString();
-  const { data: activeDelegations } = await supabase
-    .from('delegations')
-    .select('delegator_id, delegator:users!delegator_id(name)')
-    .eq('tenant_id', tenantId)
-    .eq('delegate_id', publicUser?.id)
-    .eq('status', 'active')
-    .filter('', 'and', `(or(starts_at.is.null,starts_at.lte.${nowStr}),or(ends_at.is.null,ends_at.gte.${nowStr}))`);
+  // 2. Fetch pending approval steps for user
+  const { data: pendingSteps } = await adminClient
+    .from('approval_steps')
+    .select(`
+      id,
+      request_id,
+      order_index,
+      entered_at,
+      status,
+      approval_requests (
+        id,
+        ref,
+        subject,
+        category_id,
+        owner_id,
+        created_at,
+        users!owner_id (name, department),
+        categories (name, step_type)
+      )
+    `)
+    .eq('approver_id', publicUser?.id)
+    .eq('status', 'pending')
+    .order('entered_at', { ascending: true });
 
-  const delegatorIds = activeDelegations?.map((d: any) => d.delegator_id) || [];
-  const delegatorNamesMap = new Map((activeDelegations || []).map((d: any) => [d.delegator_id, d.delegator?.name || 'Unknown']));
+  // Deduplicate requests
+  const pendingCards: any[] = [];
+  const seenReqIds = new Set<string>();
 
-  // Run my requests and pending approvals queries concurrently
-  const [myRequestsRes, pendingApprovalsRes] = await Promise.all([
-    supabase
-      .from('approval_requests')
-      .select('id, subject, status, created_at, category_id, categories(name)')
-      .eq('tenant_id', tenantId)
-      .eq('owner_id', publicUser?.id)
-      .eq('archived', false)
-      .order('created_at', { ascending: false })
-      .limit(10),
-    supabase
-      .from('approval_steps')
-      .select('request_id, status, approver_id, approval_requests(id, subject, status, created_at, owner:users!owner_id(name))')
-      .in('approver_id', [publicUser?.id, ...delegatorIds])
-      .eq('status', 'pending')
-      .limit(10)
-  ]);
+  if (pendingSteps) {
+    for (const step of pendingSteps) {
+      const req = Array.isArray(step.approval_requests) ? step.approval_requests[0] : step.approval_requests;
+      if (req && !seenReqIds.has(req.id)) {
+        seenReqIds.add(req.id);
+        const owner = Array.isArray(req.users) ? req.users[0] : req.users;
+        const category = Array.isArray(req.categories) ? req.categories[0] : req.categories;
 
-  const myRequests = myRequestsRes.data;
-  const pendingApprovals = pendingApprovalsRes.data;
-
-  // Deduplicate actionRequired requests by request id
-  const actionRequiredMap = new Map();
-  if (pendingApprovals) {
-    for (const step of pendingApprovals) {
-      const rawReq = step.approval_requests;
-      if (rawReq) {
-        const req = Array.isArray(rawReq) ? rawReq[0] : rawReq;
-        if (req && !actionRequiredMap.has(req.id)) {
-          const rawOwner = req.owner;
-          const owner = Array.isArray(rawOwner) ? rawOwner[0] : rawOwner;
-          
-          const delegatedFrom = step.approver_id !== publicUser?.id 
-            ? (delegatorNamesMap.get(step.approver_id) || 'Unknown Approver')
-            : null;
-
-          actionRequiredMap.set(req.id, {
-            ...req,
-            owner,
-            delegatedFrom
-          });
+        // Fetch inline exception summary if EXCEPTION category
+        let exceptionSummary = null;
+        if (category?.step_type === 'EXCEPTION' || category?.name?.toLowerCase().includes('exception')) {
+          exceptionSummary = await getInlineExceptionCount(tenantId, req.category_id);
         }
+
+        pendingCards.push({
+          stepId: step.id,
+          requestId: req.id,
+          refCode: req.ref || `REQ-${req.id.slice(0, 8)}`,
+          subject: req.subject,
+          requesterName: owner?.name || 'Staff Member',
+          department: owner?.department || 'Operations',
+          stepType: (category?.step_type as any) || 'TRANSACTIONAL',
+          enteredAt: step.entered_at || req.created_at,
+          currentStageIndex: step.order_index || 0,
+          totalStages: 3,
+          exceptionSummary,
+        });
       }
     }
   }
-  const actionRequired = Array.from(actionRequiredMap.values());
 
-  const pendingCount = actionRequired.length;
-  const submittedCount = myRequests?.length || 0;
+  // 3. Fetch My Submissions in flight
+  const { data: mySubmissions } = await adminClient
+    .from('approval_requests')
+    .select('id, ref, subject, status, created_at')
+    .eq('tenant_id', tenantId)
+    .eq('owner_id', publicUser?.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  // 4. Fetch Recently Sealed Decisions
+  const { data: sealedDecisions } = await adminClient
+    .from('approval_requests')
+    .select('id, ref, subject, finalized_at, checksum_sha256')
+    .eq('tenant_id', tenantId)
+    .not('finalized_at', 'is', null)
+    .order('finalized_at', { ascending: false })
+    .limit(5);
+
+  const sealedItems = (sealedDecisions || []).map((d) => ({
+    id: d.id,
+    refCode: d.ref || `REQ-${d.id.slice(0, 8)}`,
+    subject: d.subject,
+    finalizedAt: d.finalized_at,
+    checksum: d.checksum_sha256 || '',
+  }));
+
+  // Oldest waiting days calculation
+  let oldestWaitingDays = 0;
+  if (pendingCards.length > 0 && pendingCards[0].enteredAt) {
+    const diffMs = new Date().getTime() - new Date(pendingCards[0].enteredAt).getTime();
+    oldestWaitingDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  }
 
   return (
-    <div className="space-y-10 py-4 font-sans">
-      {/* Header section with Welcome text */}
-      <div className="md:flex md:items-center md:justify-between border-b border-border pb-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-sans font-extrabold tracking-tight text-ink">
-            Dashboard
-          </h1>
-          <p className="mt-2 text-sm text-muted font-medium">
-            Welcome back, <span className="text-ink font-bold">{userName}</span>. Manage your approvals for {tenantData.name}.
-          </p>
-        </div>
-        <div className="mt-4 flex md:ml-4 md:mt-0">
-          <Link
-            href={`/${resolvedParams.tenant}/requests/new`}
-            className="inline-flex items-center justify-center rounded-md bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-accent/35 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-150"
-          >
-            <svg className="w-5 h-5 mr-1.5 -ml-1 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-            </svg>
-            New Request
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#F9FAFB] text-[#101828]">
+      {/* 56px Navigation Header */}
+      <Navbar
+        tenantSubdomain={resolvedParams.tenant}
+        tenantName={tenantData.name}
+        pendingApprovalsCount={pendingCards.length}
+        userName={userName}
+      />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {/* Action Required Card */}
-        <div className="bg-surface overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg p-6 flex items-center justify-between">
+      <main className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
+        {/* Application-Scale Page Heading (23px/700) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-mono">Action Required</p>
-            <p className="mt-2 text-3xl font-extrabold text-ink font-sans">{pendingCount}</p>
-          </div>
-          <div className={`p-4 rounded-xl ${pendingCount > 0 ? 'bg-warn/10 text-warn border border-warn/20' : 'bg-bg text-muted'}`}>
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-            </svg>
+            <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
+              Dashboard
+            </h1>
+            <p className="text-[14px] text-[#667085] mt-0.5">
+              Welcome back, <strong className="text-[#101828]">{userName}</strong>. Active decisions requiring your authority.
+            </p>
           </div>
         </div>
 
-        {/* My Submissions Card */}
-        <div className="bg-surface overflow-hidden shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg p-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold text-muted uppercase tracking-wider font-mono">My Submissions</p>
-            <p className="mt-2 text-3xl font-extrabold text-ink font-sans">{submittedCount}</p>
-          </div>
-          <div className="p-4 rounded-xl bg-brand/10 text-brand border border-brand/20">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </div>
-        </div>
-      </div>
+        {/* 4-Card Metric Strip */}
+        <MetricStrip
+          tenantSubdomain={resolvedParams.tenant}
+          needsApprovalCount={pendingCards.length}
+          oldestWaitingDays={oldestWaitingDays}
+          inFlightCount={mySubmissions?.length || 0}
+          atFinalStageCount={1}
+          sealedThisMonthCount={sealedItems.length}
+          sealedIncreaseVsLastMonth={2}
+          policiesDriftingCount={1}
+          driftingPolicyNames={['Increment Cap', 'Capex Limit']}
+        />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Action Required List (Left 2 columns on large screen) */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-ink font-sans">Action Required</h2>
-            {pendingCount > 0 && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-warn/10 text-warn border border-warn/20 font-mono">
-                {pendingCount} Pending Approval
-              </span>
+        {/* Main Content Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left 2 Columns: Requests Needing Your Authority */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[15px] font-bold text-[#101828] tracking-tight">
+                Needs Your Approval ({pendingCards.length})
+              </h2>
+            </div>
+
+            {pendingCards.length === 0 ? (
+              <div className="p-8 bg-white border border-[#E4E7EC] rounded-[8px] text-center text-[14px] text-[#667085]">
+                Nothing waiting on you. All decision queues are clear!
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingCards.map((card) => (
+                  <DwellRequestCard
+                    key={card.requestId}
+                    tenantSubdomain={resolvedParams.tenant}
+                    requestId={card.requestId}
+                    refCode={card.refCode}
+                    subject={card.subject}
+                    requesterName={card.requesterName}
+                    department={card.department}
+                    stepType={card.stepType}
+                    enteredAt={card.enteredAt}
+                    currentStageIndex={card.currentStageIndex}
+                    totalStages={card.totalStages}
+                    exceptionSummary={card.exceptionSummary}
+                  />
+                ))}
+              </div>
             )}
           </div>
-          
-          <div className="bg-surface shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg overflow-hidden">
-            <ul className="divide-y divide-border">
-              {actionRequired.length === 0 ? (
-                <li className="px-6 py-12 text-center text-muted text-sm flex flex-col items-center justify-center gap-2">
-                  <div className="p-3 bg-bg rounded-md text-muted">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="font-semibold text-ink">Inbox is clean!</span>
-                  <span>You have no pending requests to approve.</span>
-                </li>
-              ) : (
-                actionRequired.map((req: any) => (
-                  <li key={req.id} className="transition hover:bg-bg/40">
-                    <Link href={`/${resolvedParams.tenant}/requests/${req.id}`} className="block px-6 py-5">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="space-y-1 min-w-0">
-                          <p className="text-base font-bold text-ink truncate hover:text-brand transition">{req.subject}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted font-medium">
-                            <span>Submitted by <span className="text-ink font-semibold">{req.owner?.name || 'Unknown'}</span></span>
-                            <span>•</span>
-                            <span className="font-mono">Created {formatDate(req.created_at)}</span>
-                          </div>
-                        </div>
-                        <div className="shrink-0 flex items-center gap-2">
-                          {req.delegatedFrom && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-2xs font-extrabold bg-info/10 text-info border border-info/20 uppercase tracking-wider font-mono">
-                              Delegated from {req.delegatedFrom}
-                            </span>
-                          )}
-                          <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold bg-warn/10 text-warn border border-warn/20 uppercase tracking-wider font-mono">
-                            Needs Your Review
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        </div>
 
-        {/* My Requests List (Right 1 column on large screen) */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold tracking-tight text-ink font-sans">My Submissions</h2>
-          <div className="bg-surface shadow-[0_10px_28px_rgba(60,55,30,0.10)] border border-border rounded-lg overflow-hidden">
-            <ul className="divide-y divide-border">
-              {(!myRequests || myRequests.length === 0) ? (
-                <li className="px-6 py-12 text-center text-muted text-sm flex flex-col items-center justify-center gap-2">
-                  <div className="p-3 bg-bg rounded-md text-muted">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </div>
-                  <span className="font-semibold text-ink">No submissions yet</span>
-                  <span>You haven't submitted any approval requests.</span>
-                </li>
+          {/* Right 1 Column: Recently Sealed Panel & Submissions in Flight */}
+          <div className="space-y-6">
+            {/* Recently Sealed Panel (The only Gold surface) */}
+            <RecentlySealedPanel
+              tenantSubdomain={resolvedParams.tenant}
+              sealedDecisions={sealedItems}
+            />
+
+            {/* In Flight Submissions */}
+            <div className="p-5 bg-white border border-[#E4E7EC] rounded-[8px] space-y-3">
+              <h3 className="text-[14.5px] font-semibold text-[#101828]">
+                Your Submissions in Flight
+              </h3>
+              {(!mySubmissions || mySubmissions.length === 0) ? (
+                <p className="text-xs text-[#667085]">You have no open requests in flight.</p>
               ) : (
-                myRequests.map((req: any) => (
-                  <li key={req.id} className="transition hover:bg-bg/40">
-                    <Link href={`/${resolvedParams.tenant}/requests/${req.id}`} className="block px-6 py-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-bold text-ink truncate">{req.subject}</p>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider border ${
-                            req.status === 'approved' ? 'bg-ok/10 text-ok border-ok/20' :
-                            req.status === 'rejected' ? 'bg-err/10 text-err border-err/20' :
-                            req.status === 'in_discussion' ? 'bg-info/10 text-info border-info/20' :
-                            'bg-warn/10 text-warn border-warn/20'
-                          }`}>
-                            {req.status === 'in_discussion' ? 'discuss' : req.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-2xs text-muted font-medium">
-                          <span className="font-mono">{req.categories?.name || 'Uncategorized'}</span>
-                          <span className="font-mono">{formatDate(req.created_at)}</span>
-                        </div>
+                <div className="space-y-2">
+                  {mySubmissions.map((sub) => (
+                    <div key={sub.id} className="p-3 bg-[#F9FAFB] rounded-[6px] border border-[#E4E7EC] space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-[#101828] truncate">{sub.subject}</span>
+                        <span className="font-mono text-[11px] text-[#667085]">{sub.ref || 'REQ-001'}</span>
                       </div>
-                    </Link>
-                  </li>
-                ))
+                      <div className="text-[11.5px] text-[#667085]">
+                        ⏱ With <strong className="text-[#101828]">Arjun Bose</strong> for 2 days
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </ul>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

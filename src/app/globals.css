@@ -3,30 +3,132 @@
 @tailwind utilities;
 
 :root {
-  --background: #F7F8FA;
-  --foreground: #101828;
+  /* Surface */
+  --bg: #FFFFFF;
+  --alt: #F9FAFB;
+  --alt2: #F4F6F8;
+  --border: #E4E7EC;
+  --border2: #D0D5DD;
+
+  /* Text */
+  --ink: #101828;
+  --ink2: #344054;
+  --muted: #667085;
+  --muted2: #98A2B3;
+
+  /* Brand */
+  --brand: #274C77;
+  --brand-h: #1E3C60;
+  --brand-lt: #E8EDF4;
+  --brand-lt2: #D3DEEB;
+
+  /* Seal — CRYPTOGRAPHIC SEALED AND VERIFIED STATES ONLY */
+  --seal: #C9A227;
+  --seal-lt: #FDF6E3;
+  --seal-bd: #E8DDB0;
+
+  /* Status */
+  --ok: #0F7548;
+  --ok-lt: #E6F4ED;
+  --warn: #B54708;
+  --warn-lt: #FEF3E5;
+  --warn-bd: #FDE3C0;
+  --err: #B42318;
+  --err-lt: #FEE8E6;
+  --err-bd: #FECDCA;
+
+  /* Geometry & Motion */
+  --r: 8px;
+  --r-lg: 10px;
+  --sh: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --sh-h: 0 4px 12px rgba(16, 24, 40, 0.09);
+  --e: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--ink);
+  background: var(--alt);
   font-family: var(--font-ibm-sans), system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
-table, td, th {
+/* Tabular figures for tables & metadata */
+table, td, th, .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Motion Keyframes */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
-  /* Signature Interaction — Section 5 */
-  .signature-active {
-    border-left: 3px solid #274C77 !important;
-    background-color: rgba(39, 76, 119, 0.08) !important;
-    padding-left: calc(1rem - 3px) !important;
+@keyframes growW {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.9) rotate(-14deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(201, 162, 39, 0);
+  }
+}
+
+@keyframes softPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(180, 35, 24, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(180, 35, 24, 0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 500ms var(--e) forwards;
+}
+
+.animate-grow-w {
+  animation: growW 900ms var(--e) forwards;
+}
+
+.animate-soft-pulse {
+  animation: softPulse 2.4s infinite;
+}
+
+.animate-stamp {
+  animation: stamp 700ms var(--e) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.001s !important;
   }
 }
