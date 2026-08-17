@@ -24,10 +24,10 @@ export default function Navbar({
   const navItems = [
     { label: 'Dashboard', href: `/${tenantSubdomain}` },
     { label: 'Approvals', href: `/${tenantSubdomain}/approvals`, count: pendingApprovalsCount },
-    { label: 'Decisions', href: `/${tenantSubdomain}?tab=decisions` },
-    { label: 'Policies', href: `/${tenantSubdomain}/admin/policy-health` },
+    { label: 'Decision Record', href: `/${tenantSubdomain}?tab=decisions` },
+    { label: 'Policies', href: `/${tenantSubdomain}/admin/intelligence` },
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
-    { label: 'Admin', href: `/${tenantSubdomain}/admin` },
+    { label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` },
   ];
 
   return (

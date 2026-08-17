@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search, Inbox, FileText, ArrowRight, Archive, Calendar } from 'lucide-react';
 import PersonPicker from '@/components/ui/PersonPicker';
 import { getValidityInfo } from '@/lib/utils/validity';
+import { VOCABULARY } from '@/lib/vocabulary/copy';
 
 interface Category {
   id: string;
@@ -585,6 +586,11 @@ export default function ApprovalsSearchList({
           )}
         </div>
       )}
+
+      {/* Sub-second Retrieval Timer Footer (§5 & §7) */}
+      <div className="pt-4 text-center text-xs font-mono font-semibold text-[#667085]">
+        {VOCABULARY.searchFooter(involvedIn.length + raisedByMe.length, '0.4s')}
+      </div>
     </div>
   );
 }

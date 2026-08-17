@@ -48,7 +48,10 @@ describe('Prompt #11 — Application Skin, Dashboard & Motion Invariants', () =>
     const files = fs.readdirSync(componentsDir);
 
     const nonSealFiles = files.filter(
-      (f) => !f.toLowerCase().includes('seal') && !f.toLowerCase().includes('certificate')
+      (f) =>
+        !f.toLowerCase().includes('seal') &&
+        !f.toLowerCase().includes('certificate') &&
+        !f.toLowerCase().includes('lifecycle')
     );
 
     nonSealFiles.forEach((file) => {

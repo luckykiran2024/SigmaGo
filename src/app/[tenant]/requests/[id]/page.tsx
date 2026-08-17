@@ -14,6 +14,7 @@ import { AlertTriangle, MessageSquare } from 'lucide-react';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import TimelineEditor from './TimelineEditor';
 import RecordOfflineModal from '@/components/ui/RecordOfflineModal';
+import LifecycleStrip from '@/components/ui/LifecycleStrip';
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -80,6 +81,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
   const tenantUsers = tenantUsersRes.data;
   const customFieldDefs = tenantId ? await getCustomFieldsForTenant(tenantId) : [];
+  const outgoingRefs = tenantId ? await getOutgoingReferences(resolvedParams.id, tenantId) : [];
     
   const userMap = new Map((tenantUsers || []).map(u => [u.id, u.name]));
   const activeTenantUsers = (tenantUsers || []).filter(u => u.status === 'active' || u.status === 'ACTIVE');
@@ -289,6 +291,18 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left column: Document details & Audit logs */}
         <div className="lg:col-span-2 space-y-8">
+          {/* 4-State Decision Lifecycle Strip (Prompt #12) */}
+          <LifecycleStrip
+            request={{
+              id: request.id,
+              refCode: request.ref || `REQ-${request.id.slice(0, 8)}`,
+              reasoning: request.approval_steps?.map((s: any) => s.comment).filter(Boolean).join(' '),
+              sealed: Boolean(request.checksum_sha256 || request.finalized_at),
+              finalizedAt: request.finalized_at,
+              referenceCount: outgoingRefs.length,
+            }}
+          />
+
           {/* Main Document Details Card */}
           <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
             {/* Header info */}
