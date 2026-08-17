@@ -52,9 +52,63 @@ export default async function TenantLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-sans text-ink">
+    <div className="min-h-screen bg-bg flex flex-col font-sans text-ink">
+      {/* Premium Header/Navbar */}
+      <header className="bg-surface border-b border-border shadow-sm z-30 sticky top-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            
+            {/* Left Section: Logo & Nav */}
+            <div className="flex items-center gap-8">
+              <Link href={`/${resolvedParams.tenant}`} className="flex items-center gap-2 group shrink-0">
+                {tenant?.logo_url ? (
+                  <img src={tenant.logo_url} alt={tenantName} className="max-h-8 object-contain" />
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center shadow-sm shadow-ink/10 group-hover:scale-105 transition">
+                      <span className="text-white font-sans font-bold text-xs tracking-tight">SG</span>
+                    </div>
+                    <span className="font-sans text-sm font-black text-gray-400 tracking-tight flex items-center gap-1.5">
+                      <span className="text-ink font-sans font-bold text-base">SigmaGo</span>
+                      <span className="text-gray-300 font-light">|</span>
+                      <span className="text-gray-500 font-semibold text-xs uppercase tracking-wider">{tenantName}</span>
+                    </span>
+                  </>
+                )}
+              </Link>
+
+              {/* Dynamic top-nav highlighting component */}
+              <TopNav tenant={resolvedParams.tenant} isAdmin={isAdmin} />
+            </div>
+
+            {/* Right Section: Actions & User menu */}
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/${resolvedParams.tenant}/requests/new`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-white hover:bg-brand/90 rounded-md text-xs font-bold shadow-md shadow-accent/10 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Plus className="w-4 h-4" />
+                New Request
+              </Link>
+              
+              <div className="w-px h-6 bg-hair" />
+
+              <UserMenu
+                email={user.email || ''}
+                name={profile.name || 'User'}
+                tenantName={tenantName}
+                tenantSubdomain={resolvedParams.tenant}
+                signOutAction={signOut}
+                avatarUrl={(profile as any).avatar_url}
+              />
+            </div>
+
+          </div>
+        </div>
+      </header>
+
       {/* Main Content Area */}
-      <main className="flex-grow w-full mx-auto">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
     </div>
