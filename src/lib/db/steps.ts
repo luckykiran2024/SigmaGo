@@ -254,25 +254,24 @@ export async function advanceChain(requestId: string, tenantId: string) {
     const generalStep = steps.find(s => s.stage_index === stageVal && s.type === 'GENERAL');
     const parallelSteps = steps.filter(s => s.stage_index === stageVal && s.type === 'PARALLEL');
 
-    if (!generalStep) continue;
+    // A. General step evaluation if present
+    if (generalStep) {
+      if (generalStep.status !== 'approved') {
+        if (generalStep.status === 'waiting') {
+          // Activate General step with fresh entered_at (§4)
+          await adminClient
+            .from('approval_steps')
+            .update({ status: 'pending', entered_at: new Date().toISOString() })
+            .eq('id', generalStep.id);
 
-    // A. General step is not approved
-    if (generalStep.status !== 'approved') {
-      if (generalStep.status === 'waiting') {
-        // Activate General step with fresh entered_at (§4)
-        await adminClient
-          .from('approval_steps')
-          .update({ status: 'pending', entered_at: new Date().toISOString() })
-          .eq('id', generalStep.id);
-
-        triggerStepEmail(generalStep.id, tenantId).catch(console.error);
+          triggerStepEmail(generalStep.id, tenantId).catch(console.error);
+        }
+        // General step is active (either just activated or already pending). Stop execution so subsequent stages remain waiting.
+        return;
       }
-      // General step is active (either we just set it to pending, or it was already pending)
-      // Stop execution so subsequent stages remain waiting.
-      return;
     }
 
-    // B. General step is approved. Check parallel steps.
+    // B. Parallel steps evaluation if present
     if (parallelSteps.length > 0) {
       const allParallelsApproved = parallelSteps.every(s => s.status === 'approved');
       if (!allParallelsApproved) {
