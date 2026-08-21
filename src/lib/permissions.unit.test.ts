@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-// Role capabilities matrix under test
+// Role capabilities matrix unit test
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   super_admin: ['*'],
   admin: [
@@ -37,7 +37,7 @@ function checkRolePermission(role: string, action: string): boolean {
   return allowed.includes(action);
 }
 
-describe('RBAC Permissions Capabilities Engine', () => {
+describe('RBAC Permissions Capabilities Engine [Pure Unit Test]', () => {
   it('should grant full wildcard access to super_admin', () => {
     expect(checkRolePermission('super_admin', 'tenant:manage')).toBe(true);
     expect(checkRolePermission('super_admin', 'any:action')).toBe(true);

@@ -5,6 +5,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { syncOrganization, EmployeeRow } from '@/lib/db/orgSync';
 import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
+import { encryptSecret } from '@/lib/crypto/secrets';
 
 async function checkAdmin(tenantSubdomain: string) {
   const supabase = await createClient();
@@ -44,10 +45,15 @@ export async function importOrgCsvAction(tenantSubdomain: string, rows: Employee
 export async function regenerateHrmsSecretAction(tenantSubdomain: string) {
   const { tenantId } = await checkAdmin(tenantSubdomain);
   const newSecret = 'hrms_' + crypto.randomBytes(24).toString('hex');
-  
+  const encryptedSecret = encryptSecret(newSecret);
+
   const { error } = await adminClient
     .from('tenants')
-    .update({ hrms_sync_secret: newSecret })
+    .update({
+      hrms_sync_secret: encryptedSecret,
+      secret_rotated_at: new Date().toISOString(),
+      secret_version: 1,
+    })
     .eq('id', tenantId);
 
   if (error) throw new Error('Failed to update sync secret: ' + error.message);

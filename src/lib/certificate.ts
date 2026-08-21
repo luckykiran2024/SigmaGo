@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import { adminClient } from '@/lib/supabase/admin';
+import { alertSealFailure } from '@/lib/observability/sentry';
 
 export interface FinalizeResult {
   requestId: string;
@@ -112,6 +113,7 @@ export async function generateChecksumAndFinalize(
 
     if (updateErr) {
       console.error(`generateChecksumAndFinalize: Failed to update request ${requestId}`, updateErr);
+      alertSealFailure(`Failed to update seal checksum for request ${requestId}: ${updateErr.message}`, { tenantId, requestId });
       return null;
     }
 
@@ -123,6 +125,7 @@ export async function generateChecksumAndFinalize(
     };
   } catch (err) {
     console.error('generateChecksumAndFinalize error:', err);
+    alertSealFailure(`Exception during seal generation for request ${requestId}: ${err instanceof Error ? err.message : String(err)}`, { tenantId, requestId });
     return null;
   }
 }

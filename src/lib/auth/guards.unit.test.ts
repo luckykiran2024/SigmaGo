@@ -7,7 +7,7 @@ function checkTenantIsolation(profileTenantId: string, targetTenantId: string): 
   return true;
 }
 
-describe('Tenant Isolation Systemic Protection', () => {
+describe('Tenant Isolation Guard Mismatch Check [Pure Unit Test]', () => {
   it('should allow access when user profile tenant_id matches target tenant_id', () => {
     const profileTenantId = 'tenant-uuid-111';
     const targetTenantId = 'tenant-uuid-111';

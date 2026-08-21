@@ -1,5 +1,6 @@
 import { adminClient } from '@/lib/supabase/admin';
 import { syncOrganization } from '@/lib/db/orgSync';
+import { decryptSecret } from '@/lib/crypto/secrets';
 
 export async function POST(
   req: Request,
@@ -20,8 +21,9 @@ export async function POST(
       return Response.json({ error: 'Tenant not found' }, { status: 404 });
     }
 
-    // 2. Authenticate secret
-    if (!tenant.hrms_sync_secret || tenant.hrms_sync_secret !== syncSecret) {
+    // 2. Authenticate secret (decrypt stored secret)
+    const storedSecret = tenant.hrms_sync_secret ? decryptSecret(tenant.hrms_sync_secret) : null;
+    if (!storedSecret || storedSecret !== syncSecret) {
       return Response.json({ error: 'Unauthorized - invalid sync secret' }, { status: 401 });
     }
 

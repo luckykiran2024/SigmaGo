@@ -24,7 +24,7 @@ export default function Navbar({
   const navItems = [
     { label: 'Dashboard', href: `/${tenantSubdomain}` },
     { label: 'Approvals', href: `/${tenantSubdomain}/approvals`, count: pendingApprovalsCount },
-    { label: 'Decision Record', href: `/${tenantSubdomain}/decisions` },
+    { label: 'Records', href: `/${tenantSubdomain}/records` },
     { label: 'Policies', href: `/${tenantSubdomain}/admin/intelligence` },
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
     { label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` },
