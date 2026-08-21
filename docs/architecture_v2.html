@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SigmaGo — Architecture v2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--alt:#F9FAFB;--alt2:#F4F6F8;--border:#E4E7EC;--border2:#D0D5DD;
+  --ink:#101828;--ink2:#344054;--muted:#667085;--muted2:#98A2B3;
+  --brand:#274C77;--brand-lt:#E8EDF4;--brand-lt2:#D3DEEB;
+  --seal:#C9A227;--seal-lt:#FDF6E3;--seal-bd:#E8DDB0;
+  --ok:#0F7548;--ok-lt:#E6F4ED;--warn:#B54708;--warn-lt:#FEF3E5;--warn-bd:#FDE3C0;
+  --err:#B42318;--err-lt:#FEE8E6;--err-bd:#FECDCA;--dark:#0C1829;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--alt);color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.mono,code{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:44px 30px 80px}
+.doc-h{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--seal);margin-bottom:10px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.lede{font-size:16px;color:var(--muted);max-width:76ch;margin-bottom:12px}
+h2{font-size:20px;font-weight:700;margin:54px 0 6px;padding-top:26px;border-top:1px solid var(--border)}
+h2 .n{color:var(--muted2);font-weight:600;margin-right:9px}
+.sub{font-size:14px;color:var(--muted);margin-bottom:22px;max-width:80ch}
+code{font-size:.88em;background:var(--alt2);padding:1.5px 5px;border-radius:4px;color:var(--ink2)}
+p{margin-bottom:12px;max-width:80ch}
+
+.dia{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:26px;margin-bottom:14px}
+.band{border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.band-h{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:12px}
+.box{border:1px solid var(--border);border-radius:8px;background:var(--bg);padding:11px 13px}
+.box .t{font-size:13px;font-weight:650;margin-bottom:2px}
+.box .d{font-size:11px;color:var(--muted);line-height:1.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.arrow{display:flex;align-items:center;justify-content:center;color:var(--border2);font-size:18px;padding:6px 0}
+.note{font-size:12.5px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);line-height:1.6}
+.note b{color:var(--ink2)}
+.boundary{display:flex;align-items:center;gap:12px;margin:16px 0}
+.boundary .ln{flex:1;height:0;border-top:2px dashed var(--err)}
+.boundary .lb{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--err);white-space:nowrap}
+.actors{display:flex;gap:9px;flex-wrap:wrap}
+.actor{border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;font-weight:600;background:var(--bg)}
+.actor .r{font-weight:400;color:var(--muted);font-size:11px;margin-left:5px}
+
+/* chain */
+.chain{display:flex;flex-direction:column;align-items:center;gap:0}
+.cnode{border:2px solid var(--border);border-radius:9px;padding:12px 20px;text-align:center;min-width:280px;background:var(--bg)}
+.cnode .ty{font-size:9.5px;font-weight:700;letter-spacing:.08em;margin-bottom:4px}
+.cnode .ex{font-size:13px;font-weight:650}
+.cnode .mt{font-size:11px;color:var(--muted);margin-top:3px}
+.cnode.s{border-color:var(--brand);background:var(--brand-lt)}
+.cnode.s .ty{color:var(--brand)}
+.cnode.p{border-color:var(--brand-lt2);background:var(--bg)}
+.cnode.p .ty{color:var(--brand)}
+.cnode.t{border-color:var(--ok);background:var(--ok-lt)}
+.cnode.t .ty{color:var(--ok)}
+.cnode.e{border-color:var(--warn);background:var(--warn-lt)}
+.cnode.e .ty{color:var(--warn)}
+.cedge{width:2px;height:22px;background:var(--border2)}
+.clabel{font-size:10px;color:var(--muted2);padding:3px 0;font-style:italic}
+.csplit{display:flex;gap:16px}
+
+/* lifecycle */
+.life{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.stage{border:1px solid var(--border);border-radius:9px;padding:11px 10px;position:relative;background:var(--bg)}
+.stage::after{content:'→';position:absolute;right:-11px;top:50%;transform:translateY(-50%);color:var(--border2);font-size:13px;z-index:2}
+.stage:last-child::after{display:none}
+.stage .s{font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px}
+.stage .t{font-size:12px;font-weight:650;margin-bottom:4px;line-height:1.3}
+.stage .d{font-size:10px;color:var(--muted);line-height:1.4}
+.stage.gold{background:var(--seal-lt);border-color:var(--seal-bd)}
+.stage.new{border-color:var(--brand);border-width:2px}
+
+/* modules */
+.mod{border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.mod-h{padding:10px 14px;background:var(--alt);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mod-h .t{font-size:13px;font-weight:700}
+.mod-h .who{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px}
+.who-all{background:var(--ok-lt);color:var(--ok)}
+.who-grant{background:var(--seal-lt);color:var(--seal)}
+.who-adm{background:var(--brand-lt);color:var(--brand)}
+.who-auth{background:var(--warn-lt);color:var(--warn)}
+.mod-b{padding:11px 14px}
+.mod-i{font-size:12px;color:var(--muted);padding:3px 0;display:flex;gap:7px}
+.mod-i::before{content:'·';color:var(--border2)}
+.mod-i.new::before{content:'+';color:var(--brand);font-weight:700}
+
+/* entities */
+.ent{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.ent-h{padding:7px 11px;font-size:11.5px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.ent-b{padding:8px 11px;font-size:10.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7}
+.ent-b .nw{color:var(--brand);font-weight:600}
+.ent.identity .ent-h{background:var(--brand-lt);color:var(--brand)}
+.ent.decision .ent-h{background:var(--ok-lt);color:var(--ok)}
+.ent.gov .ent-h{background:var(--warn-lt);color:var(--warn)}
+.ent.intel .ent-h{background:var(--seal-lt);color:var(--seal)}
+.ent.plat .ent-h{background:var(--err-lt);color:var(--err)}
+.rel{font-size:12px;color:var(--muted);line-height:1.9;font-family:'IBM Plex Mono',monospace}
+.rel b{color:var(--ink2);font-weight:600}
+
+table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:9px 12px;background:var(--alt);border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+
+.infra-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.infra-row:last-child{border-bottom:none}
+.infra-l{width:150px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--ink2)}
+.infra-v{flex:1;font-size:12.5px;color:var(--muted)}
+.infra-v b{color:var(--ink)}
+.tagm{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--alt2);padding:1px 6px;border-radius:4px;color:var(--ink2)}
+
+.changelog{background:var(--brand-lt);border:1px solid var(--brand-lt2);border-radius:10px;padding:18px 20px;margin-bottom:20px}
+.changelog .h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
+.changelog ul{margin:0 0 0 18px;font-size:13px;color:var(--ink2)}
+.changelog li{margin-bottom:5px}
+
+@media(max-width:900px){.grid3,.grid4,.grid5,.life{grid-template-columns:1fr 1fr}.stage::after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-h">SigmaGo</div>
+<h1>Architecture v2</h1>
+<p class="lede">Seven views, outside in. Updated for the STEP dependency chain, the platform plane, approval stance capture, and post-decision confidence.</p>
+
+<div class="changelog">
+  <div class="h">Changed since v1</div>
+  <ul>
+    <li><b>New view 03 — the STEP chain.</b> STEP is now a dependency structure, not a flat taxonomy. This is the largest change.</li>
+    <li><b>Data model</b> gains chain fields, stance and outcome on approval steps, and the platform plane.</li>
+    <li><b>Lifecycle</b> gains a chain-reference stage at raise and a confidence stage after sealing.</li>
+    <li><b>Modules</b> reduced to five; Delegations and Access moved inside.</li>
+    <li><b>Deployment</b> gains observability and the mandatory test-database guard.</li>
+  </ul>
+</div>
+
+<!-- ===== 1 CONTEXT ===== -->
+<h2><span class="n">01</span>System context</h2>
+<p class="sub">Who uses SigmaGo and what it connects to.</p>
+
+<div class="dia">
+  <div class="band" style="background:var(--alt2)">
+    <div class="band-h" style="color:var(--muted)">People</div>
+    <div class="actors">
+      <span class="actor">Requester<span class="r">anyone</span></span>
+      <span class="actor">Approver<span class="r">granted authority</span></span>
+      <span class="actor">Executor<span class="r">HR · Finance</span></span>
+      <span class="actor">Participant<span class="r">reference · consulted · informed</span></span>
+      <span class="actor">Policy Owner<span class="r">granted per policy</span></span>
+      <span class="actor">Oversight<span class="r">intelligence grant</span></span>
+      <span class="actor">Tenant Admin<span class="r">configuration</span></span>
+      <span class="actor" style="border-color:var(--err-bd);background:var(--err-lt)">Platform Staff<span class="r">no content access</span></span>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+  <div class="band" style="background:var(--brand-lt);border:1px solid var(--brand-lt2)">
+    <div class="band-h" style="color:var(--brand)">SigmaGo</div>
+    <div class="grid4">
+      <div class="box"><div class="t">Record</div><div class="d">Capture as a by-product of approving</div></div>
+      <div class="box"><div class="t">Route</div><div class="d">Enforce authority and sequence</div></div>
+      <div class="box"><div class="t">Seal</div><div class="d">Tamper-evident certificate</div></div>
+      <div class="box"><div class="t">Retrieve &amp; Reuse</div><div class="d">Search, chain, factors</div></div>
+    </div>
+  </div>
+  <div class="arrow">↓</div>
+  <div class="band" style="background:var(--alt2)">
+    <div class="band-h" style="color:var(--muted)">External systems</div>
+    <div class="grid5">
+      <div class="box"><div class="t">HRMS</div><div class="d">Directory sync, webhooks</div></div>
+      <div class="box"><div class="t">Identity</div><div class="d">SSO / Supabase Auth</div></div>
+      <div class="box"><div class="t">Email</div><div class="d">Notifications, action links</div></div>
+      <div class="box"><div class="t">Storage</div><div class="d">Attachments, signed URLs</div></div>
+      <div class="box"><div class="t">Observability</div><div class="d">Sentry · alerts · metrics</div></div>
+    </div>
+  </div>
+  <div class="note"><b>Directory is read-only.</b> SigmaGo never writes to the HRMS. If the org chart is wrong, it is wrong upstream.</div>
+</div>
+
+<!-- ===== 2 ACCESS PLANES ===== -->
+<h2><span class="n">02</span>Access planes</h2>
+<p class="sub">A role is what you <em>are</em>; a grant is what you may <em>do</em>. The dashed line is enforced in row-level security, not application code.</p>
+
+<div class="dia">
+  <div class="band" style="background:var(--err-lt);border:1px solid var(--err-bd)">
+    <div class="band-h" style="color:var(--err)">Platform plane · SigmaGo staff</div>
+    <div class="grid3">
+      <div class="box"><div class="t">Owner</div><div class="d">Tenants, plans, suspension, billing</div></div>
+      <div class="box"><div class="t">Support</div><div class="d">Break-glass. Time-boxed, customer-approved, logged.</div></div>
+      <div class="box"><div class="t">Billing</div><div class="d">Invoices and usage counts only</div></div>
+    </div>
+    <div class="note" style="border-top-color:var(--err-bd)">Sees <b>counts and health signals</b> per tenant. Never decision content, policy reasoning, or exception notes. Config errors surface as counts, never as names.</div>
+  </div>
+
+  <div class="boundary"><span class="ln"></span><span class="lb">RLS boundary — no platform role holds SELECT on decision tables</span><span class="ln"></span></div>
+
+  <div class="band" style="background:var(--brand-lt);border:1px solid var(--brand-lt2)">
+    <div class="band-h" style="color:var(--brand)">Tenant plane · the customer</div>
+    <div class="grid3">
+      <div class="box"><div class="t">Owner</div><div class="d">Appoints admins. Approves content-scope support grants.</div></div>
+      <div class="box"><div class="t">Admin</div><div class="d">Configuration. <b>Cannot approve. Cannot read intelligence.</b></div></div>
+      <div class="box"><div class="t">Member</div><div class="d">Raises requests. Reads what they are party to.</div></div>
+    </div>
+  </div>
+
+  <div class="arrow">+</div>
+
+  <div class="band" style="background:var(--seal-lt);border:1px solid var(--seal-bd)">
+    <div class="band-h" style="color:var(--seal)">Grants · per person, revocable, audited</div>
+    <div class="grid3">
+      <div class="box"><div class="t">Approver authority</div><div class="d">Per category, per stage, within a value threshold</div></div>
+      <div class="box"><div class="t">Policy ownership</div><div class="d">May revise a specific policy. Sees its factors without an intelligence grant.</div></div>
+      <div class="box"><div class="t">Intelligence access</div><div class="d">AGGREGATE or FULL. No role includes it.</div></div>
+    </div>
+    <div class="note" style="border-top-color:var(--seal-bd)">Every grant carries who issued it, why, when it expires, and when it was last used. Revoked grants are retained.</div>
+  </div>
+</div>
+
+<!-- ===== 3 THE CHAIN — NEW ===== -->
+<h2><span class="n">03</span>The STEP chain</h2>
+<p class="sub"><b>New in v2.</b> STEP is no longer a flat taxonomy. Each decision references the one it rests on, forming a directed acyclic graph rooted in Structural decisions.</p>
+
+<div class="dia">
+  <div class="chain">
+    <div class="cnode s">
+      <div class="ty">STRUCTURAL · root</div>
+      <div class="ex">Competency Framework</div>
+      <div class="mt">references nothing — or supersedes a prior version</div>
+    </div>
+    <div class="cedge"></div>
+    <div class="clabel">BASED_ON</div>
+    <div class="cedge"></div>
+    <div class="cnode p">
+      <div class="ty">PROCESS</div>
+      <div class="ex">L5–L7 Boundary Definition</div>
+      <div class="mt">must reference a Structural decision</div>
+    </div>
+    <div class="cedge"></div>
+    <div class="csplit" style="align-items:flex-start">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="clabel">BASED_ON</div>
+        <div class="cedge"></div>
+        <div class="cnode t">
+          <div class="ty">TRANSACTIONAL</div>
+          <div class="ex">Promotion within the boundary</div>
+          <div class="mt">follows the rule</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="clabel">EXCEPTION_TO</div>
+        <div class="cedge"></div>
+        <div class="cnode e">
+          <div class="ty">EXCEPTION</div>
+          <div class="ex">Promotion outside the boundary</div>
+          <div class="mt">bends the rule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Two directions, two questions.</b> Looking <b>down</b> gives Impact Factor and Blast Radius — what rests on this. Looking <b>up</b> gives Inherited Soundness — what this rests on, and whether any ancestor is unreasoned, superseded, or unreviewed.<br><br>
+    <b>The diagnostic that falls out:</b> if a requester cannot name the Process decision their Transaction rests on, either the rule was never recorded — organizational inheritance, detected at the moment somebody acts on it — or it is not a Transaction at all but an Exception, because no rule governs it.
+  </div>
+</div>
+
+<table>
+  <tr><th>Metric</th><th>Direction</th><th>What it says</th></tr>
+  <tr><td><b>Impact Factor</b></td><td>down</td><td>How many decisions rest on this</td></tr>
+  <tr><td><b>Deviation Factor</b></td><td>down</td><td>How many times this rule has been bent</td></tr>
+  <tr><td><b>Blast Radius</b></td><td>down, transitive</td><td>What breaks if this is revised</td></tr>
+  <tr><td><b>Inherited Soundness</b></td><td><b>up</b></td><td>The weakest link in this decision's ancestry</td></tr>
+  <tr><td><b>Governance Rate</b></td><td>ratio</td><td>What fraction of its scope a policy actually governs</td></tr>
+  <tr><td><b>Orphan Rate</b></td><td>structural</td><td>How much of the organisation rests on nothing recorded</td></tr>
+</table>
+
+<!-- ===== 4 MODULES ===== -->
+<h2><span class="n">04</span>Application modules</h2>
+<p class="sub">Five navigation items. Most users see three or four. Delegations and Access moved inside.</p>
+
+<div class="dia">
+  <div class="grid2" style="margin-bottom:11px">
+    <div class="mod">
+      <div class="mod-h"><span class="t">Dashboard</span><span class="who who-all">EVERYONE</span></div>
+      <div class="mod-b">
+        <div class="mod-i">Needs your approval, with dwell time</div>
+        <div class="mod-i">Raised by me, with current holder</div>
+        <div class="mod-i">Recently sealed</div>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-h"><span class="t">Approvals</span><span class="who who-auth">APPROVER AUTHORITY</span></div>
+      <div class="mod-b">
+        <div class="mod-i">Queue sorted by dwell</div>
+        <div class="mod-i">Exception context before deciding</div>
+        <div class="mod-i new">Three-state action: reject · reservation · endorse</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-bottom:11px">
+    <div class="mod">
+      <div class="mod-h"><span class="t">Records</span><span class="who who-all">EVERYONE · SCOPED</span></div>
+      <div class="mod-b">
+        <div class="mod-i">Decisions I am party to</div>
+        <div class="mod-i">Search with retrieval time shown</div>
+        <div class="mod-i new">Certificates carry confidence at seal</div>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="mod-h"><span class="t">Intelligence</span><span class="who who-grant">GRANT ONLY</span></div>
+      <div class="mod-b">
+        <div class="mod-i">Policy Health — Impact × Deviation</div>
+        <div class="mod-i new">Chain metrics — orphan rate, soundness, blast radius</div>
+        <div class="mod-i new">Path effectiveness — influence and latency</div>
+        <div class="mod-i">AGGREGATE hides names, amounts, notes</div>
+      </div>
+    </div>
+  </div>
+  <div class="mod">
+    <div class="mod-h"><span class="t">Admin</span><span class="who who-adm">OWNER · ADMIN</span></div>
+    <div class="mod-b">
+      <div class="grid5">
+        <div><div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Organisation</div><div style="font-size:10.5px;color:var(--muted);line-height:1.5">Approver Register · Directory · HRMS</div></div>
+        <div><div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Categories</div><div style="font-size:10.5px;color:var(--muted);line-height:1.5">STEP · paths · thresholds · expected evidence</div></div>
+        <div><div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Policies</div><div style="font-size:10.5px;color:var(--muted);line-height:1.5">Register · reasoning · versions · owners</div></div>
+        <div><div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Access</div><div style="font-size:10.5px;color:var(--muted);line-height:1.5">Module access · grants · roles · delegations</div></div>
+        <div><div style="font-size:11.5px;font-weight:700;margin-bottom:4px">Health &amp; Audit</div><div style="font-size:10.5px;color:var(--muted);line-height:1.5">Sync · webhooks · config history · support grants</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>Away toggle lives in the avatar menu</b> and opens delegation setup directly. <b>Admin → Health</b> shows the tenant their own integration and configuration status — that data must not be platform-only.</div>
+</div>
+
+<!-- ===== 5 LIFECYCLE ===== -->
+<h2><span class="n">05</span>Decision lifecycle</h2>
+<p class="sub">Two stages are new in v2: chain reference at raise, and confidence after sealing.</p>
+
+<div class="dia">
+  <div class="life">
+    <div class="stage new">
+      <div class="s">01</div><div class="t">Raise &amp; anchor</div>
+      <div class="d">Category chosen. Requester names the rule this rests on. Two-sided case required on exceptions.</div>
+    </div>
+    <div class="stage">
+      <div class="s">02</div><div class="t">Route</div>
+      <div class="d">Path from category config. <code>entered_at</code> stamped per stage.</div>
+    </div>
+    <div class="stage">
+      <div class="s">03</div><div class="t">Contextualise</div>
+      <div class="d">Exception count, Impact Factor, prior precedent, inherited soundness.</div>
+    </div>
+    <div class="stage new">
+      <div class="s">04</div><div class="t">Decide</div>
+      <div class="d">Endorse or approve with reservation. Outcome and stance captured.</div>
+    </div>
+    <div class="stage gold">
+      <div class="s">05</div><div class="t">Seal</div>
+      <div class="d">SHA-256 over content, chain, reasoning, participants.</div>
+    </div>
+    <div class="stage new">
+      <div class="s">06</div><div class="t">Score</div>
+      <div class="d">Confidence computed <b>after</b> sealing and frozen. Never before.</div>
+    </div>
+    <div class="stage">
+      <div class="s">07</div><div class="t">Execute &amp; reuse</div>
+      <div class="d">Actioned, then becomes precedent for the next similar decision.</div>
+    </div>
+  </div>
+  <div class="note">
+    <b>Stage 06 is deliberately after stage 05.</b> A confidence score shown before the decision would anchor it. Computed after sealing, it becomes a property of the record rather than an input to judgment — and it goes on the certificate, permanently. A decision approved with one reservation and incomplete evidence should say so forever.<br><br>
+    <b>Participation runs alongside every stage.</b> Comments are preserved on the certificate, marked non-authoritative. A participant can never advance the request.
+  </div>
+</div>
+
+<!-- ===== 6 DATA ===== -->
+<h2><span class="n">06</span>Data model</h2>
+<p class="sub">Grouped by concern. Fields in blue are new in v2. Every table is tenant-scoped with row-level security.</p>
+
+<div class="dia">
+  <div class="grid5" style="margin-bottom:16px">
+    <div class="ent identity">
+      <div class="ent-h">IDENTITY</div>
+      <div class="ent-b">tenants<br>users <span class="nw">role: enum</span><br>directory_persons<br>delegations<br><span class="nw">away_status</span></div>
+    </div>
+    <div class="ent decision">
+      <div class="ent-h">DECISION</div>
+      <div class="ent-b">approval_requests<br><span class="nw">·parent_reference_id</span><br><span class="nw">·chain_depth</span><br><span class="nw">·cost_of_deciding</span><br>approval_steps<br><span class="nw">·stance ·outcome</span></div>
+    </div>
+    <div class="ent gov">
+      <div class="ent-h">GOVERNANCE</div>
+      <div class="ent-b">categories<br>policies <span class="nw">·statement</span><br><span class="nw">policy_owners</span><br>approvers<br>approver_authorities</div>
+    </div>
+    <div class="ent intel">
+      <div class="ent-h">INTELLIGENCE</div>
+      <div class="ent-b">decision_references<br>intelligence_grants<br><span class="nw">exception_reasons</span><br><span class="nw">config_changes</span><br>maturity_baseline</div>
+    </div>
+    <div class="ent plat">
+      <div class="ent-h">PLATFORM</div>
+      <div class="ent-b"><span class="nw">platform_users</span><br><span class="nw">platform_support_grants</span><br><span class="nw">platform_integrations</span><br><span class="nw">alert_rules</span></div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Relationships that carry the product</div>
+  <div class="rel">
+    <b>categories</b> ──stepType──▸ determines treatment of every request<br>
+    <b>categories</b> ──governingPolicyId──▸ <b>policies</b> &nbsp;<span style="color:var(--muted2)">required when EXCEPTION</span><br>
+    <b>approval_requests</b> ──parentReference──▸ <b>the S or P it rests on</b> &nbsp;<span style="color:var(--brand)">the chain</span><br>
+    <b>decision_references</b> ──BASED_ON──▸ <b>policies</b> &nbsp;<span style="color:var(--brand)">Impact Factor</span><br>
+    <b>decision_references</b> ──EXCEPTION_TO──▸ <b>policies</b> &nbsp;<span style="color:var(--err)">Deviation Factor</span><br>
+    <b>policies</b> ──supersedes──▸ <b>policies</b> &nbsp;<span style="color:var(--muted2)">version chain</span>
+  </div>
+
+  <div class="note">
+    <b>Three fields cannot be backfilled</b> and must be captured from the first day of use: <code>stance</code>, <code>outcome</code>, and <code>parent_reference_id</code>. You cannot ask a past approver whether they had reservations, nor reconstruct which rule a past transaction was following.<br><br>
+    <b>Frozen at seal:</b> <code>confidence_at_seal</code>, <code>soundness_at_seal</code>, <code>blast_at_seal</code>. Live figures change as descendants accumulate; the certificate records what was true at the time.
+  </div>
+</div>
+
+<!-- ===== 7 DEPLOYMENT ===== -->
+<h2><span class="n">07</span>Deployment and operations</h2>
+<p class="sub">Colocation matters more than any query optimisation. Observability is new in v2.</p>
+
+<div class="dia">
+  <div class="infra-row"><div class="infra-l">Application</div><div class="infra-v">Next.js on Vercel · functions pinned to <span class="tagm">bom1</span> to colocate with the database</div></div>
+  <div class="infra-row"><div class="infra-l">Database</div><div class="infra-v">Supabase Postgres <span class="tagm">ap-south</span> · RLS on every table · pooler on <span class="tagm">6543</span>, direct <span class="tagm">5432</span> for migrations</div></div>
+  <div class="infra-row"><div class="infra-l">Identity</div><div class="infra-v"><b>One</b> identity system — the certificate's authority proof requires a single source of truth for who a person is</div></div>
+  <div class="infra-row"><div class="infra-l">Secrets</div><div class="infra-v">AES-256-GCM at rest, rotation-versioned · write-only in every API response</div></div>
+  <div class="infra-row"><div class="infra-l">Sealing</div><div class="infra-v">SHA-256 over a versioned canonical form · deterministic, no salt, so a third party can verify independently</div></div>
+  <div class="infra-row"><div class="infra-l">Observability</div><div class="infra-v">Structured JSON logs with tenant and request IDs · Sentry with a reasoning scrubber · uptime to phone · <b>seal failure pages immediately</b></div></div>
+  <div class="infra-row"><div class="infra-l">Integrations</div><div class="infra-v">Provider-agnostic contracts for metrics, alerts, logs and errors · Grafana, OpsGenie, PagerDuty, Slack, generic webhook</div></div>
+  <div class="infra-row"><div class="infra-l">Testing</div><div class="infra-v">Unit suite in-memory · integration suite against real Postgres behind a mandatory <span class="tagm">TEST_DATABASE_URL</span> that must differ from primary</div></div>
+  <div class="infra-row"><div class="infra-l">Environments</div><div class="infra-v">Production · staging with synthetic data only · never a production copy</div></div>
+
+  <div class="note">
+    <b>Alerts and logs leave our infrastructure.</b> They carry IDs only — never tenant names, decision subjects, reference strings, person names, or reasoning. An alert naming a compensation decision would place customer data in third-party SaaS, possibly in an SMS.<br><br>
+    <b>Determinism is what makes the certificate meaningful.</b> Any randomness in the digest would make independent verification impossible, and "verifiable by anyone without access to SigmaGo" would be false.
+  </div>
+</div>
+
+<div style="margin-top:50px;padding-top:22px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted)">
+  SigmaGo Architecture v2 · August 2026 · Depicts target state including work in progress.<br>
+  A business-facing High Level Design is available for board and investor review. A wired architecture with call chains and sequence flows is available for engineering review.
+</div>
+
+</div>
+</body>
+</html>

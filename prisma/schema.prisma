@@ -44,6 +44,21 @@ enum DirectoryStatus {
   DEPARTED
 }
 
+enum ApprovalStance {
+  ENDORSED
+  APPROVED_WITH_RESERVATION
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum ActionOutcome {
+  APPROVED
+  APPROVED_WITH_CONDITIONS
+  REJECTED
+  CHANGES_REQUESTED
+  DELEGATED
+}
+
 model ActionToken {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   token       String            @unique
@@ -76,6 +91,13 @@ model approval_requests {
   visibility                                                                   String                   @default("private")
   version                                                                      Int                      @default(1)
   parent_id                                                                    String?                  @db.Uuid
+  parent_reference_id                                                         String?                  @db.Uuid
+  chain_depth                                                                  Int                      @default(0)
+  cost_of_not_deciding                                                        String?                  @db.Text
+  cost_of_deciding                                                            String?                  @db.Text
+  confidence_at_seal                                                           Float?
+  soundness_at_seal                                                            Float?
+  blast_at_seal                                                                Int?
   checksum_sha256                                                              String?
   sealed_at                                                                    DateTime?                @db.Timestamptz(6)
   seal_algorithm                                                               String?                  @default("SHA-256")
@@ -123,6 +145,11 @@ model approval_steps {
   type                                       String
   order_index                                Int               @default(0)
   status                                     String            @default("pending")
+  stance                                     ApprovalStance?
+  outcome                                    ActionOutcome?
+  reservation_note                           String?           @db.Text
+  reasoning_length                           Int               @default(0)
+  was_binding                                Boolean           @default(true)
   entered_at                                 DateTime?         @db.Timestamptz(6)
   acted_at                                   DateTime?         @db.Timestamptz(6)
   comment                                    String?
@@ -274,45 +301,52 @@ model org_nodes {
 }
 
 model tenants {
-  decision_references  decision_references[]
-  id                   String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name                 String
-  subdomain            String                 @unique
-  custom_domain        String?                @unique
-  plan                 String                 @default("free")
-  region               String                 @default("ap-south-2")
-  theme_tokens         Json                   @default("{}")
-  email_domain         String?
-  dkim_verified        Boolean                @default(false)
-  powered_by           Boolean                @default(true)
-  created_at           DateTime               @default(now()) @db.Timestamptz(6)
-  hrms_sync_secret     String?
-  logo_url             String?
-  tenant_settings      Json?
-  action_tokens        ActionToken[]
-  approval_requests    approval_requests[]
-  attachments          attachments[]
-  audit_log            audit_log[]
-  categories           categories[]
-  delegations          delegations[]
-  hrms_sync_log        hrms_sync_log[]
-  org_nodes            org_nodes[]
-  tenant_custom_fields tenant_custom_fields[]
-  policies             policies[]
-  intelligence_grants  intelligence_grants[]
-  directory_persons    directory_persons[]
-  approvers            approvers[]
-  approver_authorities approver_authorities[]
-  request_participants request_participants[]
-  maturity_baselines   maturity_baselines[]
-  users                users[]
-  webhook_endpoints    webhook_endpoints[]
-  workflows            workflows[]
+  decision_references     decision_references[]
+  id                      String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                    String
+  subdomain               String                    @unique
+  custom_domain           String?                   @unique
+  plan                    String                    @default("free")
+  region                  String                    @default("ap-south-2")
+  theme_tokens            Json                      @default("{}")
+  email_domain            String?
+  dkim_verified           Boolean                   @default(false)
+  powered_by              Boolean                   @default(true)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  hrms_sync_secret        String?
+  logo_url                String?
+  tenant_settings         Json?
+  action_tokens           ActionToken[]
+  approval_requests       approval_requests[]
+  attachments             attachments[]
+  audit_log               audit_log[]
+  categories              categories[]
+  delegations             delegations[]
+  hrms_sync_log           hrms_sync_log[]
+  org_nodes               org_nodes[]
+  tenant_custom_fields    tenant_custom_fields[]
+  policies                policies[]
+  policy_owners           policy_owners[]
+  intelligence_grants     intelligence_grants[]
+  directory_persons       directory_persons[]
+  approvers               approvers[]
+  approver_authorities    approver_authorities[]
+  request_participants    request_participants[]
+  maturity_baselines      maturity_baselines[]
+  exception_reasons       exception_reasons[]
+  config_changes          config_changes[]
+  platform_support_grants platform_support_grants[]
+  platform_integrations   platform_integrations[]
+  alert_rules             alert_rules[]
+  users                   users[]
+  webhook_endpoints       webhook_endpoints[]
+  workflows               workflows[]
 }
 
 model users {
   created_references                                        decision_references[]
   created_policies                                          policies[]            @relation("PolicyCreator")
+  policy_ownerships                                         policy_owners[]
   granted_intelligence                                      intelligence_grants[] @relation("GrantedBy")
   id                                                        String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id                                                 String                @db.Uuid
@@ -321,6 +355,7 @@ model users {
   name                                                      String
   role                                                      String                @default("member")
   status                                                    String                @default("active")
+  away_status                                               Boolean               @default(false)
   hrms_employee_id                                          String?
   avatar_url                                                String?
   created_at                                                DateTime              @default(now()) @db.Timestamptz(6)
@@ -351,6 +386,21 @@ model users {
   @@index([auth_user_id], map: "idx_users_auth")
   @@index([tenant_id, email], map: "idx_users_email_tenant")
   @@index([tenant_id, employee_id], map: "users_employee_id_idx")
+}
+
+model policy_owners {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  policy_id  String   @db.Uuid
+  user_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  policy policies @relation(fields: [policy_id], references: [id], onDelete: Cascade)
+  user   users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, policy_id, user_id])
+  @@map("policy_owners")
 }
 
 model view_grants {
@@ -453,20 +503,20 @@ model decision_references {
 }
 
 model policies {
-  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id               String    @db.Uuid
+  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id               String          @db.Uuid
   title                   String
-  statement               String    @db.Text
+  statement               String          @db.Text
   reasoning               String?
   owning_department       String?
-  category_id             String?   @db.Uuid
-  status                  String    @default("ACTIVE")
-  effective_from          DateTime  @default(now()) @db.Timestamptz(6)
-  effective_to            DateTime? @db.Timestamptz(6)
-  supersedes_id           String?   @db.Uuid
-  created_from_request_id String?   @db.Uuid
-  created_by              String?   @db.Uuid
-  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  category_id             String?         @db.Uuid
+  status                  String          @default("ACTIVE")
+  effective_from          DateTime        @default(now()) @db.Timestamptz(6)
+  effective_to            DateTime?       @db.Timestamptz(6)
+  supersedes_id           String?         @db.Uuid
+  created_from_request_id String?         @db.Uuid
+  created_by              String?         @db.Uuid
+  created_at              DateTime        @default(now()) @db.Timestamptz(6)
 
   tenant               tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   category             categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
@@ -475,6 +525,7 @@ model policies {
   superseded_by        policies[]            @relation("PolicyVersionChain")
   governing_categories categories[]          @relation("GoverningPolicy")
   decision_references  decision_references[]
+  policy_owners        policy_owners[]
 
   @@index([tenant_id, status])
   @@index([tenant_id, effective_from, effective_to])
@@ -602,4 +653,78 @@ model maturity_baselines {
 
   @@unique([tenant_id, step_type])
   @@map("maturity_baselines")
+}
+
+model exception_reasons {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  request_id String   @db.Uuid
+  reason     String   @db.Text
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("exception_reasons")
+}
+
+model config_changes {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id   String   @db.Uuid
+  actor_id    String   @db.Uuid
+  entity      String
+  change_json Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("config_changes")
+}
+
+model platform_users {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String   @unique
+  role       String   @default("support")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("platform_users")
+}
+
+model platform_support_grants {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id   String    @db.Uuid
+  granted_by  String    @db.Uuid
+  approved_by String?   @db.Uuid
+  reason      String
+  starts_at   DateTime  @default(now()) @db.Timestamptz(6)
+  expires_at  DateTime  @db.Timestamptz(6)
+  revoked_at  DateTime? @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("platform_support_grants")
+}
+
+model platform_integrations {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  provider   String
+  config     Json     @default("{}")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("platform_integrations")
+}
+
+model alert_rules {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id  String   @db.Uuid
+  name       String
+  condition  String
+  channel    String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("alert_rules")
 }
