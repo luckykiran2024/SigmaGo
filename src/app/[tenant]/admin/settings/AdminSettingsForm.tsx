@@ -70,13 +70,15 @@ export default function AdminSettingsForm({
     };
   };
 
+  const [showLogoConfirm, setShowLogoConfirm] = useState(false);
+
   const handleLogoRemove = async () => {
-    if (!confirm('Are you sure you want to remove the tenant logo?')) return;
     setUploading(true);
     setMsg(null);
     try {
       await removeTenantLogoAction(tenantData.id);
       setLogoUrl(null);
+      setLogoConfirmOpen(false);
       setMsg({ type: 'success', text: 'Logo removed successfully.' });
     } catch (err: any) {
       setMsg({ type: 'error', text: err.message || 'Failed to remove logo' });
@@ -84,6 +86,8 @@ export default function AdminSettingsForm({
       setUploading(false);
     }
   };
+  const [logoConfirmOpen, setLogoConfirmOpen] = useState(false);
+
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,15 +195,42 @@ export default function AdminSettingsForm({
                   </label>
 
                   {logoUrl && (
-                    <button
-                      type="button"
-                      onClick={handleLogoRemove}
-                      disabled={uploading}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-2xs font-bold transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Remove
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setLogoConfirmOpen(true)}
+                        disabled={uploading}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-2xs font-bold transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Remove
+                      </button>
+
+                      {logoConfirmOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-xs w-full p-5 space-y-4">
+                            <h4 className="text-sm font-bold text-gray-900">Remove Tenant Logo?</h4>
+                            <p className="text-xs text-gray-500 font-medium">Are you sure you want to remove the organization logo?</p>
+                            <div className="flex items-center justify-end gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setLogoConfirmOpen(false)}
+                                className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleLogoRemove}
+                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold"
+                              >
+                                Confirm Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
                 {uploading && (

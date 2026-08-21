@@ -104,17 +104,23 @@ export function DecisionReferencesCard({
     }
   };
 
-  const handleRemove = async (referenceId: string) => {
-    if (!confirm('Remove this decision reference?')) return;
+  const [deleteRefId, setDeleteRefId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const confirmRemove = async () => {
+    if (!deleteRefId) return;
     try {
       const formData = new FormData();
-      formData.append('referenceId', referenceId);
+      formData.append('referenceId', deleteRefId);
       formData.append('sourceId', requestId);
       await removeReferenceAction(tenantSubdomain, formData);
+      setDeleteRefId(null);
+      setDeleteError(null);
     } catch (err: any) {
-      alert(err.message || 'Failed to remove reference.');
+      setDeleteError(err.message || 'Failed to remove reference.');
     }
   };
+
 
   const renderBadge = (rel: string) => {
     switch (rel) {
@@ -186,7 +192,10 @@ export function DecisionReferencesCard({
                     {ref.target_request?.status && renderStatusBadge(ref.target_request.status)}
                     {(isAdmin || ref.created_by === currentUserId) && (
                       <button
-                        onClick={() => handleRemove(ref.id)}
+                        onClick={() => {
+                          setDeleteRefId(ref.id);
+                          setDeleteError(null);
+                        }}
                         className="text-muted hover:text-err p-1 rounded-md transition"
                         title="Remove reference"
                       >
@@ -195,6 +204,28 @@ export function DecisionReferencesCard({
                     )}
                   </div>
                 </div>
+
+                {deleteRefId === ref.id && (
+                  <div className="p-3 bg-err/5 border border-err/20 rounded-[6px] flex items-center justify-between text-[13px]">
+                    <span className="text-err font-semibold">Remove this decision reference link?</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteRefId(null)}
+                        className="px-2.5 py-1 text-muted hover:text-ink font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmRemove}
+                        className="px-2.5 py-1 bg-err text-white rounded-[4px] font-semibold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {ref.note && (
                   <p className="text-[13px] text-muted pl-1 italic">
                     Note: "{ref.note}"

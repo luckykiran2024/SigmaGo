@@ -13,7 +13,9 @@ export async function submitNewRequest(
   approvalPath: Array<any>,
   beneficiaryId?: string | null,
   customFieldValues?: Record<string, any>,
-  validityData?: { validUntil?: string | null; reviewDate?: string | null; renewedFromId?: string | null }
+  validityData?: { validUntil?: string | null; reviewDate?: string | null; renewedFromId?: string | null },
+  referenceData?: { targetId?: string | null; policyId?: string | null; relationship: string } | null,
+  overrideData?: { isOverride: boolean; reason?: string | null } | null
 ) {
   const supabase = await createClient();
 
@@ -134,6 +136,31 @@ export async function submitNewRequest(
     renewedFromId: validityData?.renewedFromId || null,
     steps: steps
   });
+
+  // Handle classification override flags if present
+  if (overrideData?.isOverride) {
+    await adminClient
+      .from('approval_requests')
+      .update({
+        classification_override: true,
+        classification_override_reason: overrideData.reason || 'User kept choice despite misclassification warning'
+      })
+      .eq('id', request.id);
+  }
+
+  // Handle reference linking (Case C)
+  if (referenceData && (referenceData.targetId || referenceData.policyId)) {
+    await adminClient
+      .from('decision_references')
+      .insert({
+        tenant_id: tenantData.id,
+        source_id: request.id,
+        target_id: referenceData.targetId || null,
+        to_policy_id: referenceData.policyId || null,
+        relationship: referenceData.relationship || 'BASED_ON',
+        created_by: profile.id
+      });
+  }
 
   // 4. Handle attachment files
   const attachmentEntries = Array.from(formData.entries())

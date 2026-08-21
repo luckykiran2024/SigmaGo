@@ -123,13 +123,15 @@ export default function PersonalSettingsForm({
     };
   };
 
+  const [avatarConfirmOpen, setAvatarConfirmOpen] = useState(false);
+
   const handleAvatarRemove = async () => {
-    if (!confirm('Are you sure you want to remove your display picture?')) return;
     setUploading(true);
     setMsg(null);
     try {
       await removeUserAvatarAction(userData.id);
       setAvatarUrl(null);
+      setAvatarConfirmOpen(false);
       setMsg({ type: 'success', text: 'Display picture removed successfully.' });
       router.refresh();
     } catch (err: any) {
@@ -236,15 +238,42 @@ export default function PersonalSettingsForm({
               </label>
 
               {avatarUrl && (
-                <button
-                  type="button"
-                  onClick={handleAvatarRemove}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-2xs font-bold transition"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Remove
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setAvatarConfirmOpen(true)}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-2xs font-bold transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove
+                  </button>
+
+                  {avatarConfirmOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-xs w-full p-5 space-y-4">
+                        <h4 className="text-sm font-bold text-gray-900">Remove Display Picture?</h4>
+                        <p className="text-xs text-gray-500 font-medium">Are you sure you want to remove your profile picture?</p>
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setAvatarConfirmOpen(false)}
+                            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-xs font-bold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleAvatarRemove}
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold"
+                          >
+                            Confirm Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             {uploading && (

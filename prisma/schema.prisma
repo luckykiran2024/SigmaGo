@@ -113,7 +113,10 @@ model approval_requests {
   valid_until                                                                  DateTime?                @db.Timestamptz(6)
   review_date                                                                  DateTime?                @db.Timestamptz(6)
   renewed_from_id                                                              String?                  @db.Uuid
+  classification_override                                                      Boolean                  @default(false)
+  classification_override_reason                                               String?                  @db.Text
   action_tokens                                                                ActionToken[]
+  reference_skips                                                              reference_skips[]
   users_approval_requests_beneficiary_idTousers                                users?                   @relation("approval_requests_beneficiary_idTousers", fields: [beneficiary_id], references: [id], onUpdate: NoAction)
   categories                                                                   categories               @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users                                                                        users                    @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -221,6 +224,7 @@ model categories {
   id                          String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tenant_id                   String                 @db.Uuid
   name                        String
+  /// @deprecated Use workflows instead
   default_chain               Json                   @default("[]")
   default_sla_hours           Int                    @default(72)
   default_visibility          String                 @default("private")
@@ -228,6 +232,8 @@ model categories {
   validity_mode               String                 @default("NONE")
   step_type                   StepType               @default(TRANSACTIONAL)
   governing_policy_id         String?                @db.Uuid
+  requester_description       String?                @db.Text
+  domain                      String?                @default("OTHER")
   default_validity_days       Int?
   max_validity_days           Int?
   review_only                 Boolean                @default(false)
@@ -239,6 +245,7 @@ model categories {
   policies                    policies[]
   approver_authorities        approver_authorities[]
   approval_requests           approval_requests[]
+  reference_skips             reference_skips[]
   tenants                     tenants                @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   tenant_custom_fields        tenant_custom_fields[]
   webhook_endpoints           webhook_endpoints[]
@@ -338,6 +345,7 @@ model tenants {
   platform_support_grants platform_support_grants[]
   platform_integrations   platform_integrations[]
   alert_rules             alert_rules[]
+  reference_skips         reference_skips[]
   users                   users[]
   webhook_endpoints       webhook_endpoints[]
   workflows               workflows[]
@@ -378,6 +386,7 @@ model users {
   delegations_delegations_delegator_idTousers               delegations[]         @relation("delegations_delegator_idTousers")
   hrms_sync_log                                             hrms_sync_log[]
   org_nodes                                                 org_nodes[]
+  reference_skips                                           reference_skips[]
   tenants                                                   tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   view_grants_view_grants_granted_by_idTousers              view_grants[]         @relation("view_grants_granted_by_idTousers")
   view_grants_view_grants_grantee_idTousers                 view_grants[]         @relation("view_grants_grantee_idTousers")
@@ -510,6 +519,9 @@ model policies {
   reasoning               String?
   owning_department       String?
   category_id             String?         @db.Uuid
+  bound_type              String?         @default("NONE")
+  bound_value             Decimal?        @db.Decimal
+  bound_field             String?
   status                  String          @default("ACTIVE")
   effective_from          DateTime        @default(now()) @db.Timestamptz(6)
   effective_to            DateTime?       @db.Timestamptz(6)
@@ -728,3 +740,24 @@ model alert_rules {
 
   @@map("alert_rules")
 }
+
+model reference_skips {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id      String   @db.Uuid
+  request_id     String?  @db.Uuid
+  category_id    String   @db.Uuid
+  step_type      StepType
+  skipped_by     String   @db.Uuid
+  skipped_at     DateTime @default(now()) @db.Timestamptz(6)
+  reason         String
+  described_rule String?  @db.Text
+
+  tenant   tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category categories         @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  user     users              @relation(fields: [skipped_by], references: [id], onDelete: Cascade)
+  request  approval_requests? @relation(fields: [request_id], references: [id], onDelete: SetNull)
+
+  @@index([tenant_id, category_id])
+  @@map("reference_skips")
+}
+

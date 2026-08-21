@@ -70,26 +70,36 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
     }
   };
 
-  const handleRevoke = async (grantId: string, email: string) => {
-    const revokeReason = prompt(`Enter mandatory revocation reason for ${email}:`);
-    if (!revokeReason || revokeReason.trim().length < 10) {
-      alert('Revocation requires a reason of at least 10 characters.');
+  const [revokeTarget, setRevokeTarget] = useState<{ id: string; email: string } | null>(null);
+  const [revokeReasonInput, setRevokeReasonInput] = useState('');
+  const [revokeError, setRevokeError] = useState('');
+
+  const confirmRevoke = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!revokeTarget) return;
+
+    if (revokeReasonInput.trim().length < 10) {
+      setRevokeError('Revocation requires a reason of at least 10 characters.');
       return;
     }
 
     try {
       const revoked = await revokeIntelligenceGrant({
-        grantId,
+        grantId: revokeTarget.id,
         tenantId,
         revokedBy: adminUserId,
-        revokeReason,
+        revokeReason: revokeReasonInput,
       });
 
-      setGrants(grants.map(g => (g.id === grantId ? revoked : g)));
+      setGrants(grants.map(g => (g.id === revokeTarget.id ? revoked : g)));
+      setRevokeTarget(null);
+      setRevokeReasonInput('');
+      setRevokeError('');
     } catch (err: any) {
-      alert(err.message || 'Failed to revoke grant');
+      setRevokeError(err.message || 'Failed to revoke grant');
     }
   };
+
 
   return (
     <div className="space-y-6">
@@ -217,7 +227,11 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
                     <td className="py-3.5 px-4 text-right">
                       {!isRevoked && (
                         <button
-                          onClick={() => handleRevoke(grant.id, grant.email)}
+                          onClick={() => {
+                            setRevokeTarget({ id: grant.id, email: grant.email });
+                            setRevokeReasonInput('');
+                            setRevokeError('');
+                          }}
                           className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-bold hover:underline"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Revoke
@@ -232,7 +246,57 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
         </table>
       </div>
 
+      {/* Revoke Modal */}
+      {revokeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-gray-900 font-sans">
+              Revoke Intelligence Grant for {revokeTarget.email}
+            </h3>
+
+            {revokeError && (
+              <div className="p-3 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
+                {revokeError}
+              </div>
+            )}
+
+            <form onSubmit={confirmRevoke} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Mandatory Revocation Reason (Min 10 Characters)
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="State reason for revoking access..."
+                  value={revokeReasonInput}
+                  onChange={(e) => setRevokeReasonInput(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRevokeTarget(null)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm"
+                >
+                  Confirm Revocation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal for Issuing Grant */}
+
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-lg w-full p-6 space-y-4">

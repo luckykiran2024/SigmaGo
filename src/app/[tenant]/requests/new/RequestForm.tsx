@@ -6,6 +6,9 @@ import { submitNewRequest } from './actions';
 import PersonPicker from '@/components/ui/PersonPicker';
 import Link from 'next/link';
 import { Plus, Trash2, Users, ArrowUp, ArrowDown, Search } from 'lucide-react';
+import GroupedCategoryPicker, { CategoryOption } from '@/components/ui/GroupedCategoryPicker';
+import MisclassificationBanner from '@/components/ui/MisclassificationBanner';
+import CaseCReferencePicker, { ReferenceItem } from '@/components/ui/CaseCReferencePicker';
 
 interface ActiveUser {
   id: string;
@@ -28,11 +31,13 @@ interface CustomFieldDef {
 interface RequestFormProps {
   renewFromRequest?: any;
   tenant: string;
-  categories: { id: string; name: string }[];
+  tenantId: string;
+  categories: any[];
   activeUsers: ActiveUser[];
   workflows?: any[];
   loggedInUserId: string;
   customFields?: CustomFieldDef[];
+  allActivePolicies?: any[];
 }
 
 interface ApprovalPathItem {
@@ -40,7 +45,7 @@ interface ApprovalPathItem {
   role: 'GENERAL' | 'PARALLEL' | 'REFERENCE';
 }
 
-export default function RequestForm({ tenant, categories, activeUsers, workflows = [], loggedInUserId, customFields = [], renewFromRequest }: RequestFormProps) {
+export default function RequestForm({ tenant, tenantId, categories, activeUsers, workflows = [], loggedInUserId, customFields = [], renewFromRequest, allActivePolicies = [] }: RequestFormProps) {
   const [content, setContent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -72,15 +77,24 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
     !f.category_id || f.category_id === selectedCategoryId
   );
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedCatId = e.target.value;
-    if (!selectedCatId) {
+  // Category selection, reference picking, and misclassification state
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(categories.length > 0 ? categories[0] : null);
+  const [selectedReference, setSelectedReference] = useState<ReferenceItem | null>(null);
+  const [referenceRelationship, setReferenceRelationship] = useState<string>('BASED_ON');
+  const [isReferenceSkipped, setIsReferenceSkipped] = useState<boolean>(false);
+  const [isOverrideKept, setIsOverrideKept] = useState<boolean>(false);
+
+  const handleSelectCategory = (cat: CategoryOption | null) => {
+    setSelectedCategory(cat);
+    setIsOverrideKept(false);
+
+    if (!cat) {
       setApprovalPath([{ userId: '', role: 'GENERAL' }]);
       setIsPathLocked(false);
       return;
     }
 
-    const linkedWorkflow = workflows.find(wf => wf.category_id === selectedCatId);
+    const linkedWorkflow = workflows.find(wf => wf.category_id === cat.id);
     if (linkedWorkflow) {
       if (linkedWorkflow.steps && linkedWorkflow.steps.length > 0) {
         const mappedSteps = linkedWorkflow.steps.map((s: any) => ({
@@ -97,6 +111,25 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
       setIsPathLocked(false);
     }
   };
+
+  // Misclassification calculation
+  const governingPol = (selectedCategory as any)?.governing_policy;
+  const boundType = governingPol?.bound_type || 'NONE';
+  const boundValue = governingPol?.bound_value ? Number(governingPol.bound_value) : null;
+
+  let enteredNumericValue: number | null = null;
+  if (boundValue !== null && boundType !== 'NONE') {
+    for (const val of Object.values(customFieldValues)) {
+      const num = Number(val);
+      if (!isNaN(num) && num > 0) {
+        enteredNumericValue = num;
+        break;
+      }
+    }
+  }
+
+  const isBreached = boundValue !== null && enteredNumericValue !== null && enteredNumericValue > boundValue;
+  const exceptionCategory = categories.find((c: any) => c.step_type === 'EXCEPTION' && c.governing_policy_id === selectedCategory?.governing_policy_id);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -200,11 +233,23 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
 
       // Append manually managed selected files
       formData.delete('attachments');
-      selectedFiles.forEach((file) => {
-        formData.append('attachments', file);
-      });
+      const referenceData = selectedReference && !isReferenceSkipped ? {
+        targetId: selectedReference.step_type !== 'PROCESS' ? selectedReference.id : null,
+        policyId: selectedReference.step_type === 'PROCESS' ? selectedReference.id : null,
+        relationship: referenceRelationship || 'BASED_ON'
+      } : null;
 
-      await submitNewRequest(formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues, { validUntil, reviewDate, renewedFromId: renewFromRequest?.id });
+      const overrideData = isOverrideKept ? {
+        isOverride: true,
+        reason: `Overrode policy bound for ${selectedCategory?.name}`
+      } : null;
+
+      await submitNewRequest(
+        formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues,
+        { validUntil, reviewDate, renewedFromId: renewFromRequest?.id },
+        referenceData,
+        overrideData
+      );
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit request.");
@@ -235,47 +280,74 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-sm border border-gray-100 rounded-lg p-6 sm:p-8">
         
-        {/* Subject and Category */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <label htmlFor="subject" className="block text-sm font-bold text-ink">
-              Subject
-            </label>
-            <div className="mt-2">
-              <input
-                type="text"
-                name="subject"
-                id="subject"
-                required
-                className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
-                placeholder="e.g. Q3 Marketing Budget Increase"
-              />
-            </div>
-          </div>
+        {/* STEP 1: CATEGORY SELECTION */}
+        <div>
+          <GroupedCategoryPicker
+            categories={categories}
+            selectedCategoryId={selectedCategory?.id || ''}
+            onSelectCategory={handleSelectCategory}
+          />
+        </div>
 
-          <div>
-            <label htmlFor="category" className="block text-sm font-bold text-ink">
-              Category
-            </label>
-            <div className="mt-2 relative">
-              <select
-                id="category"
-                name="category"
-                required
-                onChange={handleCategoryChange}
-                className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm appearance-none bg-white font-medium"
-              >
-                <option value="">Select a category...</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+        {/* STEP 2: MISCLASSIFICATION DETECTION BANNER */}
+        {selectedCategory && isBreached && enteredNumericValue !== null && governingPol && (
+          <MisclassificationBanner
+            currentCategory={selectedCategory}
+            policyBound={{
+              policyTitle: governingPol.title || 'Governing Policy',
+              boundType: boundType,
+              boundValue: boundValue || 0,
+              boundField: governingPol.bound_field
+            }}
+            enteredValue={enteredNumericValue}
+            exceptionCategory={exceptionCategory}
+            onSwitchCategory={(newCat) => handleSelectCategory(newCat)}
+            onKeepChoice={() => setIsOverrideKept(true)}
+            isOverrideKept={isOverrideKept}
+          />
+        )}
+
+        {/* STEP 3: CASE C REFERENCE PICKER (ALWAYS SHOWN DIRECTLY BELOW CATEGORY) */}
+        {selectedCategory && (
+          <CaseCReferencePicker
+            tenantId={tenantId}
+            categoryId={selectedCategory.id}
+            categoryStepType={(selectedCategory.step_type as any) || 'TRANSACTIONAL'}
+            governingPolicy={
+              governingPol
+                ? {
+                    id: governingPol.id,
+                    title: governingPol.title,
+                    statement: governingPol.statement,
+                    step_type: 'PROCESS',
+                    exception_count_ytd: 0,
+                  }
+                : null
+            }
+            allActivePolicies={allActivePolicies}
+            onSelectReference={(ref, rel, skipped) => {
+              setSelectedReference(ref);
+              setReferenceRelationship(rel);
+              setIsReferenceSkipped(skipped);
+            }}
+            userId={loggedInUserId}
+          />
+        )}
+
+        {/* SUBJECT */}
+        <div>
+          <label htmlFor="subject" className="block text-sm font-bold text-ink">
+            Subject
+          </label>
+          <div className="mt-2">
+            <input
+              type="text"
+              name="subject"
+              id="subject"
+              required
+              className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+              placeholder="e.g. Q3 Marketing Budget Increase"
+            />
           </div>
         </div>
 
@@ -586,32 +658,7 @@ export default function RequestForm({ tenant, categories, activeUsers, workflows
         </div>
 
         
-        {/* Optional References Section */}
-        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-ink">Does this decision reference an existing one?</h3>
-              <p className="text-xs text-muted font-normal mt-0.5">Optional. Link to previous decisions it is based on, replaces, or deviates from.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                const targetRefPrompt = prompt("Enter the reference number or decision ID to link (e.g., REQ-2026-0001):");
-                if (targetRefPrompt && targetRefPrompt.trim()) {
-                  const currentRefs = (document.getElementById('initial_references_input') as HTMLInputElement)?.value || '[]';
-                  const parsed = JSON.parse(currentRefs);
-                  parsed.push({ targetRef: targetRefPrompt.trim(), relationship: 'based_on' });
-                  (document.getElementById('initial_references_input') as HTMLInputElement).value = JSON.stringify(parsed);
-                  alert(`Added reference to ${targetRefPrompt.trim()}.`);
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-section-alt rounded-md border border-border transition"
-            >
-              + Add reference
-            </button>
-          </div>
-          <input type="hidden" id="initial_references_input" name="initial_references" defaultValue="[]" />
-        </div>
+
 
         {/* Submit Actions */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">

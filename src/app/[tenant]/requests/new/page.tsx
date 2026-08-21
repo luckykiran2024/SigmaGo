@@ -28,19 +28,41 @@ export default async function NewRequestPage({ params, searchParams }: { params:
     .eq('subdomain', resolvedParams.tenant)
     .single();
 
-  let categories: { id: string; name: string }[] = [];
+  let categories: any[] = [];
   let activeUsers: { id: string; name: string; designation: string | null; career_level: string | null; employee_id: string | null }[] = [];
   let workflows: any[] = [];
   let renewFromRequest: any = null;
   let customFields: any[] = [];
+  let allActivePolicies: any[] = [];
 
   if (tenantData) {
     const { data: cats } = await adminClient
       .from('categories')
-      .select('id, name, validity_mode, default_validity_days, max_validity_days, review_only')
+      .select(`
+        id, name, validity_mode, default_validity_days, max_validity_days, review_only,
+        domain, requester_description, step_type, governing_policy_id,
+        governing_policy:policies!categories_governing_policy_id_fkey(id, title, statement, bound_type, bound_value, bound_field)
+      `)
       .eq('tenant_id', tenantData.id);
     if (cats) {
       categories = cats;
+    }
+
+    // Fetch active policies for Case C reference pre-ranking
+    const { data: pols } = await adminClient
+      .from('policies')
+      .select('id, title, statement, status')
+      .eq('tenant_id', tenantData.id)
+      .eq('status', 'ACTIVE');
+    
+    if (pols) {
+      allActivePolicies = pols.map(p => ({
+        id: p.id,
+        title: p.title,
+        statement: p.statement,
+        step_type: 'PROCESS',
+        status: p.status
+      }));
     }
 
     const { data: users } = await adminClient
@@ -108,12 +130,14 @@ export default async function NewRequestPage({ params, searchParams }: { params:
     <div className="max-w-4xl mx-auto py-4">
       <RequestForm
         tenant={resolvedParams.tenant}
+        tenantId={tenantData?.id || ''}
         categories={categories}
         activeUsers={activeUsers}
         workflows={workflows}
         loggedInUserId={loggedInPublicUserId || ''}
         customFields={customFields}
         renewFromRequest={renewFromRequest}
+        allActivePolicies={allActivePolicies}
       />
     </div>
   );
