@@ -11,31 +11,40 @@ export async function uploadUserAvatarAction(
   fileName: string
 ): Promise<{ success: boolean; avatarUrl?: string; error?: string }> {
   try {
-    const base64Content = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-    const buffer = Buffer.from(base64Content, 'base64');
-    
-    const ext = fileName.split('.').pop() || 'png';
-    const filePath = `${userId}/avatar-${Date.now()}.${ext}`;
+    const formattedDataUrl = base64Data.startsWith('data:')
+      ? base64Data
+      : `data:${mimeType};base64,${base64Data}`;
 
-    const { data, error } = await adminClient.storage
-      .from('avatars')
-      .upload(filePath, buffer, {
-        contentType: mimeType,
-        upsert: true
-      });
+    let avatarUrlToSave = formattedDataUrl;
 
-    if (error) {
-      console.error("Storage upload error:", error);
-      return { success: false, error: error.message };
+    try {
+      const base64Content = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const buffer = Buffer.from(base64Content, 'base64');
+      const ext = fileName.split('.').pop() || 'png';
+      const filePath = `${userId}/avatar-${Date.now()}.${ext}`;
+
+      const { data, error } = await adminClient.storage
+        .from('avatars')
+        .upload(filePath, buffer, {
+          contentType: mimeType,
+          upsert: true
+        });
+
+      if (!error && data) {
+        const { data: { publicUrl } } = adminClient.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        if (publicUrl) {
+          avatarUrlToSave = publicUrl;
+        }
+      }
+    } catch (storageErr) {
+      console.warn("Storage upload failed, using data URL fallback:", storageErr);
     }
-
-    const { data: { publicUrl } } = adminClient.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
 
     const { error: dbErr } = await adminClient
       .from('users')
-      .update({ avatar_url: publicUrl })
+      .update({ avatar_url: avatarUrlToSave })
       .eq('id', userId);
 
     if (dbErr) {
@@ -43,12 +52,13 @@ export async function uploadUserAvatarAction(
       return { success: false, error: dbErr.message };
     }
 
-    return { success: true, avatarUrl: publicUrl };
+    return { success: true, avatarUrl: avatarUrlToSave };
   } catch (err: any) {
     console.error("uploadUserAvatarAction Exception:", err);
     return { success: false, error: err.message };
   }
 }
+
 
 export async function removeUserAvatarAction(userId: string): Promise<void> {
   const { error } = await adminClient

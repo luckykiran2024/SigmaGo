@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, LayoutDashboard, Settings, Globe, LogOut, ExternalLink } from 'lucide-react';
+import { signOutAction } from '@/app/login/actions';
 
 interface NavbarProps {
   tenantSubdomain: string;
@@ -20,6 +22,19 @@ export default function Navbar({
   userName = 'User',
 }: NavbarProps) {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { label: 'Dashboard', href: `/${tenantSubdomain}` },
@@ -29,6 +44,8 @@ export default function Navbar({
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
     { label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` },
   ];
+
+  const userInitial = userName ? userName.charAt(0).toUpperCase() : 'M';
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-[#E4E7EC] h-[56px]">
@@ -79,7 +96,7 @@ export default function Navbar({
           </nav>
         </div>
 
-        {/* Right: Single Primary Action & User Profile */}
+        {/* Right: Single Primary Action & Interactive "M" User Profile Dropdown */}
         <div className="flex items-center gap-3">
           <Link
             href={`/${tenantSubdomain}/requests/new`}
@@ -89,8 +106,82 @@ export default function Navbar({
             <span>New Request</span>
           </Link>
 
-          <div className="w-[30px] h-[30px] rounded-full bg-[#E8EDF4] text-[#274C77] border border-[#D3DEEB] font-bold text-[12px] flex items-center justify-center shrink-0">
-            {userName.charAt(0).toUpperCase()}
+          {/* "M" User Avatar Menu Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="User menu"
+              aria-expanded={menuOpen}
+              className="w-[32px] h-[32px] rounded-full bg-[#E8EDF4] text-[#274C77] border border-[#D3DEEB] hover:border-[#274C77] font-bold text-[13px] flex items-center justify-center shrink-0 shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-[#274C77]/20 active:scale-95 overflow-hidden"
+            >
+              {userAvatarUrl ? (
+                <img
+                  src={userAvatarUrl}
+                  alt={userName}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span>{userInitial}</span>
+              )}
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E4E7EC] rounded-xl shadow-lg z-50 p-1.5 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150 font-sans">
+                {/* Header info */}
+                <div className="px-3 py-2 border-b border-[#F2F4F7]">
+                  <p className="text-[13px] font-bold text-[#101828] truncate">{userName}</p>
+                  <p className="text-[11px] font-medium text-[#667085] truncate">{tenantName}</p>
+                </div>
+
+                {/* Menu items */}
+                <div className="py-1 space-y-0.5">
+                  <Link
+                    href={`/${tenantSubdomain}`}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-[#344054] rounded-lg hover:bg-[#F9FAFB] hover:text-[#101828] transition"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-[#667085]" />
+                    <span>Dashboard</span>
+                  </Link>
+
+                  <Link
+                    href={`/${tenantSubdomain}/settings`}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-[#344054] rounded-lg hover:bg-[#F9FAFB] hover:text-[#101828] transition"
+                  >
+                    <Settings className="w-4 h-4 text-[#667085]" />
+                    <span>Settings</span>
+                  </Link>
+
+                  <Link
+                    href="/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 text-[13px] font-medium text-[#344054] rounded-lg hover:bg-[#F9FAFB] hover:text-[#101828] transition group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Globe className="w-4 h-4 text-[#667085]" />
+                      <span>Landing Page</span>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#98A2B3] group-hover:text-[#344054]" />
+                  </Link>
+                </div>
+
+                {/* Divider & Logout */}
+                <div className="pt-1 border-t border-[#F2F4F7]">
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-[#B42318] rounded-lg hover:bg-[#FEE8E6] transition text-left"
+                    >
+                      <LogOut className="w-4 h-4 text-[#B42318]" />
+                      <span>Logout</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

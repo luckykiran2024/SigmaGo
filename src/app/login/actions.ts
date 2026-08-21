@@ -71,3 +71,10 @@ export async function resetPassword(email: string) {
   }
   return { success: true };
 }
+
+export async function signOutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  return redirect('/login');
+}
+

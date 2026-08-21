@@ -45,6 +45,55 @@
   --e: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+html.dark, body.dark {
+  --bg: #0F172A;
+  --alt: #1E293B;
+  --alt2: #334155;
+  --border: #334155;
+  --border2: #475569;
+  --ink: #F8FAFC;
+  --ink2: #E2E8F0;
+  --muted: #94A3B8;
+  --muted2: #64748B;
+  --brand: #38BDF8;
+  --brand-h: #0284C7;
+  --brand-lt: #1E293B;
+  --brand-lt2: #334155;
+}
+
+html.midnight, body.midnight {
+  --bg: #0B0F19;
+  --alt: #111827;
+  --alt2: #1F2937;
+  --border: #1F2937;
+  --border2: #374151;
+  --ink: #F3F4F6;
+  --ink2: #E5E7EB;
+  --muted: #9CA3AF;
+  --muted2: #6B7280;
+  --brand: #6366F1;
+  --brand-h: #4F46E5;
+  --brand-lt: #1F2937;
+  --brand-lt2: #374151;
+}
+
+html.forest, body.forest {
+  --bg: #061814;
+  --alt: #0C2923;
+  --alt2: #143D35;
+  --border: #143D35;
+  --border2: #1E5449;
+  --ink: #ECFDF5;
+  --ink2: #D1FAE5;
+  --muted: #6EE7B7;
+  --muted2: #34D399;
+  --brand: #10B981;
+  --brand-h: #059669;
+  --brand-lt: #0C2923;
+  --brand-lt2: #143D35;
+}
+
+
 body {
   color: var(--ink);
   background: var(--alt);

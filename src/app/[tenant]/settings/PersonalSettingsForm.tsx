@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { uploadUserAvatarAction, removeUserAvatarAction, updateProfileAndSettingsAction, changeUserPasswordAction } from './actions';
-import { User, Upload, Trash2, Key, Bell, Shield, AlertTriangle } from 'lucide-react';
+import { useTheme, ThemeMode } from '@/components/providers/ThemeProvider';
+import { User, Upload, Trash2, Key, Bell, Shield, AlertTriangle, Palette, Check, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 
 interface UserData {
@@ -22,6 +24,8 @@ export default function PersonalSettingsForm({
   userData: UserData;
   tenantSubdomain: string;
 }) {
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [name, setName] = useState(userData.name);
   const [avatarUrl, setAvatarUrl] = useState(userData.avatar_url);
   const [uploading, setUploading] = useState(false);
@@ -42,12 +46,56 @@ export default function PersonalSettingsForm({
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const themeOptions: { id: ThemeMode; label: string; description: string; bg: string; brand: string }[] = [
+    {
+      id: 'light',
+      label: 'Light Mode',
+      description: 'Clean default interface with high legibility.',
+      bg: 'bg-white border-gray-200 text-gray-900',
+      brand: 'bg-[#274C77]'
+    },
+    {
+      id: 'dark',
+      label: 'Dark Slate',
+      description: 'Sleek dark theme reducing eye strain in low light.',
+      bg: 'bg-[#0F172A] border-gray-700 text-white',
+      brand: 'bg-[#38BDF8]'
+    },
+    {
+      id: 'midnight',
+      label: 'Midnight Blue',
+      description: 'Deep navy background with indigo accents.',
+      bg: 'bg-[#0B0F19] border-indigo-900 text-indigo-100',
+      brand: 'bg-[#6366F1]'
+    },
+    {
+      id: 'forest',
+      label: 'Emerald Forest',
+      description: 'Modern cyber teal and dark emerald theme.',
+      bg: 'bg-[#061814] border-emerald-900 text-emerald-100',
+      brand: 'bg-[#10B981]'
+    }
+  ];
+
+  const handleThemeSelect = (selectedTheme: ThemeMode) => {
+    setTheme(selectedTheme);
+    // Also save into user_settings in database
+    const updatedSettings = {
+      ...settings,
+      theme: selectedTheme,
+      action_needed_emails: actionNeededEmails,
+      fyi_emails: fyiEmails,
+      overdue_reminders: overdueReminders
+    };
+    updateProfileAndSettingsAction(userData.id, name, updatedSettings).catch(console.error);
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    if (file.size > 2 * 1024 * 1024) {
-      setMsg({ type: 'error', text: 'Avatar size must be under 2MB' });
+    if (file.size > 5 * 1024 * 1024) {
+      setMsg({ type: 'error', text: 'Avatar size must be under 5MB' });
       return;
     }
 
@@ -63,9 +111,10 @@ export default function PersonalSettingsForm({
 
       if (res.success && res.avatarUrl) {
         setAvatarUrl(res.avatarUrl);
-        setMsg({ type: 'success', text: 'Avatar updated successfully!' });
+        setMsg({ type: 'success', text: 'Display picture updated successfully!' });
+        router.refresh();
       } else {
-        setMsg({ type: 'error', text: res.error || 'Failed to upload avatar' });
+        setMsg({ type: 'error', text: res.error || 'Failed to upload display picture' });
       }
     };
     reader.onerror = () => {
@@ -75,15 +124,16 @@ export default function PersonalSettingsForm({
   };
 
   const handleAvatarRemove = async () => {
-    if (!confirm('Are you sure you want to remove your avatar?')) return;
+    if (!confirm('Are you sure you want to remove your display picture?')) return;
     setUploading(true);
     setMsg(null);
     try {
       await removeUserAvatarAction(userData.id);
       setAvatarUrl(null);
-      setMsg({ type: 'success', text: 'Avatar removed successfully.' });
+      setMsg({ type: 'success', text: 'Display picture removed successfully.' });
+      router.refresh();
     } catch (err: any) {
-      setMsg({ type: 'error', text: err.message || 'Failed to remove avatar' });
+      setMsg({ type: 'error', text: err.message || 'Failed to remove display picture' });
     } finally {
       setUploading(false);
     }
@@ -95,6 +145,8 @@ export default function PersonalSettingsForm({
     setMsg(null);
 
     const updatedSettings = {
+      ...settings,
+      theme,
       action_needed_emails: actionNeededEmails,
       fyi_emails: fyiEmails,
       overdue_reminders: overdueReminders
@@ -103,12 +155,14 @@ export default function PersonalSettingsForm({
     try {
       await updateProfileAndSettingsAction(userData.id, name, updatedSettings);
       setMsg({ type: 'success', text: 'Profile and preferences updated successfully!' });
+      router.refresh();
     } catch (err: any) {
       setMsg({ type: 'error', text: err.message || 'Failed to save settings' });
     } finally {
       setSavingProfile(false);
     }
   };
+
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,7 +368,56 @@ export default function PersonalSettingsForm({
         </div>
       </form>
 
+      {/* SECTION - THEME & APPEARANCE */}
+      <div className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
+        <div>
+          <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
+            <Palette className="w-5 h-5 text-brand" />
+            Theme & Appearance
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">Customize the color scheme and appearance of the tool.</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {themeOptions.map((opt) => {
+            const isSelected = theme === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleThemeSelect(opt.id)}
+                className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-32 ${opt.bg} ${
+                  isSelected
+                    ? 'ring-2 ring-brand border-transparent shadow-md'
+                    : 'hover:border-gray-300 hover:shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3.5 h-3.5 rounded-full ${opt.brand}`} />
+                    <span className="text-xs font-bold font-sans">{opt.label}</span>
+                  </div>
+                  {isSelected && (
+                    <div className="w-5 h-5 rounded-full bg-brand text-white flex items-center justify-center">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] opacity-75 font-medium leading-relaxed">
+                  {opt.description}
+                </p>
+                <div className="flex items-center gap-1.5 pt-1">
+                  <div className="h-1.5 w-12 rounded-full opacity-40 bg-current" />
+                  <div className="h-1.5 w-6 rounded-full opacity-20 bg-current" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* SECTION 2 - CHANGE PASSWORD */}
+
       <form onSubmit={handleChangePassword} className="bg-white border border-gray-100 shadow-sm rounded-lg p-6 space-y-6">
         <div>
           <h3 className="text-base font-bold text-ink font-sans flex items-center gap-2">
