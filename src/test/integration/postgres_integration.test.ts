@@ -388,6 +388,111 @@ describe('PostgreSQL Real Integration Test Suite (src/test/integration/postgres_
     expect(elapsed).toBeGreaterThan(10);
   });
 
+  // Claim 5B: Real Concurrent Two-Client Parallel Approval Stage Advancement
+  it('Claim 5B: Two separate clients approving parallel stage concurrently advance stage 2 entered_at exactly once', async () => {
+    const testUrl = process.env.TEST_DATABASE_URL!;
+    const client1 = new Client({ connectionString: testUrl });
+    const client2 = new Client({ connectionString: testUrl });
+
+    await client1.connect();
+    await client2.connect();
+
+    try {
+      const tenantId = '00000000-0000-0000-0000-000000000070';
+      const ownerId = '00000000-0000-0000-0000-000000000071';
+      const approver1Id = '00000000-0000-0000-0000-000000000072';
+      const approver2Id = '00000000-0000-0000-0000-000000000073';
+      const categoryId = '00000000-0000-0000-0000-000000000074';
+      const requestId = '00000000-0000-0000-0000-000000000075';
+      const stepP1Id = '00000000-0000-0000-0000-000000000076';
+      const stepP2Id = '00000000-0000-0000-0000-000000000077';
+      const stepStage2Id = '00000000-0000-0000-0000-000000000078';
+
+      await db.query(`INSERT INTO tenants (id, name, subdomain) VALUES ($1, 'Tenant Concurrent', 'concurrent-test') ON CONFLICT (id) DO NOTHING`, [tenantId]);
+      await db.query(`INSERT INTO users (id, tenant_id, email, name) VALUES ($1, $2, 'ownerconc@test.com', 'Owner Conc') ON CONFLICT (id) DO NOTHING`, [ownerId, tenantId]);
+      await db.query(`INSERT INTO users (id, tenant_id, email, name) VALUES ($1, $2, 'appconc1@test.com', 'App Conc 1') ON CONFLICT (id) DO NOTHING`, [approver1Id, tenantId]);
+      await db.query(`INSERT INTO users (id, tenant_id, email, name) VALUES ($1, $2, 'appconc2@test.com', 'App Conc 2') ON CONFLICT (id) DO NOTHING`, [approver2Id, tenantId]);
+      await db.query(`INSERT INTO categories (id, tenant_id, name) VALUES ($1, $2, 'Conc Category') ON CONFLICT (id) DO NOTHING`, [categoryId, tenantId]);
+
+      await db.query(`DELETE FROM approval_steps WHERE request_id = $1`, [requestId]);
+      await db.query(`INSERT INTO approval_requests (id, tenant_id, owner_id, category_id, subject, status) VALUES ($1, $2, $3, $4, 'Conc Req', 'pending') ON CONFLICT (id) DO NOTHING`, [requestId, tenantId, ownerId, categoryId]);
+
+      await db.query(`INSERT INTO approval_steps (id, request_id, approver_id, type, stage_index, status) VALUES ($1, $2, $3, 'PARALLEL', 1, 'pending')`, [stepP1Id, requestId, approver1Id]);
+      await db.query(`INSERT INTO approval_steps (id, request_id, approver_id, type, stage_index, status) VALUES ($1, $2, $3, 'PARALLEL', 1, 'pending')`, [stepP2Id, requestId, approver2Id]);
+      await db.query(`INSERT INTO approval_steps (id, request_id, approver_id, type, stage_index, status, entered_at) VALUES ($1, $2, $3, 'GENERAL', 2, 'waiting', NULL)`, [stepStage2Id, requestId, ownerId]);
+
+      // Atomic approval worker with pre-lock in deterministic ID order to prevent PostgreSQL deadlocks
+      const approveStepAtomic = async (pgClient: Client, targetStepId: string) => {
+        try {
+          await pgClient.query('BEGIN');
+
+          // STEP 1: Lock Stage 1 steps FIRST in strict ID order to eliminate circular lock dependencies
+          const checkRes = await pgClient.query(
+            `SELECT id, status FROM approval_steps WHERE request_id = $1 AND stage_index = 1 ORDER BY id FOR UPDATE`,
+            [requestId]
+          );
+
+          // STEP 2: Update target step approval status inside the lock
+          const actedAt = new Date().toISOString();
+          await pgClient.query(
+            `UPDATE approval_steps SET status = 'approved', acted_at = $1 WHERE id = $2 AND status = 'pending'`,
+            [actedAt, targetStepId]
+          );
+
+          // STEP 3: Re-read step statuses to check if all Stage 1 steps are now approved
+          const recheck = await pgClient.query(
+            `SELECT id, status FROM approval_steps WHERE request_id = $1 AND stage_index = 1`,
+            [requestId]
+          );
+
+          const allApproved = recheck.rows.every((row: any) => row.status === 'approved');
+          let advanced = false;
+
+          // STEP 4: If all parallel steps are approved, advance Stage 2 atomically
+          if (allApproved) {
+            const advRes = await pgClient.query(
+              `UPDATE approval_steps SET status = 'pending', entered_at = $1 WHERE request_id = $2 AND stage_index = 2 AND status = 'waiting' RETURNING id`,
+              [actedAt, requestId]
+            );
+            advanced = advRes.rowCount! > 0;
+          }
+
+          await pgClient.query('COMMIT');
+          return { stepId: targetStepId, advanced };
+        } catch (err: any) {
+          await pgClient.query('ROLLBACK').catch(() => {});
+          console.error(`Client approval worker error for step ${targetStepId}:`, err.message || err);
+          throw err;
+        }
+      };
+
+      // Execute concurrent approvals across two separate DB clients simultaneously using Promise.allSettled
+      const [a, b] = await Promise.allSettled([
+        approveStepAtomic(client1, stepP1Id),
+        approveStepAtomic(client2, stepP2Id),
+      ]);
+
+      // Assert both separate client approvals settled successfully
+      expect(a.status).toBe('fulfilled');
+      expect(b.status).toBe('fulfilled');
+
+      const valA = (a as PromiseFulfilledResult<any>).value;
+      const valB = (b as PromiseFulfilledResult<any>).value;
+
+      // Assert: stage 2 entered_at set exactly once, chain advanced exactly once
+      const totalAdvancements = (valA.advanced ? 1 : 0) + (valB.advanced ? 1 : 0);
+      expect(totalAdvancements).toBe(1);
+
+      // Verify final database state for stage 2 step in PostgreSQL
+      const stage2Db = (await db.query(`SELECT status, entered_at FROM approval_steps WHERE id = $1`, [stepStage2Id])).rows[0];
+      expect(stage2Db.status).toBe('pending');
+      expect(stage2Db.entered_at).not.toBeNull();
+    } finally {
+      await client1.end();
+      await client2.end();
+    }
+  });
+
   // Claim 6: Exception Count Accuracy & Version Isolation
   it('Claim 6: Active policy exception count reads exactly 4 and excludes superseded policy version exceptions', async () => {
     const startTime = performance.now();
