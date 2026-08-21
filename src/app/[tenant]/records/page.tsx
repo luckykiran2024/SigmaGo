@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
-import Navbar from '@/components/ui/Navbar';
 import Link from 'next/link';
 import { ShieldCheck, Search, Filter, RefreshCw } from 'lucide-react';
 
@@ -99,8 +98,6 @@ export default async function RecordsPage({ params, searchParams }: RecordsPageP
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <Navbar tenantSubdomain={tenantSubdomain} tenantName={tenant.name} />
-
       <main className="max-w-[1240px] mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
