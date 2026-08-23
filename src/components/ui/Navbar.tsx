@@ -12,6 +12,7 @@ interface NavbarProps {
   pendingApprovalsCount?: number;
   userAvatarUrl?: string;
   userName?: string;
+  isAdmin?: boolean;
 }
 
 export default function Navbar({
@@ -20,6 +21,7 @@ export default function Navbar({
   pendingApprovalsCount = 0,
   userAvatarUrl,
   userName = 'User',
+  isAdmin = false,
 }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,9 +42,9 @@ export default function Navbar({
     { label: 'Dashboard', href: `/${tenantSubdomain}` },
     { label: 'Approvals', href: `/${tenantSubdomain}/approvals`, count: pendingApprovalsCount },
     { label: 'Records', href: `/${tenantSubdomain}/records` },
-    { label: 'Policies', href: `/${tenantSubdomain}/admin/intelligence` },
+    ...(isAdmin ? [{ label: 'Policies', href: `/${tenantSubdomain}/admin/intelligence` }] : []),
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
-    { label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` },
+    ...(isAdmin ? [{ label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` }] : []),
   ];
 
   const userInitial = userName ? userName.charAt(0).toUpperCase() : 'M';

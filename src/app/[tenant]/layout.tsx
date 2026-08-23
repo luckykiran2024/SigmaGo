@@ -50,6 +50,7 @@ export default async function TenantLayout({
         pendingApprovalsCount={pendingCount || 0}
         userName={profile.name || user.email?.split('@')[0] || 'User'}
         userAvatarUrl={(profile as any).avatar_url}
+        isAdmin={profile.role === 'admin' || profile.role === 'owner'}
       />
       
       {/* Main Content Area */}
