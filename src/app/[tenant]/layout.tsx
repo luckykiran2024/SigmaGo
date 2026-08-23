@@ -21,6 +21,15 @@ export default async function TenantLayout({
     redirect('/login');
   }
 
+  // Enforce Super Admin isolation: Platform Super Admin operators do not view tenant approval queues
+  const isSuperAdminEmail =
+    user.email === 'admin@sigmago.com' ||
+    user.email === 'superadmin@sigmago.com';
+
+  if (isSuperAdminEmail) {
+    redirect('/platform-admin');
+  }
+
   // Fetch profile and tenant details concurrently
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) {

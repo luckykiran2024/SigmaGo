@@ -19,6 +19,15 @@ export async function signIn(formData: FormData) {
     return redirect(`/login?message=${encodeURIComponent(error?.message || 'Login failed')}`);
   }
 
+  // Check for platform super admin account
+  const isSuperAdmin =
+    email.toLowerCase().trim() === 'admin@sigmago.com' ||
+    email.toLowerCase().trim() === 'superadmin@sigmago.com';
+
+  if (isSuperAdmin) {
+    return redirect('/platform-admin');
+  }
+
   // Resolve user profile to find their tenant subdomain
   const profile = await getProfileForAuthUser(signInData.user.id, signInData.user.email || email);
   
