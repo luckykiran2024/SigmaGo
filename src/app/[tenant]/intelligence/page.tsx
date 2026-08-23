@@ -177,6 +177,7 @@ export default async function UserIntelligencePage({
                 <th className="py-3 px-4">Reference</th>
                 <th className="py-3 px-4">Decision Subject</th>
                 <th className="py-3 px-4">Category Domain</th>
+                <th className="py-3 px-4 text-center">Blast Radius</th>
                 <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
@@ -193,6 +194,11 @@ export default async function UserIntelligencePage({
                   <td className="py-3.5 px-4">
                     <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#F2F4F7] text-[#344054] uppercase">
                       {item.categories?.domain || 'GENERAL'}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-center">
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#E8EDF4] text-[#274C77]">
+                      {item.blast_at_seal ?? 0} descendants
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center">
