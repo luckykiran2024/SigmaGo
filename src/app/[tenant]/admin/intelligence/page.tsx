@@ -1,6 +1,8 @@
 import { adminClient } from '@/lib/supabase/admin';
 import GrantManager from './GrantManager';
 
+import Link from 'next/link';
+
 export default async function AdminIntelligencePage({
   params,
 }: {
@@ -36,13 +38,22 @@ export default async function AdminIntelligencePage({
 
   return (
     <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
-      <div className="border-b border-[#E4E7EC] pb-6">
-        <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
-          Organizational Intelligence Access
-        </h1>
-        <p className="text-[14px] text-[#667085] mt-0.5">
-          Decoupled Access Control: Intelligence access is an explicit, audited grant issued to normalized email addresses. Admin and HR roles do not confer intelligence visibility.
-        </p>
+      <div className="border-b border-[#E4E7EC] pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
+            Organizational Intelligence Access & Grant Register
+          </h1>
+          <p className="text-[14px] text-[#667085] mt-0.5">
+            Decoupled Access Control: Admin/Owner defines for whom intelligence access is granted. Roles carry no inherent visibility.
+          </p>
+        </div>
+
+        <Link
+          href={`/${resolvedParams.tenant}/intelligence`}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#274C77] hover:bg-[#1E3C60] text-white text-xs font-bold shadow-xs transition shrink-0"
+        >
+          <span>View Decision Analytics Dashboard →</span>
+        </Link>
       </div>
 
       <GrantManager

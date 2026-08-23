@@ -83,6 +83,22 @@ export default async function UserIntelligencePage({
 
   return (
     <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
+      {/* Admin Notice Banner */}
+      {isAdmin && (
+        <div className="p-4 rounded-2xl bg-[#E8EDF4] border border-[#D3DEEB] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-[#274C77] font-semibold">
+            <Lock className="w-4 h-4 shrink-0 text-[#274C77]" />
+            <span>Admin / Owner Console: Manage and issue explicit intelligence grants to employees and auditors.</span>
+          </div>
+          <Link
+            href={`/${resolvedParams.tenant}/admin/intelligence`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#274C77] hover:bg-[#1E3C60] text-white font-bold transition shrink-0"
+          >
+            <span>Manage Access Grants Register →</span>
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-[#E4E7EC] pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -91,13 +107,13 @@ export default async function UserIntelligencePage({
             Organizational Decision Analytics & Metrics
           </h1>
           <p className="text-xs text-[#667085] mt-1">
-            Decoupled access granted to <span className="font-mono text-[#274C77] font-bold">{userEmail}</span> • Scope: <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8EDF4] text-[#274C77] uppercase">{grantScope}</span>
+            Active Grant for <span className="font-mono text-[#274C77] font-bold">{userEmail}</span> • Granted Scope: <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8EDF4] text-[#274C77] uppercase">{grantScope}</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
           <CheckCircle2 className="w-4 h-4" />
-          <span>Active Intelligence Access Grant</span>
+          <span>Verified Intelligence Access</span>
         </div>
       </div>
 
