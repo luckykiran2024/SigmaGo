@@ -13,6 +13,7 @@ interface NavbarProps {
   userAvatarUrl?: string;
   userName?: string;
   isAdmin?: boolean;
+  hasIntelligenceGrant?: boolean;
 }
 
 export default function Navbar({
@@ -22,6 +23,7 @@ export default function Navbar({
   userAvatarUrl,
   userName = 'User',
   isAdmin = false,
+  hasIntelligenceGrant = false,
 }: NavbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,7 +44,9 @@ export default function Navbar({
     { label: 'Dashboard', href: `/${tenantSubdomain}` },
     { label: 'Approvals', href: `/${tenantSubdomain}/approvals`, count: pendingApprovalsCount },
     { label: 'Records', href: `/${tenantSubdomain}/records` },
-    ...(isAdmin ? [{ label: 'Policies', href: `/${tenantSubdomain}/admin/intelligence` }] : []),
+    ...(hasIntelligenceGrant || isAdmin
+      ? [{ label: 'Intelligence', href: `/${tenantSubdomain}/intelligence` }]
+      : []),
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
     ...(isAdmin ? [{ label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` }] : []),
   ];

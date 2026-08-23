@@ -51,6 +51,18 @@ export default async function TenantLayout({
     .eq('approver_id', profile.id)
     .eq('status', 'pending');
 
+  // Check if user holds an explicit active Intelligence Access Grant (§ Build Prompt #17 Decoupled Access Control)
+  const userEmail = (profile.email || user.email || '').toLowerCase().trim();
+  const { data: activeGrant } = await adminClient
+    .from('intelligence_grants')
+    .select('id')
+    .eq('tenant_id', profile.tenant_id)
+    .eq('email', userEmail)
+    .is('revoked_at', null)
+    .maybeSingle();
+
+  const hasIntelligenceAccess = Boolean(activeGrant) || profile.role === 'admin' || profile.role === 'owner';
+
   const userTheme = (profile as any).user_settings?.theme || 'light';
 
   return (
@@ -65,6 +77,7 @@ export default async function TenantLayout({
         userName={profile.name || user.email?.split('@')[0] || 'User'}
         userAvatarUrl={(profile as any).avatar_url}
         isAdmin={profile.role === 'admin' || profile.role === 'owner'}
+        hasIntelligenceGrant={hasIntelligenceAccess}
       />
       
       {/* Main Content Area */}
