@@ -45,7 +45,7 @@ export default function Navbar({
     { label: 'Approvals', href: `/${tenantSubdomain}/approvals`, count: pendingApprovalsCount },
     { label: 'Records', href: `/${tenantSubdomain}/records` },
     ...(hasIntelligenceGrant || isAdmin
-      ? [{ label: 'Intelligence', href: `/${tenantSubdomain}/intelligence` }]
+      ? [{ label: 'Decision Analytics', href: `/${tenantSubdomain}/intelligence` }]
       : []),
     { label: 'Delegations', href: `/${tenantSubdomain}/delegations` },
     ...(isAdmin ? [{ label: 'Admin', href: `/${tenantSubdomain}/admin/approvers` }] : []),

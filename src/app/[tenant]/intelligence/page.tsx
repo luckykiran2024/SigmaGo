@@ -88,7 +88,7 @@ export default async function UserIntelligencePage({
         <div>
           <h1 className="text-2xl font-extrabold text-[#101828] tracking-tight flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-[#274C77]" />
-            Organizational Intelligence & Metrics
+            Organizational Decision Analytics & Metrics
           </h1>
           <p className="text-xs text-[#667085] mt-1">
             Decoupled access granted to <span className="font-mono text-[#274C77] font-bold">{userEmail}</span> • Scope: <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8EDF4] text-[#274C77] uppercase">{grantScope}</span>
