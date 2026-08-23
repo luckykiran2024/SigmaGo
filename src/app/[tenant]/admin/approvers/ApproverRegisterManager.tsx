@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { UserCheck, ShieldAlert, AlertTriangle, Plus, Trash2, Search, CheckCircle2, UserX } from 'lucide-react';
-import { adminClient } from '@/lib/supabase/admin';
+import { addApproverToRegisterAction } from './actions';
 
 interface AuthorityBadge {
   categoryName: string;
@@ -13,33 +13,36 @@ interface ApproverItem {
   id: string;
   email: string;
   fullName: string;
-  jobTitle?: string;
-  department?: string;
+  jobTitle?: string | null;
+  department?: string | null;
   addedAt: string;
   removedAt?: string | null;
-  note?: string;
+  note?: string | null;
   authorities: AuthorityBadge[];
 }
 
-interface CategoryStageCheck {
-  categoryName: string;
-  unstaffedStages: number[];
+interface DirectoryPerson {
+  id: string;
+  email: string;
+  full_name: string;
+  job_title?: string | null;
+  department?: string | null;
 }
 
 interface ApproverRegisterManagerProps {
   approvers: ApproverItem[];
-  unstaffedCategories: CategoryStageCheck[];
-  directoryPeople: Array<{ id: string; email: string; full_name: string; job_title?: string; department?: string }>;
   tenantId: string;
   adminUserId: string;
+  directoryPeople: DirectoryPerson[];
+  unstaffedCategories: { categoryName: string; unstaffedStages: number[] }[];
 }
 
 export default function ApproverRegisterManager({
   approvers: initialApprovers,
-  unstaffedCategories,
-  directoryPeople,
   tenantId,
   adminUserId,
+  directoryPeople,
+  unstaffedCategories,
 }: ApproverRegisterManagerProps) {
   const [approvers, setApprovers] = useState<ApproverItem[]>(initialApprovers);
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,24 +74,13 @@ export default function ApproverRegisterManager({
     setLoading(true);
 
     try {
-      // Create approver record
-      const { data: newApprover, error: insertErr } = await adminClient
-        .from('approvers')
-        .upsert(
-          {
-            tenant_id: tenantId,
-            email: selectedDirEmail.toLowerCase().trim(),
-            added_by: adminUserId,
-            added_at: new Date().toISOString(),
-            removed_at: null,
-            note: note || 'Added to Approver Register',
-          },
-          { onConflict: 'tenant_id,email' }
-        )
-        .select()
-        .single();
-
-      if (insertErr) throw insertErr;
+      // Create approver record via server action
+      const newApprover = await addApproverToRegisterAction({
+        tenantId,
+        email: selectedDirEmail,
+        addedBy: adminUserId,
+        note,
+      });
 
       const dirPerson = directoryPeople.find((p) => p.email === selectedDirEmail);
 

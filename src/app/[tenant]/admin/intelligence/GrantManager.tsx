@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { ShieldCheck, ShieldAlert, Key, UserCheck, AlertCircle, Plus, Trash2, Clock, Eye } from 'lucide-react';
-import { issueIntelligenceGrant, revokeIntelligenceGrant, IntelligenceScope } from '@/lib/intelligence/access';
+import { IntelligenceScope } from '@/lib/intelligence/access';
+import { issueIntelligenceGrantAction, revokeIntelligenceGrantAction } from './actions';
 
 interface GrantRecord {
   id: string;
@@ -48,7 +49,7 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
     setLoading(true);
 
     try {
-      const newGrant = await issueIntelligenceGrant({
+      const newGrant = await issueIntelligenceGrantAction({
         tenantId,
         email,
         scope,
@@ -84,7 +85,7 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
     }
 
     try {
-      const revoked = await revokeIntelligenceGrant({
+      const revoked = await revokeIntelligenceGrantAction({
         grantId: revokeTarget.id,
         tenantId,
         revokedBy: adminUserId,
