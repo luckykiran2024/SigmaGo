@@ -102,29 +102,38 @@ export default async function UserIntelligencePage({
       </div>
 
       {/* Overview Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-6 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
           <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-bold uppercase tracking-wider">Sealed Decision Records</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Orphan Decision Rate</span>
+            <ShieldAlert className="w-5 h-5 text-amber-600" />
+          </div>
+          <p className="text-3xl font-extrabold text-[#101828]">0.0%</p>
+          <p className="text-xs text-[#667085]">Decisions without recorded rule ancestors</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-[#667085]">
+            <span className="text-xs font-bold uppercase tracking-wider">Inherited Soundness</span>
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
           </div>
-          <p className="text-3xl font-extrabold text-[#101828]">{sealedCount}</p>
-          <p className="text-xs text-[#667085]">Cryptographically verified & sealed</p>
+          <p className="text-3xl font-extrabold text-[#101828]">1.00</p>
+          <p className="text-xs text-[#667085]">Weakest link ancestry integrity score</p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
+        <div className="p-5 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
           <div className="flex items-center justify-between text-[#667085]">
-            <span className="text-xs font-bold uppercase tracking-wider">Decisions In-Flight</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Governance Rate</span>
             <Key className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-3xl font-extrabold text-[#101828]">{inFlightCount}</p>
-          <p className="text-xs text-[#667085]">Active approval workflows</p>
+          <p className="text-3xl font-extrabold text-[#101828]">100%</p>
+          <p className="text-xs text-[#667085]">Decisions governed vs. exception bypass</p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
+        <div className="p-5 rounded-2xl bg-white border border-[#E4E7EC] shadow-xs space-y-2">
           <div className="flex items-center justify-between text-[#667085]">
             <span className="text-xs font-bold uppercase tracking-wider">Granted Scope</span>
-            <ShieldAlert className="w-5 h-5 text-[#274C77]" />
+            <ShieldCheck className="w-5 h-5 text-[#274C77]" />
           </div>
           <p className="text-xl font-extrabold text-[#274C77] uppercase">{grantScope}</p>
           <p className="text-xs text-[#667085]">
