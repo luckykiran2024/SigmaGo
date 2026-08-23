@@ -181,3 +181,94 @@ table, td, th, .tabular-nums {
     transition-duration: 0.001s !important;
   }
 }
+
+/* ==========================================================================
+   GLOBAL THEME ENGINE OVERRIDES (Dark Slate, Midnight Blue, Emerald Forest)
+   ========================================================================== */
+
+html.dark, html.midnight, html.forest {
+  background-color: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+html.dark body, html.midnight body, html.forest body {
+  background-color: var(--alt) !important;
+  color: var(--ink) !important;
+}
+
+/* Header & Navbar */
+html.dark header, html.midnight header, html.forest header {
+  background-color: var(--bg) !important;
+  border-color: var(--border) !important;
+}
+
+/* Main Layout & Content Wrapper */
+html.dark main, html.midnight main, html.forest main {
+  background-color: var(--alt) !important;
+  color: var(--ink) !important;
+}
+
+/* Backgrounds: White containers, cards, light gray panels */
+html.dark .bg-white, html.midnight .bg-white, html.forest .bg-white,
+html.dark .bg-\[\#F9FAFB\], html.midnight .bg-\[\#F9FAFB\], html.forest .bg-\[\#F9FAFB\],
+html.dark .bg-gray-50, html.midnight .bg-gray-50, html.forest .bg-gray-50,
+html.dark .bg-\[\#F4F6F8\], html.midnight .bg-\[\#F4F6F8\], html.forest .bg-\[\#F4F6F8\] {
+  background-color: var(--bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .bg-gray-100, html.midnight .bg-gray-100, html.forest .bg-gray-100 {
+  background-color: var(--alt) !important;
+}
+
+/* Sidebar & Navigation Panels */
+html.dark aside, html.midnight aside, html.forest aside,
+html.dark .bg-\[\#0B0F19\], html.midnight .bg-\[\#0B0F19\], html.forest .bg-\[\#0B0F19\],
+html.dark .bg-\[\#0F172A\], html.midnight .bg-\[\#0F172A\], html.forest .bg-\[\#0F172A\],
+html.dark .bg-\[\#101828\], html.midnight .bg-\[\#101828\], html.forest .bg-\[\#101828\] {
+  background-color: var(--bg) !important;
+  border-color: var(--border) !important;
+}
+
+/* Text Colors */
+html.dark .text-\[\#101828\], html.midnight .text-\[\#101828\], html.forest .text-\[\#101828\],
+html.dark .text-gray-900, html.midnight .text-gray-900, html.forest .text-gray-900,
+html.dark .text-gray-800, html.midnight .text-gray-800, html.forest .text-gray-800,
+html.dark .text-gray-700, html.midnight .text-gray-700, html.forest .text-gray-700,
+html.dark .text-ink, html.midnight .text-ink, html.forest .text-ink {
+  color: var(--ink) !important;
+}
+
+html.dark .text-\[\#667085\], html.midnight .text-\[\#667085\], html.forest .text-\[\#667085\],
+html.dark .text-gray-500, html.midnight .text-gray-500, html.forest .text-gray-500,
+html.dark .text-gray-600, html.midnight .text-gray-600, html.forest .text-gray-600,
+html.dark .text-gray-400, html.midnight .text-gray-400, html.forest .text-gray-400 {
+  color: var(--muted) !important;
+}
+
+/* Borders */
+html.dark .border-gray-100, html.midnight .border-gray-100, html.forest .border-gray-100,
+html.dark .border-gray-200, html.midnight .border-gray-200, html.forest .border-gray-200,
+html.dark .border-gray-50, html.midnight .border-gray-50, html.forest .border-gray-50,
+html.dark .border-\[\#E4E7EC\], html.midnight .border-\[\#E4E7EC\], html.forest .border-\[\#E4E7EC\],
+html.dark .border-\[\#F2F4F7\], html.midnight .border-\[\#F2F4F7\], html.forest .border-\[\#F2F4F7\] {
+  border-color: var(--border) !important;
+}
+
+/* Inputs, Textareas, Selects */
+html.dark input:not([type="checkbox"]):not([type="radio"]), html.midnight input:not([type="checkbox"]):not([type="radio"]), html.forest input:not([type="checkbox"]):not([type="radio"]),
+html.dark select, html.midnight select, html.forest select,
+html.dark textarea, html.midnight textarea, html.forest textarea {
+  background-color: var(--alt2) !important;
+  color: var(--ink) !important;
+  border-color: var(--border2) !important;
+}
+
+/* Readonly / Disabled inputs in themed mode */
+html.dark input:read-only, html.midnight input:read-only, html.forest input:read-only {
+  background-color: var(--bg) !important;
+  color: var(--muted) !important;
+  border-color: var(--border) !important;
+}
+

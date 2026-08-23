@@ -3,6 +3,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import Navbar from '@/components/ui/Navbar';
+import ThemeInitializer from '@/components/providers/ThemeInitializer';
 
 export default async function TenantLayout({
   children,
@@ -41,8 +42,12 @@ export default async function TenantLayout({
     .eq('approver_id', profile.id)
     .eq('status', 'pending');
 
+  const userTheme = (profile as any).user_settings?.theme || 'light';
+
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-sans text-[#101828]">
+    <div className="min-h-screen bg-alt flex flex-col font-sans text-ink transition-colors duration-200">
+      <ThemeInitializer userTheme={userTheme} />
+
       {/* Single Prompt #11 Navbar rendered across all tenant routes */}
       <Navbar
         tenantSubdomain={resolvedParams.tenant}
