@@ -12,15 +12,20 @@ export async function issueIntelligenceGrantAction(payload: {
   reason: string;
   expiresAt?: string | null;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('Unauthorized');
-  }
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: 'Unauthorized user session' };
+    }
 
-  const grant = await issueIntelligenceGrant(payload);
-  revalidatePath('/[tenant]/admin/intelligence', 'page');
-  return grant;
+    const grant = await issueIntelligenceGrant(payload);
+    revalidatePath('/[tenant]/admin/intelligence', 'page');
+    return { success: true, grant };
+  } catch (err: any) {
+    console.error('issueIntelligenceGrantAction error:', err);
+    return { success: false, error: err.message || 'Failed to issue grant' };
+  }
 }
 
 export async function revokeIntelligenceGrantAction(payload: {
@@ -29,13 +34,18 @@ export async function revokeIntelligenceGrantAction(payload: {
   revokedBy: string;
   revokeReason: string;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('Unauthorized');
-  }
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, error: 'Unauthorized user session' };
+    }
 
-  const grant = await revokeIntelligenceGrant(payload);
-  revalidatePath('/[tenant]/admin/intelligence', 'page');
-  return grant;
+    const grant = await revokeIntelligenceGrant(payload);
+    revalidatePath('/[tenant]/admin/intelligence', 'page');
+    return { success: true, grant };
+  } catch (err: any) {
+    console.error('revokeIntelligenceGrantAction error:', err);
+    return { success: false, error: err.message || 'Failed to revoke grant' };
+  }
 }

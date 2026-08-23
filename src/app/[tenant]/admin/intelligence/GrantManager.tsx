@@ -49,7 +49,7 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
     setLoading(true);
 
     try {
-      const newGrant = await issueIntelligenceGrantAction({
+      const res = await issueIntelligenceGrantAction({
         tenantId,
         email,
         scope,
@@ -58,6 +58,12 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
         expiresAt: expiresAt || null,
       });
 
+      if (!res.success || !res.grant) {
+        setError(res.error || 'Failed to issue grant');
+        return;
+      }
+
+      const newGrant = res.grant;
       setGrants([newGrant, ...grants.filter(g => g.email !== newGrant.email)]);
       setSuccess(`Intelligence grant successfully issued to ${email}`);
       setShowAddModal(false);
@@ -85,13 +91,19 @@ export default function GrantManager({ grants: initialGrants, tenantId, adminUse
     }
 
     try {
-      const revoked = await revokeIntelligenceGrantAction({
+      const res = await revokeIntelligenceGrantAction({
         grantId: revokeTarget.id,
         tenantId,
         revokedBy: adminUserId,
         revokeReason: revokeReasonInput,
       });
 
+      if (!res.success || !res.grant) {
+        setRevokeError(res.error || 'Failed to revoke grant');
+        return;
+      }
+
+      const revoked = res.grant;
       setGrants(grants.map(g => (g.id === revokeTarget.id ? revoked : g)));
       setRevokeTarget(null);
       setRevokeReasonInput('');
