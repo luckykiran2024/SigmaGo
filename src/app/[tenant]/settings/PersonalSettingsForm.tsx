@@ -90,23 +90,65 @@ export default function PersonalSettingsForm({
     updateProfileAndSettingsAction(userData.id, name, updatedSettings).catch(console.error);
   };
 
+function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 400; // 400x400 max avatar dimension
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve({ base64: event.target?.result as string, mimeType: file.type });
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const mimeType = 'image/png';
+        const compressedBase64 = canvas.toDataURL(mimeType, 0.9);
+        resolve({ base64: compressedBase64, mimeType });
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    if (file.size > 5 * 1024 * 1024) {
-      setMsg({ type: 'error', text: 'Avatar size must be under 5MB' });
+    if (file.size > 10 * 1024 * 1024) {
+      setMsg({ type: 'error', text: 'Avatar file size must be under 10MB' });
       return;
     }
 
     setUploading(true);
     setMsg(null);
 
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      const res = await uploadUserAvatarAction(userData.id, base64, file.type, file.name);
+    try {
+      const { base64, mimeType } = await compressImageToAvatar(file);
+      const res = await uploadUserAvatarAction(userData.id, base64, mimeType, file.name);
       setUploading(false);
 
       if (res.success && res.avatarUrl) {
@@ -116,11 +158,10 @@ export default function PersonalSettingsForm({
       } else {
         setMsg({ type: 'error', text: res.error || 'Failed to upload display picture' });
       }
-    };
-    reader.onerror = () => {
+    } catch (err: any) {
       setUploading(false);
-      setMsg({ type: 'error', text: 'Error reading file' });
-    };
+      setMsg({ type: 'error', text: err.message || 'Error processing photo file' });
+    }
   };
 
   const [avatarConfirmOpen, setAvatarConfirmOpen] = useState(false);
