@@ -2,7 +2,11 @@ const { Client } = require('pg');
 require('dotenv').config();
 
 async function applySchemaFixes() {
-  const testUrl = "postgresql://postgres.mawiqviucthalwyfvmfr:S%40%40nv%21%402024@aws-1-ap-southeast-1.pooler.supabase.com:5432/sigmago_test";
+  const testUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+
+  if (!testUrl) {
+    throw new Error('FATAL: Database connection URL is missing. Set DATABASE_URL or DIRECT_URL in environment.');
+  }
   const client = new Client({ connectionString: testUrl });
   await client.connect();
 

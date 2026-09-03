@@ -34,6 +34,9 @@ export async function actOnStep(payload: {
   conditionText?: string
   actionSource:  'web' | 'email' | 'digest'
   delegationId?: string
+  stance?:       'ENDORSED' | 'APPROVED_WITH_RESERVATION' | 'REJECTED' | 'CHANGES_REQUESTED'
+  reservationNote?: string
+  wasBinding?:   boolean
 }) {
   // Verify step is pending and actor is authorized (is direct approver, or has active delegation)
   const { data: checkStep, error: checkError } = await adminClient
@@ -71,14 +74,49 @@ export async function actOnStep(payload: {
     delegationId = delegation.id;
   }
 
+  let stance: 'ENDORSED' | 'APPROVED_WITH_RESERVATION' | 'REJECTED' | 'CHANGES_REQUESTED';
+  let outcome: 'APPROVED' | 'APPROVED_WITH_CONDITIONS' | 'REJECTED' | 'CHANGES_REQUESTED' | 'DELEGATED';
+  const wasBinding = payload.wasBinding !== undefined ? payload.wasBinding : true;
+  let reservationNote = payload.reservationNote || null;
+
+  if (payload.action === 'discuss') {
+    stance = 'CHANGES_REQUESTED';
+    outcome = 'CHANGES_REQUESTED';
+  } else if (payload.action === 'rejected') {
+    stance = payload.stance || 'REJECTED';
+    outcome = 'REJECTED';
+  } else {
+    // action === 'approved'
+    const hasReservation = payload.stance === 'APPROVED_WITH_RESERVATION' ||
+      Boolean(reservationNote && reservationNote.trim().length > 0) ||
+      Boolean(payload.conditionText && payload.conditionText.trim().length > 0);
+
+    if (hasReservation) {
+      stance = 'APPROVED_WITH_RESERVATION';
+      outcome = 'APPROVED_WITH_CONDITIONS';
+      reservationNote = reservationNote || payload.conditionText || payload.comment || null;
+      if (!reservationNote || reservationNote.trim().length === 0) {
+        throw new Error('Reservation note is required when approving with reservation or conditions.');
+      }
+    } else {
+      stance = payload.stance || 'ENDORSED';
+      outcome = 'APPROVED';
+    }
+  }
+
   if (payload.action === 'discuss') {
     const { data: step, error: stepError } = await adminClient
       .from('approval_steps')
       .update({
-        comment:        payload.comment,
-        condition_text: payload.conditionText,
-        action_source:  payload.actionSource,
-        delegation_id:  delegationId
+        stance:          stance,
+        outcome:         outcome,
+        was_binding:     wasBinding,
+        reservation_note: reservationNote,
+        reasoning_length: (payload.comment || '').trim().length,
+        comment:         payload.comment,
+        condition_text:  payload.conditionText,
+        action_source:   payload.actionSource,
+        delegation_id:   delegationId
       })
       .eq('id', payload.stepId)
       .select('request_id')
@@ -137,6 +175,10 @@ export async function actOnStep(payload: {
       action_type: 'step_discussion',
       metadata: {
         step_id:       payload.stepId,
+        stance:        stance,
+        outcome:       outcome,
+        was_binding:   wasBinding,
+        reservation_note: reservationNote,
         action_source: payload.actionSource,
         condition:     payload.conditionText,
         comment:       payload.comment,
@@ -152,6 +194,19 @@ export async function actOnStep(payload: {
       }
     });
 
+    const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+    await emitDecisionEvent({
+      tenantId: payload.tenantId,
+      requestId: step.request_id,
+      stepId: payload.stepId,
+      eventType: 'STEP_CHANGES_REQUESTED',
+      actorId: payload.actorId,
+      stance: stance,
+      outcome: outcome,
+      wasBinding: wasBinding,
+      eventPayload: { comment: payload.comment, condition: payload.conditionText }
+    });
+
     return;
   }
 
@@ -159,13 +214,18 @@ export async function actOnStep(payload: {
   const { data: step, error: stepError } = await adminClient
     .from('approval_steps')
     .update({
-      status:         payload.action,
-      acted_at:       new Date().toISOString(),
-      acted_by_id:    payload.actorId,
-      comment:        payload.comment,
-      condition_text: payload.conditionText,
-      action_source:  payload.actionSource,
-      delegation_id:  delegationId
+      status:          payload.action,
+      stance:          stance,
+      outcome:         outcome,
+      was_binding:     wasBinding,
+      reservation_note: reservationNote,
+      reasoning_length: (payload.comment || '').trim().length,
+      acted_at:        new Date().toISOString(),
+      acted_by_id:     payload.actorId,
+      comment:         payload.comment,
+      condition_text:  payload.conditionText || reservationNote,
+      action_source:   payload.actionSource,
+      delegation_id:   delegationId
     })
     .eq('id', payload.stepId)
     .select('request_id, order_index, type')
@@ -188,9 +248,13 @@ export async function actOnStep(payload: {
     actor_id:    payload.actorId,
     action_type: `step_${payload.action}`,
     metadata: {
-      step_id:       payload.stepId,
-      action_source: payload.actionSource,
-      condition:     payload.conditionText,
+      step_id:          payload.stepId,
+      stance:           stance,
+      outcome:          outcome,
+      was_binding:      wasBinding,
+      reservation_note: reservationNote,
+      action_source:    payload.actionSource,
+      condition:        payload.conditionText,
       ...(delegationId ? {
         actor_name_snapshot: actorUser?.name || 'Unknown',
         actor_employee_id_snapshot: actorUser?.employee_id || 'N/A',
@@ -199,7 +263,20 @@ export async function actOnStep(payload: {
         summary: `${actorUser?.name || 'Unknown'} (${actorUser?.employee_id || 'N/A'}) ${verb} on behalf of ${approverUser?.name || 'Unknown'} (${approverUser?.employee_id || 'N/A'}) as delegate.`
       } : {})
     }
-  })
+  });
+
+  const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+  await emitDecisionEvent({
+    tenantId: payload.tenantId,
+    requestId: step.request_id,
+    stepId: payload.stepId,
+    eventType: payload.action === 'approved' ? 'STEP_APPROVED' : 'STEP_REJECTED',
+    actorId: payload.actorId,
+    stance: stance,
+    outcome: outcome,
+    wasBinding: wasBinding,
+    eventPayload: { comment: payload.comment, condition: payload.conditionText || reservationNote }
+  });
 
   await advanceChain(step.request_id, payload.tenantId)
 }
@@ -313,10 +390,16 @@ async function finalizeRequest(requestId: string, tenantId: string) {
 
   const { data: steps } = await adminClient
     .from('approval_steps')
-    .select('id, approver_id, type, stage_index, status, acted_at, acted_by_id, comment')
+    .select('id, approver_id, type, stage_index, status, acted_at, acted_by_id, comment, stance, outcome, was_binding, reservation_note')
     .eq('request_id', requestId)
     .order('stage_index', { ascending: true })
     .order('order_index', { ascending: true })
+    .order('id', { ascending: true });
+
+  const { data: references } = await adminClient
+    .from('decision_references')
+    .select('id, target_id, to_policy_id, relationship')
+    .eq('source_id', requestId)
     .order('id', { ascending: true });
 
   const { data: auditLogs } = await adminClient
@@ -334,6 +417,11 @@ async function finalizeRequest(requestId: string, tenantId: string) {
       owner_id: request.owner_id,
       category_id: request.category_id,
       created_at: request.created_at,
+      parent_reference_id: request.parent_reference_id || null,
+      workflow_id: request.workflow_id || null,
+      workflow_version_id: request.workflow_version_id || null,
+      baseline_step_type: request.baseline_step_type || null,
+      resolved_step_type: request.resolved_step_type || null,
     },
     steps: (steps || []).map(s => ({
       id: s.id,
@@ -344,6 +432,16 @@ async function finalizeRequest(requestId: string, tenantId: string) {
       acted_at: s.acted_at,
       acted_by_id: s.acted_by_id,
       comment: s.comment,
+      stance: s.stance || null,
+      outcome: s.outcome || null,
+      was_binding: s.was_binding !== undefined ? s.was_binding : true,
+      reservation_note: s.reservation_note || null,
+    })),
+    references: (references || []).map(r => ({
+      id: r.id,
+      target_id: r.target_id || null,
+      to_policy_id: r.to_policy_id || null,
+      relationship: r.relationship,
     })),
     audit_log: (auditLogs || []).map(l => ({
       id: l.id,
@@ -377,6 +475,29 @@ async function finalizeRequest(requestId: string, tenantId: string) {
     actor_id:    null,
     action_type: 'request_finalized',
     metadata:    { checksum: checksumHex }
+  });
+
+  const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+  await emitDecisionEvent({
+    tenantId: tenantId,
+    requestId: requestId,
+    workflowId: request.workflow_id || null,
+    workflowVersionId: request.workflow_version_id || null,
+    eventType: 'REQUEST_FINALIZED',
+    baselineStepType: request.baseline_step_type || null,
+    resolvedStepType: request.resolved_step_type || null,
+    eventPayload: { checksum: checksumHex, status: 'approved' }
+  });
+
+  await emitDecisionEvent({
+    tenantId: tenantId,
+    requestId: requestId,
+    workflowId: request.workflow_id || null,
+    workflowVersionId: request.workflow_version_id || null,
+    eventType: 'REQUEST_SEALED',
+    baselineStepType: request.baseline_step_type || null,
+    resolvedStepType: request.resolved_step_type || null,
+    eventPayload: { checksum: checksumHex, algorithm: 'SHA-256' }
   });
 }
 

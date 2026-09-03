@@ -46,7 +46,7 @@ export async function generateChecksumAndFinalize(
     // 1. Fetch approval request record
     const { data: request, error: fetchErr } = await adminClient
       .from('approval_requests')
-      .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version')
+      .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version, parent_reference_id, workflow_id, workflow_version_id, baseline_step_type, resolved_step_type')
       .eq('id', requestId)
       .eq('tenant_id', tenantId)
       .maybeSingle();
@@ -59,9 +59,16 @@ export async function generateChecksumAndFinalize(
     // 2. Fetch associated steps (Authority Chain)
     const { data: steps } = await adminClient
       .from('approval_steps')
-      .select('id, order_index, approver_id, status, acted_at')
+      .select('id, order_index, approver_id, status, acted_at, stance, outcome, was_binding, reservation_note')
       .eq('request_id', requestId)
       .order('order_index', { ascending: true });
+
+    // 2b. Fetch associated decision references
+    const { data: references } = await adminClient
+      .from('decision_references')
+      .select('id, target_id, to_policy_id, relationship')
+      .eq('source_id', requestId)
+      .order('id', { ascending: true });
 
     // 3. Fetch associated participants (Non-authoritative Participation)
     const { data: participants } = await adminClient
@@ -80,12 +87,27 @@ export async function generateChecksumAndFinalize(
       beneficiaryId: request.beneficiary_id || '',
       ownerId: request.owner_id || '',
       version: request.version || 1,
+      parentReferenceId: request.parent_reference_id || null,
+      workflowId: request.workflow_id || null,
+      workflowVersionId: request.workflow_version_id || null,
+      baselineStepType: request.baseline_step_type || null,
+      resolvedStepType: request.resolved_step_type || null,
       authoritySteps: (steps || []).map((s) => ({
         id: s.id,
         order: s.order_index,
         approver: s.approver_id,
         status: s.status,
         actedAt: s.acted_at,
+        stance: s.stance || null,
+        outcome: s.outcome || null,
+        wasBinding: s.was_binding !== undefined ? s.was_binding : true,
+        reservationNote: s.reservation_note || null,
+      })),
+      decisionReferences: (references || []).map((r) => ({
+        id: r.id,
+        targetId: r.target_id || null,
+        toPolicyId: r.to_policy_id || null,
+        relationship: r.relationship,
       })),
       participationRecords: (participants || []).map((p) => ({
         id: p.id,

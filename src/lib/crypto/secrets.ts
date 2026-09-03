@@ -8,7 +8,10 @@ const AUTH_TAG_LENGTH = 16; // 128-bit Auth Tag
 function getMasterKey(): Buffer {
   const envKey = process.env.SECRET_ENCRYPTION_KEY;
   if (!envKey) {
-    // Development fallback key — MUST be overridden in production
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: SECRET_ENCRYPTION_KEY environment variable is missing in production. Refusing to operate with development fallback key.');
+    }
+    // Development fallback key — only usable when NODE_ENV is not production
     return crypto.scryptSync('default_sigmago_development_secret_key_change_me', 'sigmago_salt', 32);
   }
   if (envKey.length === 64) {

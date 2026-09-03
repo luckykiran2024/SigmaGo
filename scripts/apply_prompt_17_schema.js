@@ -2,7 +2,11 @@ import 'dotenv/config';
 import pg from 'pg';
 
 const { Client } = pg;
-const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://postgres.mawiqviucthalwyfvmfr:S%40%40nv%21%402024@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres';
+const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('FATAL: Database connection URL is missing. Set DATABASE_URL or DIRECT_URL in environment.');
+}
 
 async function applyPrompt17Schema() {
   const client = new Client({ connectionString });

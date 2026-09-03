@@ -21,6 +21,16 @@ export async function createRequest(payload: {
     orderIndex:  number
     stageIndex?: number
   }>
+  parentReferenceId?:    string | null
+  workflowId?:           string | null
+  workflowVersionId?:    string | null
+  baselineStepType?:     string | null
+  resolvedStepType?:     string | null
+  classificationSource?: string | null
+  classificationReason?: string | null
+  expectedSlaHours?:     number | null
+  expectedDecisionAt?:   string | null
+  workflowSnapshot?:     Record<string, any>
 }) {
   const supabase = await createClient()
 
@@ -43,6 +53,19 @@ export async function createRequest(payload: {
   if (payload.validUntil) insertPayload.valid_until = payload.validUntil
   if (payload.reviewDate) insertPayload.review_date = payload.reviewDate
   if (payload.renewedFromId) insertPayload.renewed_from_id = payload.renewedFromId
+  if (payload.parentReferenceId) insertPayload.parent_reference_id = payload.parentReferenceId
+  if (payload.workflowId) insertPayload.workflow_id = payload.workflowId
+  if (payload.workflowVersionId) insertPayload.workflow_version_id = payload.workflowVersionId
+  if (payload.baselineStepType) insertPayload.baseline_step_type = payload.baselineStepType
+  if (payload.resolvedStepType) insertPayload.resolved_step_type = payload.resolvedStepType
+  if (payload.classificationSource) insertPayload.classification_source = payload.classificationSource
+  if (payload.classificationReason) insertPayload.classification_reason = payload.classificationReason
+  if (payload.expectedSlaHours) {
+    insertPayload.expected_sla_hours = payload.expectedSlaHours
+    insertPayload.expected_decision_at = new Date(Date.now() + payload.expectedSlaHours * 3600 * 1000).toISOString()
+  }
+  if (payload.expectedDecisionAt) insertPayload.expected_decision_at = payload.expectedDecisionAt
+  if (payload.workflowSnapshot) insertPayload.workflow_snapshot = payload.workflowSnapshot
 
   const { data: request, error: reqError } = await supabase
     .from('approval_requests')

@@ -1,7 +1,11 @@
 const { Client } = require('pg');
 
 async function setupExtensions() {
-  const connectionString = "postgresql://postgres.mawiqviucthalwyfvmfr:S%40%40nv%21%402024@aws-1-ap-southeast-1.pooler.supabase.com:5432/sigmago_test";
+  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error('FATAL: Database connection URL is missing. Set DATABASE_URL or DIRECT_URL in environment.');
+  }
   const client = new Client({ connectionString });
   await client.connect();
   try {

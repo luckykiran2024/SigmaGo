@@ -113,7 +113,61 @@ export async function submitNewRequest(
     }
   }
 
-  // 2. Map steps
+  // 2. Resolve workflow identity, version, SLA, and STEP classification
+  let workflowId: string | null = null;
+  let workflowVersionId: string | null = null;
+  let baselineStepType: any = 'TRANSACTIONAL';
+  let resolvedStepType: any = 'TRANSACTIONAL';
+  let classificationSource: string = 'WORKFLOW';
+  let classificationReason: string | null = null;
+  let expectedSlaHours: number | null = null;
+  let workflowSnapshot: Record<string, any> = {};
+
+  if (categoryId) {
+    const { data: wf } = await adminClient
+      .from('workflows')
+      .select('id, name, base_step_type, governing_policy_id, default_sla_hours, current_version_number, classification_rules_json')
+      .eq('category_id', categoryId)
+      .eq('tenant_id', tenantData.id)
+      .maybeSingle();
+
+    if (wf) {
+      workflowId = wf.id;
+      baselineStepType = wf.base_step_type || 'TRANSACTIONAL';
+      resolvedStepType = baselineStepType;
+      expectedSlaHours = wf.default_sla_hours || null;
+
+      const { data: wfVer } = await adminClient
+        .from('workflow_versions')
+        .select('*')
+        .eq('workflow_id', wf.id)
+        .eq('tenant_id', tenantData.id)
+        .is('effective_to', null)
+        .order('version_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (wfVer) {
+        workflowVersionId = wfVer.id;
+        workflowSnapshot = wfVer;
+      }
+    }
+  }
+
+  // Detect Exception relationship
+  if (referenceData?.relationship === 'EXCEPTION_TO') {
+    resolvedStepType = 'EXCEPTION';
+    classificationSource = 'EXCEPTION_RULE';
+    classificationReason = 'Request initiated as an explicit Exception to governing policy/decision.';
+  }
+
+  // Detect manual override
+  if (overrideData?.isOverride) {
+    classificationSource = 'MANUAL_OVERRIDE';
+    classificationReason = overrideData.reason || 'User overrode system classification';
+  }
+
+  // 3. Map steps
   const steps = approvalPath.map(step => ({
     approverId: step.approver_id || step.approverId,
     type: step.type,
@@ -121,7 +175,7 @@ export async function submitNewRequest(
     stageIndex: step.stage_index ?? step.stageIndex ?? 0
   }));
 
-  // 3. Create request
+  // 4. Create request
   const request = await createRequest({
     tenantId: tenantData.id,
     ownerId: profile.id,
@@ -134,8 +188,47 @@ export async function submitNewRequest(
     validUntil: validityData?.validUntil || null,
     reviewDate: validityData?.reviewDate || null,
     renewedFromId: validityData?.renewedFromId || null,
+    parentReferenceId: referenceData?.targetId || null,
+    workflowId: workflowId,
+    workflowVersionId: workflowVersionId,
+    baselineStepType: baselineStepType,
+    resolvedStepType: resolvedStepType,
+    classificationSource: classificationSource,
+    classificationReason: classificationReason,
+    expectedSlaHours: expectedSlaHours,
+    workflowSnapshot: workflowSnapshot,
     steps: steps
   });
+
+  const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+
+  // Emit REQUEST_CREATED & WORKFLOW_RESOLVED events
+  await emitDecisionEvent({
+    tenantId: tenantData.id,
+    requestId: request.id,
+    workflowId: workflowId,
+    workflowVersionId: workflowVersionId,
+    eventType: 'REQUEST_CREATED',
+    actorId: profile.id,
+    baselineStepType: baselineStepType,
+    resolvedStepType: resolvedStepType,
+    parentReferenceId: referenceData?.targetId || null,
+    eventPayload: { subject: subject.trim(), categoryId }
+  });
+
+  if (workflowId) {
+    await emitDecisionEvent({
+      tenantId: tenantData.id,
+      requestId: request.id,
+      workflowId: workflowId,
+      workflowVersionId: workflowVersionId,
+      eventType: 'WORKFLOW_RESOLVED',
+      actorId: profile.id,
+      baselineStepType: baselineStepType,
+      resolvedStepType: resolvedStepType,
+      eventPayload: { workflowId, workflowVersionId }
+    });
+  }
 
   // Handle classification override flags if present
   if (overrideData?.isOverride) {
@@ -146,6 +239,18 @@ export async function submitNewRequest(
         classification_override_reason: overrideData.reason || 'User kept choice despite misclassification warning'
       })
       .eq('id', request.id);
+
+    await emitDecisionEvent({
+      tenantId: tenantData.id,
+      requestId: request.id,
+      workflowId: workflowId,
+      workflowVersionId: workflowVersionId,
+      eventType: 'CLASSIFICATION_OVERRIDDEN',
+      actorId: profile.id,
+      baselineStepType: baselineStepType,
+      resolvedStepType: resolvedStepType,
+      eventPayload: { reason: overrideData.reason }
+    });
   }
 
   // Handle reference linking (Case C)
@@ -160,9 +265,23 @@ export async function submitNewRequest(
         relationship: referenceData.relationship || 'BASED_ON',
         created_by: profile.id
       });
+
+    await emitDecisionEvent({
+      tenantId: tenantData.id,
+      requestId: request.id,
+      workflowId: workflowId,
+      workflowVersionId: workflowVersionId,
+      eventType: referenceData.relationship === 'EXCEPTION_TO' ? 'EXCEPTION_DETECTED' : 'REFERENCE_ADDED',
+      actorId: profile.id,
+      policyId: referenceData.policyId || null,
+      parentReferenceId: referenceData.targetId || null,
+      baselineStepType: baselineStepType,
+      resolvedStepType: resolvedStepType,
+      eventPayload: { relationship: referenceData.relationship, targetId: referenceData.targetId, policyId: referenceData.policyId }
+    });
   }
 
-  // 4. Handle attachment files
+  // 5. Handle attachment files
   const attachmentEntries = Array.from(formData.entries())
     .filter(([key]) => key.startsWith('attachment_'));
 
@@ -173,8 +292,20 @@ export async function submitNewRequest(
     }
   }
 
-  // 5. Submit request
+  // 6. Submit request & emit REQUEST_SUBMITTED
   await submitRequest(request.id, profile.id, tenantData.id);
+
+  await emitDecisionEvent({
+    tenantId: tenantData.id,
+    requestId: request.id,
+    workflowId: workflowId,
+    workflowVersionId: workflowVersionId,
+    eventType: 'REQUEST_SUBMITTED',
+    actorId: profile.id,
+    baselineStepType: baselineStepType,
+    resolvedStepType: resolvedStepType,
+    parentReferenceId: referenceData?.targetId || null,
+  });
 
   revalidatePath(`/${tenant}/approvals`);
   return { success: true, requestId: request.id };
