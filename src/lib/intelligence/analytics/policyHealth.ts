@@ -18,16 +18,16 @@ export interface PolicyHealthAssessment {
   explanation: string;
 }
 
-export interface PolicyHealthTransition {
-  policyId: string;
-  fromPeriodKey: string;
-  toPeriodKey: string;
-  fromState: PolicyHealthState;
-  toState: PolicyHealthState;
+export type PolicyHealthTransition = {
+  from: 'HEALTHY' | 'WATCH' | 'DRIFTING';
+  to: 'HEALTHY' | 'WATCH' | 'DRIFTING' | 'REVISED' | 'RETIRED';
   observedProbability: number;
   sampleSize: number;
-  confidenceLabel: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
-}
+  confidenceLabel?: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
+  policyId?: string;
+  fromPeriodKey?: string;
+  toPeriodKey?: string;
+};
 
 export function evaluatePolicyHealth(params: {
   policyId: string;

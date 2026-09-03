@@ -6,19 +6,19 @@
 
 import { StepType } from './distributions';
 
-export interface StageTransition {
-  stepType: StepType;          // dimension used to slice the process
-  fromStage: string;           // 'START', 'Stage 0', 'Stage 1'
-  toStage: string;             // 'Stage 1', 'SEALED', 'REJECTED'
-  observedProbability: number; // transition_count / denominator_count
-  transitionCount: number;
-  denominatorCount: number;
+export type StageTransition = {
+  stepType: StepType;          // which type's process this describes
+  fromStage: number | 'START' | string;
+  toStage: number | 'SEALED' | 'REJECTED' | string;
+  observedProbability: number;
   sampleSize: number;
-  confidenceLabel: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
+  transitionCount?: number;
+  denominatorCount?: number;
+  confidenceLabel?: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
   workflowId?: string;
   contextId?: string;
   historicalBaseline?: number;
-}
+};
 
 export function computeWorkflowStageTransitions(params: {
   stepType: StepType;
