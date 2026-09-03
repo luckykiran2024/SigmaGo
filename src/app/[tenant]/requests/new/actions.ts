@@ -83,7 +83,7 @@ export async function submitNewRequest(
   }
 
   // H7 Fix: Verify all approver IDs in path are active users of THIS tenant
-  const approverIds = approvalPath.map(s => s.approver_id || s.approverId);
+  const approverIds = approvalPath.map(s => s.userId || s.approver_id || s.approverId).filter(Boolean);
   const { data: validApprovers } = await adminClient
     .from('users')
     .select('id')
@@ -93,8 +93,8 @@ export async function submitNewRequest(
 
   const validApproverSet = new Set((validApprovers || []).map(u => u.id));
   for (const step of approvalPath) {
-    const appValId = step.approver_id || step.approverId;
-    if (!validApproverSet.has(appValId)) {
+    const appValId = step.userId || step.approver_id || step.approverId;
+    if (!appValId || !validApproverSet.has(appValId)) {
       throw new Error(`Approver ID "${appValId}" is not an active member of this tenant.`);
     }
   }
@@ -169,8 +169,8 @@ export async function submitNewRequest(
 
   // 3. Map steps
   const steps = approvalPath.map(step => ({
-    approverId: step.approver_id || step.approverId,
-    type: step.type,
+    approverId: step.userId || step.approver_id || step.approverId,
+    type: step.role || step.type || 'GENERAL',
     orderIndex: step.order_index ?? step.orderIndex ?? 0,
     stageIndex: step.stage_index ?? step.stageIndex ?? 0
   }));

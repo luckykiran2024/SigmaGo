@@ -32,8 +32,6 @@ export async function createRequest(payload: {
   expectedDecisionAt?:   string | null
   workflowSnapshot?:     Record<string, any>
 }) {
-  const supabase = await createClient()
-
   const insertPayload: Record<string, any> = {
     tenant_id:   payload.tenantId,
     owner_id:    payload.ownerId,
@@ -67,7 +65,7 @@ export async function createRequest(payload: {
   if (payload.expectedDecisionAt) insertPayload.expected_decision_at = payload.expectedDecisionAt
   if (payload.workflowSnapshot) insertPayload.workflow_snapshot = payload.workflowSnapshot
 
-  const { data: request, error: reqError } = await supabase
+  const { data: request, error: reqError } = await adminClient
     .from('approval_requests')
     .insert(insertPayload)
     .select()

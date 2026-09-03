@@ -152,9 +152,9 @@ export async function sendApprovalActionEmail(
       id,
       approver_id,
       request_id,
-      tenant_id,
       stage_index,
       approval_requests (
+        tenant_id,
         subject,
         body_json,
         categories ( name ),
@@ -172,12 +172,13 @@ export async function sendApprovalActionEmail(
   const req = step.approval_requests as any;
   const categoryName = req.categories?.name || 'General';
   const ownerName = req.users?.name || 'Unknown';
+  const tenantId = req.tenant_id;
   
   // Parse body text from editor JSON if applicable
   const justification = extractPlainTextFromTiptap(req.body_json);
 
   // Generate action token
-  const token = await generateActionToken(stepId, step.approver_id || '', step.request_id, step.tenant_id);
+  const token = await generateActionToken(stepId, step.approver_id || '', step.request_id, tenantId);
 
   // Build confirmation links
   const approveUrl = `${APP_URL}/${tenantSubdomain}/act/${token}?intent=approve`;

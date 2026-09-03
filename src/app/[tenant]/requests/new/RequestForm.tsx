@@ -244,12 +244,18 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         reason: `Overrode policy bound for ${selectedCategory?.name}`
       } : null;
 
-      await submitNewRequest(
+      const res = await submitNewRequest(
         formData, content, tenant, cleanPath, beneficiaryId || null, customFieldValues,
         { validUntil, reviewDate, renewedFromId: renewFromRequest?.id },
         referenceData,
         overrideData
       );
+
+      if (res && res.requestId) {
+        window.location.href = `/${tenant}/requests/${res.requestId}`;
+      } else {
+        window.location.href = `/${tenant}/approvals`;
+      }
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to submit request.");
