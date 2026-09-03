@@ -37,6 +37,17 @@ async function applyOrganisationalIntelligenceV3Schema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS idx_workflows_tenant_category ON workflows(tenant_id, category_id);
+
+      ALTER TABLE workflows
+        ADD COLUMN IF NOT EXISTS description TEXT,
+        ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true,
+        ADD COLUMN IF NOT EXISTS base_step_type TEXT NOT NULL DEFAULT 'TRANSACTIONAL',
+        ADD COLUMN IF NOT EXISTS governing_policy_id UUID REFERENCES policies(id) ON DELETE SET NULL,
+        ADD COLUMN IF NOT EXISTS default_sla_hours INT,
+        ADD COLUMN IF NOT EXISTS classification_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+        ADD COLUMN IF NOT EXISTS opportunity_model_id UUID,
+        ADD COLUMN IF NOT EXISTS current_version_number INT NOT NULL DEFAULT 1,
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
     `);
 
     // 2. Workflow Versions
