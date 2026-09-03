@@ -83,3 +83,22 @@ export function isComparablePeriod(currentKey: string, comparatorKey: string): b
   const comparatorQuarter = comparatorKey.split('-')[1];
   return Boolean(currentQuarter && comparatorQuarter && currentQuarter === comparatorQuarter);
 }
+
+export function getPeriodDateRange(periodKey: string): { startDate: string; endDate: string } {
+  const parts = periodKey.split('-');
+  const year = parseInt(parts[0], 10) || new Date().getFullYear();
+  const quarter = (parts[1] || 'AMJ') as NamedQuarter;
+
+  const quarterRanges: Record<NamedQuarter, { startMonth: number; endMonth: number; endDay: number }> = {
+    JFM: { startMonth: 0, endMonth: 2, endDay: 31 },
+    AMJ: { startMonth: 3, endMonth: 5, endDay: 30 },
+    JAS: { startMonth: 6, endMonth: 8, endDay: 30 },
+    OND: { startMonth: 9, endMonth: 11, endDay: 31 },
+  };
+
+  const range = quarterRanges[quarter] || { startMonth: 0, endMonth: 11, endDay: 31 };
+  const startDate = new Date(Date.UTC(year, range.startMonth, 1)).toISOString();
+  const endDate = new Date(Date.UTC(year, range.endMonth, range.endDay, 23, 59, 59, 999)).toISOString();
+
+  return { startDate, endDate };
+}

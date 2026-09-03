@@ -71,20 +71,33 @@ export default async function UserIntelligencePage({
   const grantScope = activeGrant ? activeGrant.scope : 'FULL';
 
   // Resolve current period and comparable baseline (Same quarter prior year)
-  const { resolvePeriodKey } = await import('@/lib/intelligence/analytics/periods');
+  const { resolvePeriodKey, getPeriodDateRange } = await import('@/lib/intelligence/analytics/periods');
   const { calculateStepDistribution } = await import('@/lib/intelligence/analytics/distributions');
   const { analyzeStepMovement } = await import('@/lib/intelligence/analytics/contributors');
   const { generateIntelligenceSignals } = await import('@/lib/intelligence/analytics/signals');
   const ExecutiveIntelligenceConsole = (await import('@/components/intelligence/ExecutiveIntelligenceConsole')).default;
 
   const periodInfo = resolvePeriodKey();
+  const comparatorRange = getPeriodDateRange(periodInfo.comparatorPeriodKey);
 
   // Query requests for intelligence analytics
   const { data: allRequests } = await adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, categories(name, domain)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, category_id, categories(name, domain)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false });
+
+  // Separate active current requests and historical comparator requests
+  const currentRequests = (allRequests || []).filter((r: any) => {
+    const created = new Date(r.created_at).getTime();
+    return created >= new Date(periodInfo.startDate).getTime() && created <= new Date(periodInfo.endDate).getTime();
+  });
+  const activeCurrentRequests = currentRequests.length > 0 ? currentRequests : (allRequests || []);
+
+  const comparatorRequests = (allRequests || []).filter((r: any) => {
+    const created = new Date(r.created_at).getTime();
+    return created >= new Date(comparatorRange.startDate).getTime() && created <= new Date(comparatorRange.endDate).getTime();
+  });
 
   const currentCounts = {
     STRUCTURAL: 0,
@@ -93,7 +106,7 @@ export default async function UserIntelligencePage({
     PROCESS: 0,
   };
 
-  (allRequests || []).forEach((row: any) => {
+  activeCurrentRequests.forEach((row: any) => {
     const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as any;
     if (currentCounts[st as keyof typeof currentCounts] !== undefined) {
       currentCounts[st as keyof typeof currentCounts]++;
@@ -107,20 +120,29 @@ export default async function UserIntelligencePage({
     currentCounts.TRANSACTIONAL = 1;
   }
 
-  // Baseline comparator counts (comparable period prior year)
+  // Baseline comparator counts: Real observed counts from the prior-year comparable period
   const comparatorCounts = {
-    STRUCTURAL: Math.max(1, Math.round(currentCounts.STRUCTURAL * 0.85)),
-    TRANSACTIONAL: Math.max(1, Math.round(currentCounts.TRANSACTIONAL * 1.05)),
-    EXCEPTION: Math.max(1, Math.round(currentCounts.EXCEPTION * 0.80)),
-    PROCESS: Math.max(1, Math.round(currentCounts.PROCESS * 0.95)),
+    STRUCTURAL: 0,
+    TRANSACTIONAL: 0,
+    EXCEPTION: 0,
+    PROCESS: 0,
   };
+
+  comparatorRequests.forEach((row: any) => {
+    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as any;
+    if (comparatorCounts[st as keyof typeof comparatorCounts] !== undefined) {
+      comparatorCounts[st as keyof typeof comparatorCounts]++;
+    } else {
+      comparatorCounts.TRANSACTIONAL++;
+    }
+  });
 
   const distribution = calculateStepDistribution(currentCounts, comparatorCounts);
 
   // Fetch active workflows
   const { data: workflows } = await adminClient
     .from('workflows')
-    .select('id, name, base_step_type, categories(domain)')
+    .select('id, name, category_id, base_step_type, categories(domain)')
     .eq('tenant_id', tenant.id);
 
   // Build movement analyses for each STEP type
@@ -133,23 +155,44 @@ export default async function UserIntelligencePage({
   ];
 
   for (const st of stepKeys) {
-    const matchingWorkflows = (workflows || [])
-      .filter((w: any) => (w.base_step_type || 'TRANSACTIONAL') === st)
-      .map((w: any) => ({
+    const stWorkflows = (workflows || []).filter((w: any) => (w.base_step_type || 'TRANSACTIONAL') === st);
+
+    let allocatedCurrent = 0;
+    let allocatedBaseline = 0;
+
+    const matchingWorkflows = stWorkflows.map((w: any) => {
+      const cCount = activeCurrentRequests.filter((r: any) =>
+        (r.workflow_id === w.id || r.category_id === w.category_id) &&
+        (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st
+      ).length;
+
+      const bCount = comparatorRequests.filter((r: any) =>
+        (r.workflow_id === w.id || r.category_id === w.category_id) &&
+        (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st
+      ).length;
+
+      allocatedCurrent += cCount;
+      allocatedBaseline += bCount;
+
+      return {
         workflowId: w.id,
         workflowName: w.name,
         domain: w.categories?.domain || 'OPERATIONS',
-        currentCount: Math.max(1, Math.round(currentCounts[st as keyof typeof currentCounts] * 0.6)),
-        baselineCount: Math.max(1, Math.round(comparatorCounts[st as keyof typeof comparatorCounts] * 0.6)),
-      }));
+        currentCount: cCount,
+        baselineCount: bCount,
+      };
+    });
 
-    if (matchingWorkflows.length === 0) {
+    const unallocatedCurrent = Math.max(0, currentCounts[st] - allocatedCurrent);
+    const unallocatedBaseline = Math.max(0, comparatorCounts[st] - allocatedBaseline);
+
+    if (unallocatedCurrent > 0 || unallocatedBaseline > 0 || matchingWorkflows.length === 0) {
       matchingWorkflows.push({
         workflowId: `wf-default-${st}`,
-        workflowName: `Standard ${st} Operations`,
+        workflowName: matchingWorkflows.length === 0 ? `Standard ${st} Decisions` : `Other ${st} Decisions`,
         domain: 'GENERAL',
-        currentCount: currentCounts[st as keyof typeof currentCounts],
-        baselineCount: comparatorCounts[st as keyof typeof comparatorCounts],
+        currentCount: unallocatedCurrent,
+        baselineCount: unallocatedBaseline,
       });
     }
 
