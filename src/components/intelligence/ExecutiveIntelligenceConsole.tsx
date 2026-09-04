@@ -280,7 +280,7 @@ export default function ExecutiveIntelligenceConsole({
                     <p>{statusInfo.desc}</p>
                     <p className="text-[11px] text-[#667085]">
                       {item.historicalRange
-                        ? `Observed range (${item.historicalRange.samplePeriodsCount} periods): ${(item.historicalRange.minShare * 100).toFixed(1)}%–${(item.historicalRange.maxShare * 100).toFixed(1)}%`
+                        ? `Observed range (${item.historicalRange.samplePeriodsCount || item.historicalRange.periodCount} periods): ${(item.historicalRange.minShare * 100).toFixed(1)}%–${(item.historicalRange.maxShare * 100).toFixed(1)}%`
                         : distribution.totalComparatorDecisions > 0
                         ? `Prior comparable period: ${(item.comparatorShare * 100).toFixed(1)}%`
                         : 'No historical comparator data'}

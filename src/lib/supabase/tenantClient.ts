@@ -34,6 +34,7 @@ const MULTI_TENANT_TABLES = new Set([
   'attachments',
   'reference_skips',
   'custom_fields',
+  'transactional_outbox',
 ]);
 
 /**

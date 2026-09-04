@@ -36,6 +36,7 @@ const MULTI_TENANT_TABLES = new Set([
   'stage_transition_metrics',
   'support_tickets',
   'tenants',
+  'transactional_outbox',
   'users',
   'workflows',
   'workflow_versions',

@@ -1,11 +1,11 @@
 {
   "summary": {
-    "total": 316,
-    "tenantScoped": 102,
-    "primaryKeyKeyed": 28,
+    "total": 325,
+    "tenantScoped": 106,
+    "primaryKeyKeyed": 29,
     "platformPrivileged": 53,
-    "unsafeUnscoped": 59,
-    "unknownReview": 74
+    "unsafeUnscoped": 61,
+    "unknownReview": 76
   },
   "inventory": [
     {
@@ -1150,7 +1150,7 @@
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
-      "line": 156,
+      "line": 203,
       "snippet": "const { data: workflows } = await adminClient",
       "table": "workflows",
       "operation": "SELECT",
@@ -1162,7 +1162,19 @@
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
-      "line": 241,
+      "line": 209,
+      "snippet": "const { data: tenantReferences } = await adminClient",
+      "table": "decision_references",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/app/[tenant]/intelligence/page.tsx",
+      "line": 331,
       "snippet": "const { data: tenantPolicies } = await adminClient",
       "table": "policies",
       "operation": "SELECT",
@@ -1390,7 +1402,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 301,
+      "line": 302,
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
@@ -1402,7 +1414,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 324,
+      "line": 326,
       "snippet": "await adminClient",
       "table": "decision_references",
       "operation": "INSERT",
@@ -1570,7 +1582,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/[id]/certificate/page.tsx",
-      "line": 38,
+      "line": 37,
       "snippet": "const { data: tenantData } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -2038,7 +2050,7 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 150,
+      "line": 257,
       "snippet": "const { data: request, error: fetchErr } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -2050,7 +2062,7 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 163,
+      "line": 269,
       "snippet": "const { data: steps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2062,7 +2074,7 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 170,
+      "line": 276,
       "snippet": "const { data: references } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
@@ -2074,7 +2086,7 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 177,
+      "line": 282,
       "snippet": "const { data: participants } = await adminClient",
       "table": "request_participants",
       "operation": "SELECT",
@@ -2086,19 +2098,19 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 194,
+      "line": 309,
       "snippet": "const { error: updateErr } = await adminClient",
-      "table": "approval_requests",
-      "operation": "UPDATE",
+      "table": "unknown",
+      "operation": "unknown",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "UNKNOWN_REVIEW_REQUIRED",
+      "justification": "Call site requires manual architectural verification."
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 229,
+      "line": 363,
       "snippet": "const { data: steps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2110,7 +2122,7 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 235,
+      "line": 369,
       "snippet": "const { data: participants } = await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -2818,7 +2830,67 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 43,
+      "line": 44,
+      "snippet": "const { data: existingStep } = await adminClient",
+      "table": "approval_steps",
+      "operation": "SELECT",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 92,
+      "snippet": "const { data: rpcRes, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {",
+      "table": "rpc",
+      "operation": "RPC",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 122,
+      "snippet": "const { data: nextSteps } = await adminClient",
+      "table": "approval_steps",
+      "operation": "SELECT",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 139,
+      "snippet": "const { data: request } = await adminClient",
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": true,
+      "crossTenantPlatform": false,
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 146,
+      "snippet": "const { data: tenant } = await adminClient",
+      "table": "unknown",
+      "operation": "unknown",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNKNOWN_REVIEW_REQUIRED",
+      "justification": "Call site requires manual architectural verification."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 178,
       "snippet": "const { data: checkStep, error: checkError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2830,7 +2902,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 61,
+      "line": 196,
       "snippet": "const { data: delegation } = await adminClient",
       "table": "delegations",
       "operation": "SELECT",
@@ -2842,7 +2914,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 109,
+      "line": 214,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
@@ -2854,7 +2926,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 129,
+      "line": 234,
       "snippet": "const { error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
@@ -2866,7 +2938,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 136,
+      "line": 241,
       "snippet": "const { data: users } = await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -2878,7 +2950,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 145,
+      "line": 250,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -2890,7 +2962,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 155,
+      "line": 260,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -2902,7 +2974,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 172,
+      "line": 277,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -2914,7 +2986,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 215,
+      "line": 320,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
@@ -2926,7 +2998,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 237,
+      "line": 342,
       "snippet": "const { data: users } = await adminClient",
       "table": "users",
       "operation": "SELECT",
@@ -2938,7 +3010,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 246,
+      "line": 351,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "unknown",
       "operation": "unknown",
@@ -2950,7 +3022,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 287,
+      "line": 392,
       "snippet": "const { data: request, error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -2962,7 +3034,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 300,
+      "line": 405,
       "snippet": "const { data: steps, error } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2974,7 +3046,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 340,
+      "line": 445,
       "snippet": "await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
@@ -2986,7 +3058,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 370,
+      "line": 475,
       "snippet": "await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -2998,7 +3070,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 403,
+      "line": 508,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -3010,43 +3082,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 411,
-      "snippet": "const { data: steps } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 419,
-      "snippet": "const { data: references } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 425,
-      "snippet": "const { data: auditLogs } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 440,
+      "line": 518,
       "snippet": "await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -3058,7 +3094,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 449,
+      "line": 525,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "unknown",
       "operation": "unknown",
@@ -3070,7 +3106,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 482,
+      "line": 558,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -3082,7 +3118,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 489,
+      "line": 565,
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
@@ -3094,7 +3130,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 494,
+      "line": 570,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "unknown",
       "operation": "unknown",
@@ -3106,7 +3142,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 507,
+      "line": 583,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -3118,7 +3154,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 515,
+      "line": 591,
       "snippet": "const { data: step } = await adminClient",
       "table": "unknown",
       "operation": "unknown",
@@ -3585,6 +3621,66 @@
       "justification": "Call site requires manual architectural verification."
     },
     {
+      "file": "src/lib/events/outbox.ts",
+      "line": 33,
+      "snippet": "client = adminClient",
+      "table": "transactional_outbox",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/events/outbox.ts",
+      "line": 68,
+      "snippet": "client = adminClient",
+      "table": "transactional_outbox",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/events/outbox.ts",
+      "line": 101,
+      "snippet": "client = adminClient",
+      "table": "transactional_outbox",
+      "operation": "UPDATE",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table 'transactional_outbox' queried without explicit tenant_id filter or verified primary key."
+    },
+    {
+      "file": "src/lib/events/outbox.ts",
+      "line": 131,
+      "snippet": "client = adminClient",
+      "table": "unknown",
+      "operation": "unknown",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNKNOWN_REVIEW_REQUIRED",
+      "justification": "Call site requires manual architectural verification."
+    },
+    {
+      "file": "src/lib/events/outbox.ts",
+      "line": 171,
+      "snippet": "const client = options.client || adminClient;",
+      "table": "unknown",
+      "operation": "unknown",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNKNOWN_REVIEW_REQUIRED",
+      "justification": "Call site requires manual architectural verification."
+    },
+    {
       "file": "src/lib/intelligence/access.ts",
       "line": 35,
       "snippet": "const { data: user, error: userError } = await adminClient",
@@ -3792,6 +3888,18 @@
       "file": "src/lib/supabase/admin.ts",
       "line": 18,
       "snippet": "export const adminClient = new Proxy({} as SupabaseClient, {",
+      "table": "unknown",
+      "operation": "unknown",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNKNOWN_REVIEW_REQUIRED",
+      "justification": "Call site requires manual architectural verification."
+    },
+    {
+      "file": "src/lib/supabase/tenantClient.ts",
+      "line": 67,
+      "snippet": "return new Proxy(adminClient, {",
       "table": "unknown",
       "operation": "unknown",
       "tenantFilterPresent": false,

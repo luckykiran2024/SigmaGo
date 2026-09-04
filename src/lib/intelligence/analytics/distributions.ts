@@ -19,6 +19,7 @@ export interface StepShareMetric {
     minShare: number;
     maxShare: number;
     periodCount: number;
+    samplePeriodsCount?: number;
     hasHistoricalRange: boolean; // True if >= 3 comparable periods observed
   } | null;
   confidence: 'EMERGING' | 'DEVELOPING' | 'RELIABLE' | 'STRONG' | 'INSTITUTIONAL';

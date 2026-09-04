@@ -368,6 +368,7 @@ model tenants {
   policyPeriodMetrics      policy_period_metrics[]
   decisionFootprintMetrics decision_footprint_metrics[]
   intelligenceSignals      intelligence_signals[]
+  transactionalOutbox      transactional_outbox[]
 }
 
 model users {
@@ -1001,4 +1002,24 @@ model intelligence_signals {
   @@index([tenant_id, status, period_key])
   @@index([tenant_id, signal_type, period_key])
   @@map("intelligence_signals")
+}
+
+model transactional_outbox {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id      String    @db.Uuid
+  event_type     String
+  aggregate_type String
+  aggregate_id   String    @db.Uuid
+  payload        Json      @default("{}")
+  status         String    @default("PENDING")
+  retry_count    Int       @default(0)
+  error_message  String?
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  processed_at   DateTime? @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([status, created_at], map: "idx_outbox_pending")
+  @@index([tenant_id, created_at], map: "idx_outbox_tenant")
+  @@map("transactional_outbox")
 }

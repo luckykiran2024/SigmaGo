@@ -1,0 +1,190 @@
+import { adminClient } from '@/lib/supabase/admin';
+
+export interface OutboxEventPayload {
+  tenantId: string;
+  eventType: string;
+  aggregateType: string;
+  aggregateId: string;
+  payload?: Record<string, any>;
+}
+
+export interface OutboxRecord {
+  id: string;
+  tenant_id: string;
+  event_type: string;
+  aggregate_type: string;
+  aggregate_id: string;
+  payload: Record<string, any>;
+  status: 'PENDING' | 'PROCESSED' | 'FAILED';
+  retry_count: number;
+  error_message?: string | null;
+  created_at: string;
+  processed_at?: string | null;
+}
+
+const MAX_RETRIES = 3;
+
+/**
+ * Inserts an event into the transactional outbox table.
+ * Designed to be called within or immediately adjacent to the authoritative write transaction.
+ */
+export async function recordOutboxEvent(
+  event: OutboxEventPayload,
+  client = adminClient
+): Promise<string | null> {
+  try {
+    const { data, error } = await client
+      .from('transactional_outbox')
+      .insert({
+        tenant_id: event.tenantId,
+        event_type: event.eventType,
+        aggregate_type: event.aggregateType,
+        aggregate_id: event.aggregateId,
+        payload: event.payload || {},
+        status: 'PENDING',
+        retry_count: 0,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('[Outbox] Failed to record outbox event:', error.message);
+      return null;
+    }
+
+    return data?.id || null;
+  } catch (err: any) {
+    console.error('[Outbox] Error writing to transactional outbox:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Fetches pending outbox events eligible for dispatch/processing.
+ */
+export async function getPendingOutboxEvents(
+  limit = 50,
+  tenantId?: string,
+  client = adminClient
+): Promise<OutboxRecord[]> {
+  try {
+    let query = client
+      .from('transactional_outbox')
+      .select('*')
+      .eq('status', 'PENDING')
+      .lt('retry_count', MAX_RETRIES);
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
+
+    query = query.order('created_at', { ascending: true }).limit(limit);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('[Outbox] Failed to fetch pending outbox events:', error.message);
+      return [];
+    }
+
+    return (data || []) as OutboxRecord[];
+  } catch (err: any) {
+    console.error('[Outbox] Error reading pending outbox events:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Marks an outbox event as successfully processed/published.
+ */
+export async function markOutboxEventProcessed(
+  eventId: string,
+  client = adminClient
+): Promise<boolean> {
+  try {
+    const { error } = await client
+      .from('transactional_outbox')
+      .update({
+        status: 'PROCESSED',
+        processed_at: new Date().toISOString(),
+        error_message: null,
+      })
+      .eq('id', eventId);
+
+    if (error) {
+      console.error(`[Outbox] Failed to mark event ${eventId} as PROCESSED:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.error(`[Outbox] Error updating event ${eventId}:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Marks an outbox event as failed, incrementing the retry count.
+ */
+export async function markOutboxEventFailed(
+  eventId: string,
+  currentRetryCount: number,
+  errorMessage: string,
+  client = adminClient
+): Promise<boolean> {
+  try {
+    const nextRetry = currentRetryCount + 1;
+    const newStatus = nextRetry >= MAX_RETRIES ? 'FAILED' : 'PENDING';
+
+    const { error } = await client
+      .from('transactional_outbox')
+      .update({
+        status: newStatus,
+        retry_count: nextRetry,
+        error_message: errorMessage.substring(0, 1000),
+      })
+      .eq('id', eventId);
+
+    if (error) {
+      console.error(`[Outbox] Failed to mark event ${eventId} failure:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.error(`[Outbox] Error updating event ${eventId} failure:`, err.message);
+    return false;
+  }
+}
+
+export type OutboxEventHandler = (event: OutboxRecord) => Promise<void>;
+
+/**
+ * Processes a batch of pending outbox events with a specified handler.
+ * Guarantees idempotent execution and isolates individual event failures.
+ */
+export async function processOutboxBatch(
+  options: {
+    limit?: number;
+    tenantId?: string;
+    handler: OutboxEventHandler;
+    client?: any;
+  }
+): Promise<{ processed: number; failed: number }> {
+  const client = options.client || adminClient;
+  const pending = await getPendingOutboxEvents(options.limit || 50, options.tenantId, client);
+
+  let processed = 0;
+  let failed = 0;
+
+  for (const record of pending) {
+    try {
+      await options.handler(record);
+      await markOutboxEventProcessed(record.id, client);
+      processed++;
+    } catch (err: any) {
+      console.error(`[Outbox] Error processing event ${record.id} (${record.event_type}):`, err.message);
+      await markOutboxEventFailed(record.id, record.retry_count, err.message || 'Unknown error', client);
+      failed++;
+    }
+  }
+
+  return { processed, failed };
+}

@@ -1,17 +1,17 @@
 # Admin Client Privileged Access Inventory
 
-**Audit Date**: 2026-09-04T03:47:47.930Z
+**Audit Date**: 2026-09-04T10:52:22.571Z
 
 ## Executive Summary
 
 | Category | Count | Percentage |
 | :--- | :--- | :--- |
-| **Total Privileged Calls** | **316** | 100% |
-| TENANT_SCOPED | 102 | 32.3% |
-| PRIMARY_KEY_KEYED | 28 | 8.9% |
-| PLATFORM_PRIVILEGED | 53 | 16.8% |
-| UNSAFE_UNSCOPED | 59 | 18.7% |
-| UNKNOWN_REVIEW_REQUIRED | 74 | 23.4% |
+| **Total Privileged Calls** | **325** | 100% |
+| TENANT_SCOPED | 106 | 32.6% |
+| PRIMARY_KEY_KEYED | 29 | 8.9% |
+| PLATFORM_PRIVILEGED | 53 | 16.3% |
+| UNSAFE_UNSCOPED | 61 | 18.8% |
+| UNKNOWN_REVIEW_REQUIRED | 76 | 23.4% |
 
 ## Detailed Call-Site Inventory
 
@@ -112,8 +112,9 @@
 | `src/app/[tenant]/intelligence/page.tsx:50` | `intelligence_grants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/intelligence/page.tsx:75` | `intelligence_grants` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'intelligence_grants' queried without explicit tenant_id filter or verified primary key. |
 | `src/app/[tenant]/intelligence/page.tsx:97` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/intelligence/page.tsx:156` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/intelligence/page.tsx:241` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:203` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:209` | `decision_references` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:331` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/layout.tsx:39` | `tenants` | `SELECT` | **PRIMARY_KEY_KEYED** | Lookup on tenants table by unique primary key ID. |
 | `src/app/[tenant]/layout.tsx:48` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
 | `src/app/[tenant]/layout.tsx:56` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
@@ -132,8 +133,8 @@
 | `src/app/[tenant]/requests/new/actions.ts:132` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/requests/new/actions.ts:145` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/app/[tenant]/requests/new/actions.ts:163` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/app/[tenant]/requests/new/actions.ts:301` | `approval_requests` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key. |
-| `src/app/[tenant]/requests/new/actions.ts:324` | `decision_references` | `INSERT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key. |
+| `src/app/[tenant]/requests/new/actions.ts:302` | `approval_requests` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key. |
+| `src/app/[tenant]/requests/new/actions.ts:326` | `decision_references` | `INSERT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key. |
 | `src/app/[tenant]/requests/new/page.tsx:25` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/app/[tenant]/requests/new/page.tsx:39` | `categories` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'categories' queried without explicit tenant_id filter or verified primary key. |
 | `src/app/[tenant]/requests/new/page.tsx:52` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
@@ -147,7 +148,7 @@
 | `src/app/[tenant]/requests/[id]/amendActions.ts:179` | `approval_requests` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
 | `src/app/[tenant]/requests/[id]/amendActions.ts:189` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
 | `src/app/[tenant]/requests/[id]/amendActions.ts:216` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/app/[tenant]/requests/[id]/certificate/page.tsx:38` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
+| `src/app/[tenant]/requests/[id]/certificate/page.tsx:37` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/app/[tenant]/requests/[id]/discussionActions.ts:17` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/app/[tenant]/requests/[id]/discussionActions.ts:29` | `approval_requests` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
 | `src/app/[tenant]/requests/[id]/discussionActions.ts:41` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
@@ -186,13 +187,13 @@
 | `src/lib/ai/templates.ts:328` | `categories` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/auth/guards.ts:25` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/lib/auth/guards.ts:74` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
-| `src/lib/certificate.ts:150` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/certificate.ts:163` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/certificate.ts:170` | `decision_references` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/certificate.ts:177` | `request_participants` | `SELECT` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/certificate.ts:194` | `approval_requests` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/certificate.ts:229` | `approval_steps` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/certificate.ts:235` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/certificate.ts:257` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/certificate.ts:269` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/certificate.ts:276` | `decision_references` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/certificate.ts:282` | `request_participants` | `SELECT` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/certificate.ts:309` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/certificate.ts:363` | `approval_steps` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/certificate.ts:369` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/lib/db/cache.ts:6` | `categories` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/db/cache.ts:19` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/lib/db/customFields.ts:24` | `tenant_custom_fields` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
@@ -251,32 +252,34 @@
 | `src/lib/db/requests.ts:129` | `audit_log` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/db/requests.ts:211` | `tenants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/db/requests.ts:218` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:43` | `approval_steps` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:61` | `delegations` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:109` | `approval_steps` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/db/steps.ts:129` | `approval_requests` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:136` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:145` | `approval_requests` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:155` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:172` | `audit_log` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:215` | `approval_steps` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/db/steps.ts:237` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/db/steps.ts:246` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:287` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:300` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
-| `src/lib/db/steps.ts:340` | `approval_steps` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:370` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:403` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:411` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:419` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:425` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:440` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
-| `src/lib/db/steps.ts:449` | `unknown` | `unknown` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:482` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:489` | `approval_requests` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:494` | `unknown` | `unknown` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
-| `src/lib/db/steps.ts:507` | `tenants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/lib/db/steps.ts:515` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:44` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:92` | `rpc` | `RPC` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:122` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:139` | `approval_requests` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:146` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:178` | `approval_steps` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:196` | `delegations` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:214` | `approval_steps` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:234` | `approval_requests` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:241` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:250` | `approval_requests` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:260` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:277` | `audit_log` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:320` | `approval_steps` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:342` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:351` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:392` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:405` | `approval_steps` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/db/steps.ts:445` | `approval_steps` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:475` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:508` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:518` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/db/steps.ts:525` | `unknown` | `unknown` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:558` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:565` | `approval_requests` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:570` | `unknown` | `unknown` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
+| `src/lib/db/steps.ts:583` | `tenants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/db/steps.ts:591` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/lib/db/users.ts:7` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
 | `src/lib/db/users.ts:24` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
 | `src/lib/db/users.ts:34` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
@@ -315,6 +318,11 @@
 | `src/lib/email/outbound.ts:316` | `users` | `SELECT` | **UNSAFE_UNSCOPED** | Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key. |
 | `src/lib/email/outbound.ts:329` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/lib/email/outbound.ts:345` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/events/outbox.ts:33` | `transactional_outbox` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/events/outbox.ts:68` | `transactional_outbox` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/events/outbox.ts:101` | `transactional_outbox` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'transactional_outbox' queried without explicit tenant_id filter or verified primary key. |
+| `src/lib/events/outbox.ts:131` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/events/outbox.ts:171` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/lib/intelligence/access.ts:35` | `users` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/intelligence/access.ts:52` | `intelligence_grants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/intelligence/access.ts:74` | `intelligence_grants` | `UPDATE` | **UNSAFE_UNSCOPED** | Multi-tenant table 'intelligence_grants' queried without explicit tenant_id filter or verified primary key. |
@@ -333,3 +341,4 @@
 | `src/lib/participants.ts:116` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
 | `src/lib/permissions.ts:66` | `users` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/supabase/admin.ts:18` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
+| `src/lib/supabase/tenantClient.ts:67` | `unknown` | `unknown` | **UNKNOWN_REVIEW_REQUIRED** | Call site requires manual architectural verification. |
