@@ -1,19 +1,12 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
-const ibmSans = IBM_Plex_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-sans",
-  display: "swap",
-});
-
-const ibmMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-ibm-mono",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -23,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#101828",
+  themeColor: "#182230",
 };
 
 export default function RootLayout({
@@ -32,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-bg text-ink font-sans">
-      <body className={`${ibmSans.variable} ${ibmMono.variable} font-sans antialiased h-full text-ink bg-bg`}>
+    <html lang="en" className="h-full bg-[#F7F8FA] text-[#182230] font-sans">
+      <body className={`${inter.variable} font-sans antialiased h-full text-[#182230] bg-[#F7F8FA]`}>
         <ThemeProvider>
           {children}
         </ThemeProvider>

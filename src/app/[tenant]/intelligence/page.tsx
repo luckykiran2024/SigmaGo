@@ -33,10 +33,10 @@ export default async function UserIntelligencePage({
   // Strict Tenant Isolation Enforcement (§ P0 Security Review)
   if (profile.tenant_id !== tenant.id) {
     return (
-      <div className="max-w-2xl mx-auto my-16 p-8 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm text-center space-y-4 font-sans">
-        <Lock className="w-12 h-12 text-[#B42318] mx-auto" />
-        <h2 className="text-lg font-extrabold text-[#101828]">Cross-Tenant Access Forbidden</h2>
-        <p className="text-xs text-[#667085] leading-relaxed">
+      <div className="max-w-xl mx-auto my-12 p-6 bg-white border border-[#E4E7EC] rounded-[8px] shadow-none text-center space-y-3 font-sans">
+        <Lock className="w-8 h-8 text-[#B42318] mx-auto" />
+        <h2 className="text-[16px] font-semibold text-[#182230]">Cross-tenant access forbidden</h2>
+        <p className="text-[13px] text-[#475467] leading-relaxed">
           Your authenticated user does not belong to workspace &quot;{tenant.name}&quot;.
         </p>
       </div>
@@ -57,14 +57,14 @@ export default async function UserIntelligencePage({
 
   if (!activeGrant && !isAdmin) {
     return (
-      <div className="max-w-2xl mx-auto my-16 p-8 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm text-center space-y-4 font-sans">
-        <Lock className="w-12 h-12 text-[#B42318] mx-auto" />
-        <h2 className="text-lg font-extrabold text-[#101828]">Intelligence Access Required</h2>
-        <p className="text-xs text-[#667085] leading-relaxed">
+      <div className="max-w-xl mx-auto my-12 p-6 bg-white border border-[#E4E7EC] rounded-[8px] shadow-none text-center space-y-3 font-sans">
+        <Lock className="w-8 h-8 text-[#B42318] mx-auto" />
+        <h2 className="text-[16px] font-semibold text-[#182230]">Intelligence access required</h2>
+        <p className="text-[13px] text-[#475467] leading-relaxed">
           Access to organizational decision metrics is an explicit grant issued to normalized email addresses. Roles carry no inherent intelligence access.
         </p>
-        <p className="text-xs font-semibold text-[#344054]">
-          Contact your workspace administrator to request an explicit Intelligence Access Grant for <span className="font-mono text-[#274C77]">{userEmail}</span>.
+        <p className="text-[13px] font-medium text-[#182230]">
+          Contact your workspace administrator to request an explicit intelligence grant for <span className="font-mono text-[#274C77]">{userEmail}</span>.
         </p>
       </div>
     );
@@ -309,7 +309,7 @@ export default async function UserIntelligencePage({
   }
 
   return (
-    <div className="max-w-[1240px] mx-auto px-4 py-8 font-sans">
+    <div className="max-w-[1440px] mx-auto px-8 py-6 font-sans">
       <ExecutiveIntelligenceConsole
         tenant={resolvedParams.tenant}
         userEmail={userEmail}
