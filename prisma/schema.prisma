@@ -169,6 +169,7 @@ model approval_steps {
   acted_by_id                                String?           @db.Uuid
   delegation_id                              String?           @db.Uuid
   action_source                              String?
+  idempotency_key                            String?           @unique
   updated_at                                 DateTime          @default(now()) @db.Timestamptz(6)
   stage_index                                Int               @default(0)
   recorded_offline                           Boolean           @default(false)

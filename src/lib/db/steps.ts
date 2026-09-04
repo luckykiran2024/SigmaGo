@@ -1,6 +1,5 @@
 import { createClient } from '../supabase/server'
 import { adminClient } from '../supabase/admin'
-import { buildCanonicalDecisionRecord, computeCanonicalSha256 } from '@/lib/certificate'
 
 export async function getMyPendingSteps(userId: string, tenantId: string) {
   const supabase = await createClient()
@@ -38,7 +37,143 @@ export async function actOnStep(payload: {
   stance?:       'ENDORSED' | 'APPROVED_WITH_RESERVATION' | 'REJECTED' | 'CHANGES_REQUESTED'
   reservationNote?: string
   wasBinding?:   boolean
+  idempotencyKey?: string
 }) {
+  // 1. Idempotency check: Return existing step if already processed with this key
+  if (payload.idempotencyKey) {
+    const { data: existingStep } = await adminClient
+      .from('approval_steps')
+      .select('id, status, acted_at')
+      .eq('idempotency_key', payload.idempotencyKey)
+      .maybeSingle();
+
+    if (existingStep) {
+      return {
+        success: true,
+        alreadyProcessed: true,
+        stepId: existingStep.id,
+        status: existingStep.status,
+      };
+    }
+  }
+
+  let stance: 'ENDORSED' | 'APPROVED_WITH_RESERVATION' | 'REJECTED' | 'CHANGES_REQUESTED';
+  let outcome: 'APPROVED' | 'APPROVED_WITH_CONDITIONS' | 'REJECTED' | 'CHANGES_REQUESTED' | 'DELEGATED';
+  const wasBinding = payload.wasBinding !== undefined ? payload.wasBinding : true;
+  let reservationNote = payload.reservationNote || null;
+
+  if (payload.action === 'discuss') {
+    stance = 'CHANGES_REQUESTED';
+    outcome = 'CHANGES_REQUESTED';
+  } else if (payload.action === 'rejected') {
+    stance = payload.stance || 'REJECTED';
+    outcome = 'REJECTED';
+  } else {
+    // action === 'approved'
+    const hasReservation = payload.stance === 'APPROVED_WITH_RESERVATION' ||
+      Boolean(reservationNote && reservationNote.trim().length > 0) ||
+      Boolean(payload.conditionText && payload.conditionText.trim().length > 0);
+
+    if (hasReservation) {
+      stance = 'APPROVED_WITH_RESERVATION';
+      outcome = 'APPROVED_WITH_CONDITIONS';
+      reservationNote = reservationNote || payload.conditionText || payload.comment || null;
+      if (!reservationNote || reservationNote.trim().length === 0) {
+        throw new Error('Reservation note is required when approving with reservation or conditions.');
+      }
+    } else {
+      stance = payload.stance || 'ENDORSED';
+      outcome = 'APPROVED';
+    }
+  }
+
+  // 2. Attempt atomic transactional execution via PostgreSQL RPC
+  try {
+    const { data: rpcRes, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {
+      p_step_id: payload.stepId,
+      p_actor_id: payload.actorId,
+      p_tenant_id: payload.tenantId,
+      p_action: payload.action,
+      p_stance: stance,
+      p_outcome: outcome,
+      p_was_binding: wasBinding,
+      p_reservation_note: reservationNote,
+      p_comment: payload.comment || null,
+      p_condition_text: payload.conditionText || null,
+      p_action_source: payload.actionSource,
+      p_delegation_id: payload.delegationId || null,
+      p_idempotency_key: payload.idempotencyKey || null,
+    });
+
+    if (!rpcErr && rpcRes) {
+      if (rpcRes.already_processed) {
+        return {
+          success: true,
+          alreadyProcessed: true,
+          stepId: rpcRes.step_id,
+          status: rpcRes.status,
+        };
+      }
+
+      if (rpcRes.finalized && rpcRes.request_id) {
+        await finalizeRequest(rpcRes.request_id, payload.tenantId);
+      } else if (rpcRes.stage_advanced && rpcRes.next_stage_index !== undefined) {
+        try {
+          const { data: nextSteps } = await adminClient
+            .from('approval_steps')
+            .select('id')
+            .eq('request_id', rpcRes.request_id)
+            .eq('stage_index', rpcRes.next_stage_index)
+            .eq('status', 'pending');
+
+          for (const ns of nextSteps || []) {
+            triggerStepEmail(ns.id, payload.tenantId).catch(console.error);
+          }
+        } catch (err) {
+          console.error('Non-blocking: Failed to trigger next stage notification emails:', err);
+        }
+      }
+
+      if (payload.action === 'discuss' && rpcRes.request_id) {
+        try {
+          const { data: request } = await adminClient
+            .from('approval_requests')
+            .select('owner_id, owner:users!owner_id(email)')
+            .eq('id', rpcRes.request_id)
+            .single();
+
+          const ownerEmail = (request?.owner as any)?.email;
+          const { data: tenant } = await adminClient
+            .from('tenants')
+            .select('subdomain')
+            .eq('id', payload.tenantId)
+            .single();
+
+          if (ownerEmail && tenant) {
+            const { sendDiscussionNotificationEmail } = await import('../email/outbound');
+            await sendDiscussionNotificationEmail(
+              tenant.subdomain,
+              rpcRes.request_id,
+              payload.comment || 'No comment provided.',
+              'An approver',
+              ownerEmail
+            ).catch(console.error);
+          }
+        } catch (e) {
+          console.error('Error triggering discussion email:', e);
+        }
+      }
+
+      return {
+        success: true,
+        ...rpcRes,
+      };
+    }
+  } catch (rpcException) {
+    console.warn('RPC sigmago_act_on_step threw, falling back to application path:', rpcException);
+  }
+
+  // 3. Fallback application path (for testing and environments without RPC)
   // Verify step is pending and actor is authorized (is direct approver, or has active delegation)
   const { data: checkStep, error: checkError } = await adminClient
     .from('approval_steps')
@@ -73,36 +208,6 @@ export async function actOnStep(payload: {
       throw new Error('Unauthorized: You are not the assigned approver or active delegate for this step');
     }
     delegationId = delegation.id;
-  }
-
-  let stance: 'ENDORSED' | 'APPROVED_WITH_RESERVATION' | 'REJECTED' | 'CHANGES_REQUESTED';
-  let outcome: 'APPROVED' | 'APPROVED_WITH_CONDITIONS' | 'REJECTED' | 'CHANGES_REQUESTED' | 'DELEGATED';
-  const wasBinding = payload.wasBinding !== undefined ? payload.wasBinding : true;
-  let reservationNote = payload.reservationNote || null;
-
-  if (payload.action === 'discuss') {
-    stance = 'CHANGES_REQUESTED';
-    outcome = 'CHANGES_REQUESTED';
-  } else if (payload.action === 'rejected') {
-    stance = payload.stance || 'REJECTED';
-    outcome = 'REJECTED';
-  } else {
-    // action === 'approved'
-    const hasReservation = payload.stance === 'APPROVED_WITH_RESERVATION' ||
-      Boolean(reservationNote && reservationNote.trim().length > 0) ||
-      Boolean(payload.conditionText && payload.conditionText.trim().length > 0);
-
-    if (hasReservation) {
-      stance = 'APPROVED_WITH_RESERVATION';
-      outcome = 'APPROVED_WITH_CONDITIONS';
-      reservationNote = reservationNote || payload.conditionText || payload.comment || null;
-      if (!reservationNote || reservationNote.trim().length === 0) {
-        throw new Error('Reservation note is required when approving with reservation or conditions.');
-      }
-    } else {
-      stance = payload.stance || 'ENDORSED';
-      outcome = 'APPROVED';
-    }
   }
 
   if (payload.action === 'discuss') {
@@ -402,47 +507,18 @@ export async function advanceChain(requestId: string, tenantId: string) {
 async function finalizeRequest(requestId: string, tenantId: string) {
   const { data: request } = await adminClient
     .from('approval_requests')
-    .select('*')
+    .select('workflow_id, workflow_version_id, baseline_step_type, resolved_step_type')
     .eq('id', requestId)
     .single();
 
-  if (!request) return;
-
-  const { data: steps } = await adminClient
-    .from('approval_steps')
-    .select('id, approver_id, type, stage_index, status, acted_at, acted_by_id, comment, stance, outcome, was_binding, reservation_note')
-    .eq('request_id', requestId)
-    .order('stage_index', { ascending: true })
-    .order('order_index', { ascending: true })
-    .order('id', { ascending: true });
-
-  const { data: references } = await adminClient
-    .from('decision_references')
-    .select('id, target_id, to_policy_id, relationship')
-    .eq('source_id', requestId)
-    .order('id', { ascending: true });
-
-  const { data: auditLogs } = await adminClient
-    .from('audit_log')
-    .select('id, action_type, actor_id, metadata, created_at')
-    .eq('request_id', requestId)
-    .order('created_at', { ascending: true })
-    .order('id', { ascending: true });
-
-  const canonicalRecord = buildCanonicalDecisionRecord({
-    request,
-    steps: steps || [],
-    references: references || [],
-  });
-
-  const checksumHex = computeCanonicalSha256(canonicalRecord);
+  const { generateChecksumAndFinalize } = await import('@/lib/certificate');
+  const finalizeRes = await generateChecksumAndFinalize(requestId, tenantId);
+  const checksumHex = finalizeRes?.checksum || null;
 
   await adminClient
     .from('approval_requests')
     .update({
-      status:          'approved',
-      finalized_at:    new Date().toISOString(),
-      checksum_sha256: checksumHex
+      status: 'approved',
     })
     .eq('id', requestId);
 
@@ -458,23 +534,23 @@ async function finalizeRequest(requestId: string, tenantId: string) {
   await emitDecisionEvent({
     tenantId: tenantId,
     requestId: requestId,
-    workflowId: request.workflow_id || null,
-    workflowVersionId: request.workflow_version_id || null,
+    workflowId: request?.workflow_id || null,
+    workflowVersionId: request?.workflow_version_id || null,
     eventType: 'REQUEST_FINALIZED',
-    baselineStepType: request.baseline_step_type || null,
-    resolvedStepType: request.resolved_step_type || null,
+    baselineStepType: request?.baseline_step_type || null,
+    resolvedStepType: request?.resolved_step_type || null,
     eventPayload: { checksum: checksumHex, status: 'approved' }
   });
 
   await emitDecisionEvent({
     tenantId: tenantId,
     requestId: requestId,
-    workflowId: request.workflow_id || null,
-    workflowVersionId: request.workflow_version_id || null,
+    workflowId: request?.workflow_id || null,
+    workflowVersionId: request?.workflow_version_id || null,
     eventType: 'REQUEST_SEALED',
-    baselineStepType: request.baseline_step_type || null,
-    resolvedStepType: request.resolved_step_type || null,
-    eventPayload: { checksum: checksumHex, algorithm: 'SHA-256' }
+    baselineStepType: request?.baseline_step_type || null,
+    resolvedStepType: request?.resolved_step_type || null,
+    eventPayload: { checksum: checksumHex, algorithm: 'SHA-256', canonicalVersion: 1 }
   });
 }
 
