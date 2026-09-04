@@ -90,9 +90,22 @@ export function analyzeStepMovement(params: {
   contributors.sort((a, b) => Math.abs(b.movementContributionPp) - Math.abs(a.movementContributionPp));
 
   // Verify mathematical reconciliation (sum of workflow movement pp)
-  const reconciledMovementPp = Math.round(
+  let reconciledMovementPp = Math.round(
     contributors.reduce((acc, c) => acc + c.movementContributionPp, 0) * 10
   ) / 10;
+
+  // Exact reconciliation: If fractional rounding discrepancy exists, assign remainder to highest contributor
+  if (contributors.length > 0 && totalCurrentAll > 0 && totalBaselineAll > 0) {
+    const roundingDelta = Math.round((movementPp - reconciledMovementPp) * 10) / 10;
+    if (Math.abs(roundingDelta) > 0 && Math.abs(roundingDelta) <= 0.2) {
+      contributors[0].movementContributionPp = Math.round(
+        (contributors[0].movementContributionPp + roundingDelta) * 10
+      ) / 10;
+      reconciledMovementPp = Math.round(
+        contributors.reduce((acc, c) => acc + c.movementContributionPp, 0) * 10
+      ) / 10;
+    }
+  }
 
   // Top 10 consequential decisions ranked by footprint score
   const topConsequentialDecisions = consequentialDecisions

@@ -4,37 +4,23 @@
  * classification cannot be bypassed by client manipulation.
  */
 
-export interface ClassificationRule {
-  id?: string;
-  field: string;
-  operator: '>=' | '<=' | '>' | '<' | '==' | '!=' | 'EQUALS' | 'NOT_EQUALS';
-  value: number | string | boolean;
-  breachStepType?: 'EXCEPTION' | 'STRUCTURAL';
-  reason?: string;
-}
+import {
+  ClassificationRule,
+  ClassificationRuleType,
+  ClassificationRuleOperator,
+  RuleEvaluationResult,
+  RuleEvaluationParams,
+} from './types';
 
-export interface RuleEvaluationResult {
-  isBreached: boolean;
-  resolvedStepType: 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS';
-  classificationSource: 'WORKFLOW' | 'EXCEPTION_RULE' | 'MANUAL_OVERRIDE';
-  classificationReason: string | null;
-  breachedRule?: ClassificationRule | null;
-}
+export type {
+  ClassificationRule,
+  ClassificationRuleType,
+  ClassificationRuleOperator,
+  RuleEvaluationResult,
+  RuleEvaluationParams,
+};
 
-export function evaluateClassificationRules(params: {
-  baseStepType: 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS';
-  rulesJson?: any;
-  policyBound?: {
-    boundField?: string | null;
-    boundType?: string | null; // 'MAX' | 'MIN'
-    boundValue?: number | null;
-    policyTitle?: string | null;
-  } | null;
-  customFields?: Record<string, any>;
-  formDataNumericValues?: Record<string, number>;
-  manualOverride?: { isOverride: boolean; reason?: string | null } | null;
-  referenceRelationship?: string | null;
-}): RuleEvaluationResult {
+export function evaluateClassificationRules(params: RuleEvaluationParams): RuleEvaluationResult {
   const {
     baseStepType,
     rulesJson,
