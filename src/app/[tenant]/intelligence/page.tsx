@@ -388,12 +388,45 @@ export default async function UserIntelligencePage({
   });
 
   // Strict Server-Side Privacy Isolation (§ P0 Security Review)
-  // If user grant is AGGREGATE_ONLY, strip all row-level decision records at the data boundary
+  // If user grant is AGGREGATE_ONLY, strip all row-level decision records and suppress small cohorts (< 5)
   const isAggregateOnly = grantScope === 'AGGREGATE_ONLY';
   if (isAggregateOnly) {
     stepKeys.forEach((st) => {
       if (movementAnalyses[st]) {
         movementAnalyses[st].topConsequentialDecisions = [];
+
+        // Small cohort suppression (< 5 decisions) to prevent individual employee de-anonymization
+        let suppressedCurrent = 0;
+        let suppressedBaseline = 0;
+        const preservedContributors: any[] = [];
+
+        movementAnalyses[st].contributors.forEach((c: any) => {
+          if (c.currentCount < 5 && c.baselineCount < 5) {
+            suppressedCurrent += c.currentCount;
+            suppressedBaseline += c.baselineCount;
+          } else {
+            preservedContributors.push(c);
+          }
+        });
+
+        if (suppressedCurrent > 0 || suppressedBaseline > 0) {
+          const cShare = suppressedCurrent / Math.max(1, distribution.totalCurrentDecisions);
+          const bShare = suppressedBaseline / Math.max(1, distribution.totalComparatorDecisions);
+          const diffPp = Math.round((cShare - bShare) * 1000) / 10;
+          preservedContributors.push({
+            workflowId: `wf-suppressed-${st}`,
+            workflowName: 'Other workflows (< 5 decisions suppressed for privacy)',
+            domain: 'AGGREGATE',
+            currentCount: suppressedCurrent,
+            baselineCount: suppressedBaseline,
+            currentShareContribution: cShare,
+            baselineShareContribution: bShare,
+            movementContributionPp: diffPp,
+            direction: diffPp > 0.05 ? 'UP' : diffPp < -0.05 ? 'DOWN' : 'STABLE',
+          });
+        }
+
+        movementAnalyses[st].contributors = preservedContributors;
       }
     });
   }

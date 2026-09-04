@@ -164,6 +164,7 @@ export async function submitNewRequest(
         .from('policies')
         .select('title, bound_field, bound_type, bound_value')
         .eq('id', effectivePolicyId)
+        .eq('tenant_id', tenantData.id)
         .maybeSingle();
 
       if (pol) {
@@ -304,7 +305,8 @@ export async function submitNewRequest(
         classification_override: true,
         classification_override_reason: overrideData.reason || 'User kept choice despite misclassification warning'
       })
-      .eq('id', request.id);
+      .eq('id', request.id)
+      .eq('tenant_id', tenantData.id);
 
     await emitDecisionEvent({
       tenantId: tenantData.id,

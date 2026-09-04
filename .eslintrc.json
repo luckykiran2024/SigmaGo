@@ -1,3 +1,17 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "no-restricted-imports": [
+      "warn",
+      {
+        "paths": [
+          {
+            "name": "@/lib/supabase/admin",
+            "importNames": ["adminClient"],
+            "message": "Use getTenantClient or getTenantAdminClient for tenant-scoped database access to prevent cross-tenant exposure."
+          }
+        ]
+      }
+    ]
+  }
 }
