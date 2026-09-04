@@ -39,6 +39,9 @@ export function generateIntelligenceSignals(params: {
     currentShare: number;
     baselineShare: number;
     topWorkflowName: string;
+    sampleSize?: number;
+    comparablePeriodsCount?: number;
+    policyCoverage?: number;
   }>;
 }): IntelligenceSignal[] {
   const signals: IntelligenceSignal[] = [];
@@ -62,7 +65,7 @@ export function generateIntelligenceSignals(params: {
           confidence: es.totalDecisions >= 50 ? 'STRONG' : 'RELIABLE',
           confidenceBasis: {
             sampleSize: es.totalDecisions,
-            comparablePeriodsCount: 2,
+            comparablePeriodsCount: es.historicalBaselineRate > 0 ? 2 : 1,
             policyCoverage: 1.0,
           },
           policyId: es.policyId,
@@ -76,6 +79,8 @@ export function generateIntelligenceSignals(params: {
     for (const sm of params.stepMovements) {
       if (Math.abs(sm.movementPp) >= 2.0) {
         const sign = sm.movementPp > 0 ? '+' : '';
+        const effectiveSample = sm.sampleSize ?? 0;
+        const confidenceLevel = effectiveSample >= 50 ? 'STRONG' : effectiveSample >= 10 ? 'RELIABLE' : 'EMERGING';
         signals.push({
           id: `sig-step-${sm.stepType}`,
           signalType: 'STEP_MOVEMENT',
@@ -87,11 +92,11 @@ export function generateIntelligenceSignals(params: {
           magnitude: Math.abs(sm.movementPp),
           persistence: 1,
           impact: Math.abs(sm.movementPp) >= 4.0 ? 'HIGH' : 'MEDIUM',
-          confidence: 'RELIABLE',
+          confidence: confidenceLevel,
           confidenceBasis: {
-            sampleSize: 100,
-            comparablePeriodsCount: 2,
-            policyCoverage: 0.95,
+            sampleSize: effectiveSample,
+            comparablePeriodsCount: sm.comparablePeriodsCount ?? (sm.baselineShare > 0 ? 2 : 1),
+            policyCoverage: sm.policyCoverage ?? 1.0,
           },
         });
       }

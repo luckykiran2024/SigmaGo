@@ -53,13 +53,16 @@ export async function submitNewRequest(
   }
 
   // H7 Fix: Verify category belongs to submitter's tenant
+  let cat: any = null;
   if (categoryId) {
-    const { data: cat } = await adminClient
+    const { data: fetchedCat } = await adminClient
       .from('categories')
-      .select('id, validity_mode, max_validity_days, review_only, tenant_id')
+      .select('id, validity_mode, max_validity_days, review_only, tenant_id, governing_policy_id')
       .eq('id', categoryId)
       .eq('tenant_id', tenantData.id) // H7 Fix: Ensure category belongs to THIS tenant
       .maybeSingle();
+
+    cat = fetchedCat;
 
     if (!cat) {
       throw new Error('Category not found or does not belong to this tenant');
@@ -122,6 +125,8 @@ export async function submitNewRequest(
   let classificationReason: string | null = null;
   let expectedSlaHours: number | null = null;
   let workflowSnapshot: Record<string, any> = {};
+  let governingPolicyBound: any = null;
+  let workflowRulesJson: any = null;
 
   if (categoryId) {
     const { data: wf } = await adminClient
@@ -134,8 +139,8 @@ export async function submitNewRequest(
     if (wf) {
       workflowId = wf.id;
       baselineStepType = wf.base_step_type || 'TRANSACTIONAL';
-      resolvedStepType = baselineStepType;
       expectedSlaHours = wf.default_sla_hours || null;
+      workflowRulesJson = wf.classification_rules_json;
 
       const { data: wfVer } = await adminClient
         .from('workflow_versions')
@@ -152,28 +157,89 @@ export async function submitNewRequest(
         workflowSnapshot = wfVer;
       }
     }
+
+    const effectivePolicyId = wf?.governing_policy_id || cat?.governing_policy_id;
+    if (effectivePolicyId) {
+      const { data: pol } = await adminClient
+        .from('policies')
+        .select('title, bound_field, bound_type, bound_value')
+        .eq('id', effectivePolicyId)
+        .maybeSingle();
+
+      if (pol) {
+        governingPolicyBound = {
+          boundField: pol.bound_field,
+          boundType: pol.bound_type,
+          boundValue: pol.bound_value,
+          policyTitle: pol.title,
+        };
+      }
+    }
   }
 
-  // Detect Exception relationship
-  if (referenceData?.relationship === 'EXCEPTION_TO') {
-    resolvedStepType = 'EXCEPTION';
-    classificationSource = 'EXCEPTION_RULE';
-    classificationReason = 'Request initiated as an explicit Exception to governing policy/decision.';
+  // Extract numeric form fields for server-side evaluation
+  const formDataNumericValues: Record<string, number> = {};
+  for (const [k, v] of formData.entries()) {
+    const n = parseFloat(String(v));
+    if (!isNaN(n)) {
+      formDataNumericValues[k] = n;
+    }
   }
 
-  // Detect manual override
-  if (overrideData?.isOverride) {
-    classificationSource = 'MANUAL_OVERRIDE';
-    classificationReason = overrideData.reason || 'User overrode system classification';
-  }
+  // Server-authoritative classification rule evaluation
+  const { evaluateClassificationRules } = await import('@/lib/intelligence/rules/evaluator');
+  const ruleEvaluation = evaluateClassificationRules({
+    baseStepType: baselineStepType,
+    rulesJson: workflowRulesJson,
+    policyBound: governingPolicyBound,
+    customFields: customFieldValues || {},
+    formDataNumericValues,
+    manualOverride: overrideData,
+    referenceRelationship: referenceData?.relationship,
+  });
 
-  // 3. Map steps
-  const steps = approvalPath.map(step => ({
-    approverId: step.userId || step.approver_id || step.approverId,
-    type: step.role || step.type || 'GENERAL',
-    orderIndex: step.order_index ?? step.orderIndex ?? 0,
-    stageIndex: step.stage_index ?? step.stageIndex ?? 0
-  }));
+  resolvedStepType = ruleEvaluation.resolvedStepType;
+  classificationSource = ruleEvaluation.classificationSource;
+  classificationReason = ruleEvaluation.classificationReason;
+
+  // 3. Map steps deterministically (Sequential Direct approvers get incremental stageIndex)
+  let currentStage = 0;
+  let inParallelCluster = false;
+
+  const steps = approvalPath.map((step, index) => {
+    const role = step.role || step.type || 'GENERAL';
+    let assignedStage: number;
+
+    if (step.stage_index !== undefined && step.stage_index !== null) {
+      assignedStage = Number(step.stage_index);
+    } else if (step.stageIndex !== undefined && step.stageIndex !== null) {
+      assignedStage = Number(step.stageIndex);
+    } else {
+      if (role === 'REFERENCE') {
+        assignedStage = 0;
+      } else if (role === 'PARALLEL') {
+        if (!inParallelCluster && index > 0) {
+          currentStage++;
+        }
+        inParallelCluster = true;
+        assignedStage = currentStage;
+      } else {
+        // GENERAL Direct Approver
+        if (index > 0) {
+          currentStage++;
+        }
+        inParallelCluster = false;
+        assignedStage = currentStage;
+      }
+    }
+
+    return {
+      approverId: step.userId || step.approver_id || step.approverId,
+      type: role,
+      orderIndex: step.order_index ?? step.orderIndex ?? index,
+      stageIndex: assignedStage,
+    };
+  });
 
   // 4. Create request
   const request = await createRequest({

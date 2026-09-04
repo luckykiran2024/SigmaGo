@@ -91,10 +91,10 @@ model approval_requests {
   visibility                                                                   String                   @default("private")
   version                                                                      Int                      @default(1)
   parent_id                                                                    String?                  @db.Uuid
-  parent_reference_id                                                         String?                  @db.Uuid
+  parent_reference_id                                                          String?                  @db.Uuid
   chain_depth                                                                  Int                      @default(0)
-  cost_of_not_deciding                                                        String?                  @db.Text
-  cost_of_deciding                                                            String?                  @db.Text
+  cost_of_not_deciding                                                         String?                  @db.Text
+  cost_of_deciding                                                             String?                  @db.Text
   confidence_at_seal                                                           Float?
   soundness_at_seal                                                            Float?
   blast_at_seal                                                                Int?
@@ -115,6 +115,15 @@ model approval_requests {
   renewed_from_id                                                              String?                  @db.Uuid
   classification_override                                                      Boolean                  @default(false)
   classification_override_reason                                               String?                  @db.Text
+  workflow_id                                                                  String?                  @db.Uuid
+  workflow_version_id                                                          String?                  @db.Uuid
+  baseline_step_type                                                           StepType?
+  resolved_step_type                                                           StepType?
+  classification_source                                                        String?
+  classification_reason                                                        String?                  @db.Text
+  expected_sla_hours                                                           Int?
+  expected_decision_at                                                         DateTime?                @db.Timestamptz(6)
+  workflow_snapshot                                                            Json?                    @default("{}")
   action_tokens                                                                ActionToken[]
   reference_skips                                                              reference_skips[]
   users_approval_requests_beneficiary_idTousers                                users?                   @relation("approval_requests_beneficiary_idTousers", fields: [beneficiary_id], references: [id], onUpdate: NoAction)
@@ -308,51 +317,56 @@ model org_nodes {
 }
 
 model tenants {
-  decision_references     decision_references[]
-  id                      String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name                    String
-  subdomain               String                    @unique
-  custom_domain           String?                   @unique
-  plan                    String                    @default("free")
-  region                  String                    @default("ap-south-2")
-  theme_tokens            Json                      @default("{}")
-  email_domain            String?
-  dkim_verified           Boolean                   @default(false)
-  powered_by              Boolean                   @default(true)
-  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
-  hrms_sync_secret        String?
-  logo_url                String?
-  tenant_settings         Json?
-  action_tokens           ActionToken[]
-  approval_requests       approval_requests[]
-  attachments             attachments[]
-  audit_log               audit_log[]
-  categories              categories[]
-  delegations             delegations[]
-  hrms_sync_log           hrms_sync_log[]
-  org_nodes               org_nodes[]
-  tenant_custom_fields    tenant_custom_fields[]
-  policies                policies[]
-  policy_owners           policy_owners[]
-  intelligence_grants     intelligence_grants[]
-  directory_persons       directory_persons[]
-  approvers               approvers[]
-  approver_authorities    approver_authorities[]
-  request_participants    request_participants[]
-  maturity_baselines      maturity_baselines[]
-  exception_reasons       exception_reasons[]
-  config_changes          config_changes[]
-  platform_support_grants platform_support_grants[]
-  platform_integrations   platform_integrations[]
-  alert_rules             alert_rules[]
-  reference_skips         reference_skips[]
-  users                   users[]
+  decision_references      decision_references[]
+  id                       String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                     String
+  subdomain                String                       @unique
+  custom_domain            String?                      @unique
+  plan                     String                       @default("free")
+  region                   String                       @default("ap-south-2")
+  theme_tokens             Json                         @default("{}")
+  email_domain             String?
+  dkim_verified            Boolean                      @default(false)
+  powered_by               Boolean                      @default(true)
+  created_at               DateTime                     @default(now()) @db.Timestamptz(6)
+  hrms_sync_secret         String?
+  logo_url                 String?
+  tenant_settings          Json?
+  action_tokens            ActionToken[]
+  approval_requests        approval_requests[]
+  attachments              attachments[]
+  audit_log                audit_log[]
+  categories               categories[]
+  delegations              delegations[]
+  hrms_sync_log            hrms_sync_log[]
+  org_nodes                org_nodes[]
+  tenant_custom_fields     tenant_custom_fields[]
+  policies                 policies[]
+  policy_owners            policy_owners[]
+  intelligence_grants      intelligence_grants[]
+  directory_persons        directory_persons[]
+  approvers                approvers[]
+  approver_authorities     approver_authorities[]
+  request_participants     request_participants[]
+  maturity_baselines       maturity_baselines[]
+  exception_reasons        exception_reasons[]
+  config_changes           config_changes[]
+  platform_support_grants  platform_support_grants[]
+  platform_integrations    platform_integrations[]
+  alert_rules              alert_rules[]
+  reference_skips          reference_skips[]
+  users                    users[]
   webhook_endpoints        webhook_endpoints[]
   workflows                workflows[]
   workflow_versions        workflow_versions[]
   decision_events          decision_events[]
   decision_calendar_events decision_calendar_events[]
   support_tickets          support_tickets[]
+  decisionPeriodMetrics    decision_period_metrics[]
+  stageTransitionMetrics   stage_transition_metrics[]
+  policyPeriodMetrics      policy_period_metrics[]
+  decisionFootprintMetrics decision_footprint_metrics[]
+  intelligenceSignals      intelligence_signals[]
 }
 
 model users {
@@ -461,22 +475,22 @@ model webhook_endpoints {
 }
 
 model workflows {
-  id                        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id                 String             @db.Uuid
-  category_id               String?            @db.Uuid
+  id                        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                 String      @db.Uuid
+  category_id               String?     @db.Uuid
   name                      String
   description               String?
-  is_active                 Boolean            @default(true)
-  is_locked                 Boolean            @default(false)
-  base_step_type            StepType           @default(TRANSACTIONAL)
-  governing_policy_id       String?            @db.Uuid
+  is_active                 Boolean     @default(true)
+  is_locked                 Boolean     @default(false)
+  base_step_type            StepType    @default(TRANSACTIONAL)
+  governing_policy_id       String?     @db.Uuid
   default_sla_hours         Int?
-  classification_rules_json Json               @default("{}")
-  opportunity_model_id      String?            @db.Uuid
-  current_version_number    Int                @default(1)
-  steps                     Json               @default("[]")
-  created_at                DateTime           @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
-  updated_at                DateTime           @default(now()) @db.Timestamptz(6)
+  classification_rules_json Json        @default("{}")
+  opportunity_model_id      String?     @db.Uuid
+  current_version_number    Int         @default(1)
+  steps                     Json        @default("[]")
+  created_at                DateTime    @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at                DateTime    @default(now()) @db.Timestamptz(6)
   categories                categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   tenants                   tenants     @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -528,23 +542,23 @@ model decision_references {
 }
 
 model policies {
-  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id               String          @db.Uuid
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id               String    @db.Uuid
   title                   String
-  statement               String          @db.Text
+  statement               String    @db.Text
   reasoning               String?
   owning_department       String?
-  category_id             String?         @db.Uuid
-  bound_type              String?         @default("NONE")
-  bound_value             Decimal?        @db.Decimal
+  category_id             String?   @db.Uuid
+  bound_type              String?   @default("NONE")
+  bound_value             Decimal?  @db.Decimal
   bound_field             String?
-  status                  String          @default("ACTIVE")
-  effective_from          DateTime        @default(now()) @db.Timestamptz(6)
-  effective_to            DateTime?       @db.Timestamptz(6)
-  supersedes_id           String?         @db.Uuid
-  created_from_request_id String?         @db.Uuid
-  created_by              String?         @db.Uuid
-  created_at              DateTime        @default(now()) @db.Timestamptz(6)
+  status                  String    @default("ACTIVE")
+  effective_from          DateTime  @default(now()) @db.Timestamptz(6)
+  effective_to            DateTime? @db.Timestamptz(6)
+  supersedes_id           String?   @db.Uuid
+  created_from_request_id String?   @db.Uuid
+  created_by              String?   @db.Uuid
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
 
   tenant               tenants               @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   category             categories?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
@@ -778,25 +792,25 @@ model reference_skips {
 }
 
 model workflow_versions {
-  id                           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id                    String            @db.Uuid
-  workflow_id                  String            @db.Uuid
+  id                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                    String    @db.Uuid
+  workflow_id                  String    @db.Uuid
   version_number               Int
   name_snapshot                String
-  category_id_snapshot         String?           @db.Uuid
+  category_id_snapshot         String?   @db.Uuid
   base_step_type               StepType
-  governing_policy_id_snapshot String?           @db.Uuid
-  steps_json                   Json              @default("[]")
-  classification_rules_json    Json              @default("{}")
+  governing_policy_id_snapshot String?   @db.Uuid
+  steps_json                   Json      @default("[]")
+  classification_rules_json    Json      @default("{}")
   default_sla_hours            Int?
-  custom_fields_snapshot       Json              @default("[]")
-  validity_snapshot            Json              @default("{}")
-  opportunity_model_snapshot   Json              @default("{}")
-  created_by                   String?           @db.Uuid
-  created_at                   DateTime          @default(now()) @db.Timestamptz(6)
-  effective_from               DateTime          @default(now()) @db.Timestamptz(6)
-  effective_to                 DateTime?         @db.Timestamptz(6)
-  tenant                       tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  custom_fields_snapshot       Json      @default("[]")
+  validity_snapshot            Json      @default("{}")
+  opportunity_model_snapshot   Json      @default("{}")
+  created_by                   String?   @db.Uuid
+  created_at                   DateTime  @default(now()) @db.Timestamptz(6)
+  effective_from               DateTime  @default(now()) @db.Timestamptz(6)
+  effective_to                 DateTime? @db.Timestamptz(6)
+  tenant                       tenants   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@unique([tenant_id, workflow_id, version_number])
   @@index([tenant_id, workflow_id, effective_from])
@@ -804,26 +818,26 @@ model workflow_versions {
 }
 
 model decision_events {
-  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id           String             @db.Uuid
-  request_id          String             @db.Uuid
-  workflow_id         String?            @db.Uuid
-  workflow_version_id String?            @db.Uuid
+  id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id           String          @db.Uuid
+  request_id          String          @db.Uuid
+  workflow_id         String?         @db.Uuid
+  workflow_version_id String?         @db.Uuid
   event_type          String
-  event_at            DateTime           @default(now()) @db.Timestamptz(6)
-  actor_id            String?            @db.Uuid
-  step_id             String?            @db.Uuid
+  event_at            DateTime        @default(now()) @db.Timestamptz(6)
+  actor_id            String?         @db.Uuid
+  step_id             String?         @db.Uuid
   baseline_step_type  StepType?
   resolved_step_type  StepType?
-  policy_id           String?            @db.Uuid
-  parent_reference_id String?            @db.Uuid
+  policy_id           String?         @db.Uuid
+  parent_reference_id String?         @db.Uuid
   stance              ApprovalStance?
   outcome             ActionOutcome?
   was_binding         Boolean?
-  event_payload       Json               @default("{}")
-  correlation_id      String?            @db.Uuid
-  created_at          DateTime           @default(now()) @db.Timestamptz(6)
-  tenant              tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  event_payload       Json            @default("{}")
+  correlation_id      String?         @db.Uuid
+  created_at          DateTime        @default(now()) @db.Timestamptz(6)
+  tenant              tenants         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@index([tenant_id, event_at(sort: Desc)])
   @@index([tenant_id, request_id, event_at])
@@ -835,20 +849,20 @@ model decision_events {
 }
 
 model decision_calendar_events {
-  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenant_id           String            @db.Uuid
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id           String   @db.Uuid
   name                String
   context_type        String
-  starts_at           DateTime          @db.Timestamptz(6)
-  ends_at             DateTime          @db.Timestamptz(6)
+  starts_at           DateTime @db.Timestamptz(6)
+  ends_at             DateTime @db.Timestamptz(6)
   recurring_rule      String?
-  expected_step_types Json              @default("[]")
-  domains             Json              @default("[]")
-  workflows           Json              @default("[]")
+  expected_step_types Json     @default("[]")
+  domains             Json     @default("[]")
+  workflows           Json     @default("[]")
   description         String?
-  created_by          String?           @db.Uuid
-  created_at          DateTime          @default(now()) @db.Timestamptz(6)
-  tenant              tenants           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  created_by          String?  @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  tenant              tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@index([tenant_id, starts_at, ends_at])
   @@map("decision_calendar_events")
@@ -870,4 +884,120 @@ model support_tickets {
   @@map("support_tickets")
 }
 
+model decision_period_metrics {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id             String   @db.Uuid
+  period_key            String
+  comparator_period_key String
+  context_id            String?  @db.Uuid
+  domain                String?
+  workflow_id           String?  @db.Uuid
+  step_type             String
+  total_decisions       Int      @default(0)
+  approved_count        Int      @default(0)
+  rejected_count        Int      @default(0)
+  exception_count       Int      @default(0)
+  avg_cycle_hours       Float    @default(0.0)
+  median_cycle_hours    Float    @default(0.0)
+  p90_cycle_hours       Float    @default(0.0)
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  refreshed_at          DateTime @default(now()) @db.Timestamptz(6)
 
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, period_key, workflow_id, step_type], map: "uq_decision_period_metric")
+  @@map("decision_period_metrics")
+}
+
+model stage_transition_metrics {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id            String   @db.Uuid
+  period_key           String
+  context_id           String?  @db.Uuid
+  workflow_id          String   @db.Uuid
+  step_type            String
+  from_stage           String
+  to_stage             String
+  terminal_state       String?
+  transition_count     Int      @default(0)
+  denominator_count    Int      @default(0)
+  observed_probability Float    @default(0.0)
+  sample_size          Int      @default(0)
+  refreshed_at         DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, period_key, workflow_id, from_stage, to_stage], map: "uq_stage_transition_metric")
+  @@map("stage_transition_metrics")
+}
+
+model policy_period_metrics {
+  id                        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                 String   @db.Uuid
+  policy_id                 String   @db.Uuid
+  period_key                String
+  total_governed_decisions  Int      @default(0)
+  based_on_count            Int      @default(0)
+  exception_count           Int      @default(0)
+  governance_rate           Float    @default(1.0)
+  distinct_approvers        Int      @default(0)
+  dominant_exception_reason String?
+  health_state              String   @default("HEALTHY")
+  refreshed_at              DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, policy_id, period_key], map: "uq_policy_period_metric")
+  @@map("policy_period_metrics")
+}
+
+model decision_footprint_metrics {
+  id                          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id                   String   @db.Uuid
+  request_id                  String   @db.Uuid
+  direct_descendant_count     Int      @default(0)
+  transitive_descendant_count Int      @default(0)
+  based_on_count              Int      @default(0)
+  exception_child_count       Int      @default(0)
+  replacement_count           Int      @default(0)
+  renewal_count               Int      @default(0)
+  cross_domain_reach          Int      @default(0)
+  persistence_days            Int      @default(0)
+  last_activity_at            DateTime @default(now()) @db.Timestamptz(6)
+  refreshed_at                DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, request_id], map: "uq_decision_footprint_metric")
+  @@map("decision_footprint_metrics")
+}
+
+model intelligence_signals {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id        String   @db.Uuid
+  signal_type      String
+  entity_type      String
+  entity_id        String?  @db.Uuid
+  workflow_id      String?  @db.Uuid
+  policy_id        String?  @db.Uuid
+  period_key       String
+  title            String
+  factual_summary  String
+  pattern_summary  String?
+  interpretation   String?
+  recommendation   String?
+  magnitude        Float    @default(0.0)
+  persistence      Int      @default(1)
+  impact           String?  @default("MEDIUM")
+  confidence       String   @default("DEVELOPING")
+  confidence_basis Json     @default("{}")
+  evidence         Json     @default("{}")
+  status           String   @default("ACTIVE")
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  tenant tenants @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, status, period_key])
+  @@index([tenant_id, signal_type, period_key])
+  @@map("intelligence_signals")
+}

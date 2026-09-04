@@ -30,6 +30,19 @@ export default async function UserIntelligencePage({
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) redirect('/login');
 
+  // Strict Tenant Isolation Enforcement (§ P0 Security Review)
+  if (profile.tenant_id !== tenant.id) {
+    return (
+      <div className="max-w-2xl mx-auto my-16 p-8 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm text-center space-y-4 font-sans">
+        <Lock className="w-12 h-12 text-[#B42318] mx-auto" />
+        <h2 className="text-lg font-extrabold text-[#101828]">Cross-Tenant Access Forbidden</h2>
+        <p className="text-xs text-[#667085] leading-relaxed">
+          Your authenticated user does not belong to workspace &quot;{tenant.name}&quot;.
+        </p>
+      </div>
+    );
+  }
+
   const userEmail = (profile.email || user.email || '').toLowerCase().trim();
   const isAdmin = profile.role === 'admin' || profile.role === 'owner';
 
@@ -224,35 +237,76 @@ export default async function UserIntelligencePage({
     });
   }
 
-  // Generate 4-layer signals
+  // Query tenant policies to generate dynamic exception pressure signals
+  const { data: tenantPolicies } = await adminClient
+    .from('policies')
+    .select('id, title')
+    .eq('tenant_id', tenant.id);
+
+  const dynamicExceptionSignals = (tenantPolicies || []).map((pol: any) => {
+    const curPolRequests = activeCurrentRequests.filter((r: any) =>
+      r.categories?.governing_policy_id === pol.id || (r.categories?.domain && r.categories.domain.toLowerCase() === pol.title.toLowerCase())
+    );
+    const compPolRequests = comparatorRequests.filter((r: any) =>
+      r.categories?.governing_policy_id === pol.id || (r.categories?.domain && r.categories.domain.toLowerCase() === pol.title.toLowerCase())
+    );
+
+    const curExceptions = curPolRequests.filter((r: any) => (r.resolved_step_type || r.baseline_step_type) === 'EXCEPTION').length;
+    const compExceptions = compPolRequests.filter((r: any) => (r.resolved_step_type || r.baseline_step_type) === 'EXCEPTION').length;
+
+    const currentRate = curPolRequests.length > 0 ? curExceptions / curPolRequests.length : 0;
+    const historicalBaselineRate = compPolRequests.length > 0 ? compExceptions / compPolRequests.length : 0;
+
+    return {
+      policyId: pol.id,
+      policyTitle: pol.title,
+      totalDecisions: curPolRequests.length,
+      exceptionCount: curExceptions,
+      currentRate,
+      historicalBaselineRate,
+    };
+  }).filter((s: any) => s.totalDecisions >= 5);
+
+  const topExceptionWf = movementAnalyses['EXCEPTION']?.contributors[0]?.workflowName || 'General Exception Approvals';
+  const topStructuralWf = movementAnalyses['STRUCTURAL']?.contributors[0]?.workflowName || 'Organizational Governance Decisions';
+
+  // Generate 4-layer signals from dynamic data
   const signals = generateIntelligenceSignals({
-    exceptionSignals: [
-      {
-        policyId: 'pol-promotions',
-        policyTitle: 'Promotion & Leveling Policy',
-        totalDecisions: Math.max(10, currentCounts.EXCEPTION + currentCounts.TRANSACTIONAL),
-        exceptionCount: currentCounts.EXCEPTION,
-        currentRate: currentCounts.EXCEPTION / Math.max(1, currentCounts.EXCEPTION + currentCounts.TRANSACTIONAL),
-        historicalBaselineRate: 0.12,
-      },
-    ],
+    exceptionSignals: dynamicExceptionSignals,
     stepMovements: [
       {
         stepType: 'EXCEPTION',
         movementPp: distribution.steps.EXCEPTION.movementPp,
         currentShare: distribution.steps.EXCEPTION.currentShare,
         baselineShare: distribution.steps.EXCEPTION.comparatorShare,
-        topWorkflowName: 'Compensation & Leveling Exceptions',
+        topWorkflowName: topExceptionWf,
+        sampleSize: distribution.totalCurrentDecisions,
+        comparablePeriodsCount: distribution.totalComparatorDecisions > 0 ? 2 : 1,
+        policyCoverage: 1.0,
       },
       {
         stepType: 'STRUCTURAL',
         movementPp: distribution.steps.STRUCTURAL.movementPp,
         currentShare: distribution.steps.STRUCTURAL.currentShare,
         baselineShare: distribution.steps.STRUCTURAL.comparatorShare,
-        topWorkflowName: 'Enterprise Organization Architecture',
+        topWorkflowName: topStructuralWf,
+        sampleSize: distribution.totalCurrentDecisions,
+        comparablePeriodsCount: distribution.totalComparatorDecisions > 0 ? 2 : 1,
+        policyCoverage: 1.0,
       },
     ],
   });
+
+  // Strict Server-Side Privacy Isolation (§ P0 Security Review)
+  // If user grant is AGGREGATE_ONLY, strip all row-level decision records at the data boundary
+  const isAggregateOnly = grantScope === 'AGGREGATE_ONLY';
+  if (isAggregateOnly) {
+    stepKeys.forEach((st) => {
+      if (movementAnalyses[st]) {
+        movementAnalyses[st].topConsequentialDecisions = [];
+      }
+    });
+  }
 
   return (
     <div className="max-w-[1240px] mx-auto px-4 py-8 font-sans">
@@ -266,7 +320,7 @@ export default async function UserIntelligencePage({
         comparatorDisplayName={`${periodInfo.quarter} ${periodInfo.year - 1}`}
         signals={signals}
         movementAnalyses={movementAnalyses}
-        sealedDecisions={allRequests || []}
+        sealedDecisions={isAggregateOnly ? [] : (allRequests || [])}
       />
     </div>
   );

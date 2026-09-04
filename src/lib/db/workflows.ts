@@ -158,6 +158,14 @@ export async function updateWorkflow(
 
   if (verErr) {
     console.error('Failed to create new workflow_version:', verErr);
+    // Rollback: Re-activate previous version snapshot
+    await adminClient
+      .from('workflow_versions')
+      .update({ effective_to: null })
+      .eq('workflow_id', workflowId)
+      .eq('tenant_id', tenantId)
+      .eq('effective_to', now);
+    throw new Error(`Transaction aborted: Could not create workflow version snapshot: ${verErr.message}`);
   }
 
   // 4. Update the parent workflow record
@@ -180,7 +188,23 @@ export async function updateWorkflow(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Failed to update parent workflow:', error);
+    // Rollback: delete newly inserted version and re-activate previous
+    await adminClient
+      .from('workflow_versions')
+      .delete()
+      .eq('workflow_id', workflowId)
+      .eq('version_number', nextVersionNumber);
+    await adminClient
+      .from('workflow_versions')
+      .update({ effective_to: null })
+      .eq('workflow_id', workflowId)
+      .eq('tenant_id', tenantId)
+      .eq('effective_to', now);
+    throw new Error(`Transaction aborted: Could not update workflow parent record: ${error.message}`);
+  }
+
   return data;
 }
 

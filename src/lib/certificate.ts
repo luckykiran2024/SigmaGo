@@ -34,6 +34,109 @@ export interface CertificateBlocks {
   participation: CertificateParticipantEntry[];
 }
 
+export interface CanonicalDecisionRecord {
+  id: string;
+  tenantId: string;
+  subject: string;
+  body: any;
+  conditions: any[];
+  customFields: any;
+  beneficiaryId: string | null;
+  ownerId: string;
+  version: number;
+  parentReferenceId: string | null;
+  workflowId: string | null;
+  workflowVersionId: string | null;
+  baselineStepType: string | null;
+  resolvedStepType: string | null;
+  authoritySteps: Array<{
+    id: string;
+    order: number;
+    approver: string;
+    status: string;
+    actedAt: string | null;
+    stance: string | null;
+    outcome: string | null;
+    wasBinding: boolean;
+    reservationNote: string | null;
+  }>;
+  decisionReferences: Array<{
+    id: string;
+    targetId: string | null;
+    toPolicyId: string | null;
+    relationship: string;
+  }>;
+  participationRecords?: Array<{
+    id: string;
+    email: string;
+    role: string;
+    isExternal: boolean;
+    state: string;
+    comment?: string | null;
+    isAuthoritative: false;
+  }>;
+}
+
+/**
+ * Single canonical serialisation function for sealing, verifying, and certificate rendering.
+ * NEVER duplicate this canonical structure.
+ */
+export function buildCanonicalDecisionRecord(params: {
+  request: any;
+  steps: any[];
+  references?: any[];
+  participants?: any[];
+}): CanonicalDecisionRecord {
+  const req = params.request;
+  return {
+    id: req.id,
+    tenantId: req.tenant_id || req.tenantId,
+    subject: req.subject || '',
+    body: req.body_json || req.body || {},
+    conditions: req.conditions || [],
+    customFields: req.custom_fields || req.customFields || {},
+    beneficiaryId: req.beneficiary_id || req.beneficiaryId || null,
+    ownerId: req.owner_id || req.ownerId || '',
+    version: req.version || 1,
+    parentReferenceId: req.parent_reference_id || req.parentReferenceId || null,
+    workflowId: req.workflow_id || req.workflowId || null,
+    workflowVersionId: req.workflow_version_id || req.workflowVersionId || null,
+    baselineStepType: req.baseline_step_type || req.baselineStepType || null,
+    resolvedStepType: req.resolved_step_type || req.resolvedStepType || null,
+    authoritySteps: (params.steps || []).map((s) => ({
+      id: s.id,
+      order: s.order_index ?? s.order ?? 0,
+      approver: s.approver_id || s.approver || '',
+      status: s.status,
+      actedAt: s.acted_at || s.actedAt || null,
+      stance: s.stance || null,
+      outcome: s.outcome || null,
+      wasBinding: s.was_binding !== undefined ? s.was_binding : s.wasBinding !== undefined ? s.wasBinding : true,
+      reservationNote: s.reservation_note || s.reservationNote || null,
+    })),
+    decisionReferences: (params.references || []).map((r) => ({
+      id: r.id,
+      targetId: r.target_id || r.targetId || null,
+      toPolicyId: r.to_policy_id || r.toPolicyId || null,
+      relationship: r.relationship,
+    })),
+    participationRecords: (params.participants || []).map((p) => ({
+      id: p.id,
+      email: p.email,
+      role: p.role,
+      isExternal: Boolean(p.is_external ?? p.isExternal),
+      state: p.state,
+      comment: p.comment || null,
+      isAuthoritative: false as const,
+    })),
+  };
+}
+
+export function computeCanonicalSha256(canonicalObject: CanonicalDecisionRecord | any): string {
+  const canonicalPayload = JSON.stringify(canonicalObject);
+  return createHash('sha256').update(canonicalPayload, 'utf8').digest('hex');
+}
+
 /**
  * Calculates a canonical SHA-256 checksum for an approved request payload
  * incorporating both Authority steps and Non-authoritative Participants.
@@ -77,50 +180,14 @@ export async function generateChecksumAndFinalize(
       .eq('request_id', requestId);
 
     // 4. Compute deterministic canonical payload representation
-    const canonicalPayload = JSON.stringify({
-      id: request.id,
-      tenantId: request.tenant_id,
-      subject: request.subject || '',
-      body: request.body_json || {},
-      conditions: request.conditions || [],
-      customFields: request.custom_fields || {},
-      beneficiaryId: request.beneficiary_id || '',
-      ownerId: request.owner_id || '',
-      version: request.version || 1,
-      parentReferenceId: request.parent_reference_id || null,
-      workflowId: request.workflow_id || null,
-      workflowVersionId: request.workflow_version_id || null,
-      baselineStepType: request.baseline_step_type || null,
-      resolvedStepType: request.resolved_step_type || null,
-      authoritySteps: (steps || []).map((s) => ({
-        id: s.id,
-        order: s.order_index,
-        approver: s.approver_id,
-        status: s.status,
-        actedAt: s.acted_at,
-        stance: s.stance || null,
-        outcome: s.outcome || null,
-        wasBinding: s.was_binding !== undefined ? s.was_binding : true,
-        reservationNote: s.reservation_note || null,
-      })),
-      decisionReferences: (references || []).map((r) => ({
-        id: r.id,
-        targetId: r.target_id || null,
-        toPolicyId: r.to_policy_id || null,
-        relationship: r.relationship,
-      })),
-      participationRecords: (participants || []).map((p) => ({
-        id: p.id,
-        email: p.email,
-        role: p.role,
-        isExternal: p.is_external,
-        state: p.state,
-        comment: p.comment,
-        isAuthoritative: false,
-      })),
+    const canonicalRecord = buildCanonicalDecisionRecord({
+      request,
+      steps: steps || [],
+      references: references || [],
+      participants: participants || [],
     });
 
-    const checksum = createHash('sha256').update(canonicalPayload, 'utf8').digest('hex');
+    const checksum = computeCanonicalSha256(canonicalRecord);
     const finalizedAt = new Date().toISOString();
 
     // 5. Update approval_requests table in database

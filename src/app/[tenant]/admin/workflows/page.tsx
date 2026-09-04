@@ -28,6 +28,12 @@ export default async function AdminWorkflowsPage({ params }: { params: Promise<{
     redirect(`/${resolvedParams.tenant}`);
   }
 
+  // Enforce Tenant Scoping (§ P0 Security Review)
+  const isSuperAdmin = profile.role === 'super_admin' || profile.role === 'SUPER_ADMIN';
+  if (!isSuperAdmin && profile.tenant_id !== tenant.id) {
+    redirect(`/${resolvedParams.tenant}`);
+  }
+
   // Load categories
   const { data: categories } = await adminClient
     .from('categories')

@@ -1,5 +1,6 @@
 import { createClient } from '../supabase/server'
 import { adminClient } from '../supabase/admin'
+import { buildCanonicalDecisionRecord, computeCanonicalSha256 } from '@/lib/certificate'
 
 export async function getMyPendingSteps(userId: string, tenantId: string) {
   const supabase = await createClient()
@@ -342,6 +343,16 @@ export async function advanceChain(requestId: string, tenantId: string) {
             .eq('id', generalStep.id);
 
           triggerStepEmail(generalStep.id, tenantId).catch(console.error);
+
+          const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+          await emitDecisionEvent({
+            tenantId,
+            requestId,
+            stepId: generalStep.id,
+            eventType: 'STEP_ENTERED',
+            actorId: generalStep.approver_id,
+            eventPayload: { stageIndex: generalStep.stage_index, approverId: generalStep.approver_id }
+          });
         }
         // General step is active (either just activated or already pending). Stop execution so subsequent stages remain waiting.
         return;
@@ -361,9 +372,18 @@ export async function advanceChain(requestId: string, tenantId: string) {
             .update({ status: 'pending', entered_at: new Date().toISOString() })
             .in('id', ids);
 
-          // Trigger emails
-          for (const id of ids) {
-            triggerStepEmail(id, tenantId).catch(console.error);
+          const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
+          // Trigger emails and emit STEP_ENTERED
+          for (const s of waitingParallels) {
+            triggerStepEmail(s.id, tenantId).catch(console.error);
+            await emitDecisionEvent({
+              tenantId,
+              requestId,
+              stepId: s.id,
+              eventType: 'STEP_ENTERED',
+              actorId: s.approver_id,
+              eventPayload: { stageIndex: s.stage_index, approverId: s.approver_id }
+            });
           }
         }
         // At least one parallel step is active (pending). Wait.
@@ -409,56 +429,13 @@ async function finalizeRequest(requestId: string, tenantId: string) {
     .order('created_at', { ascending: true })
     .order('id', { ascending: true });
 
-  const canonicalData = {
-    request: {
-      id: request.id,
-      subject: request.subject,
-      body_json: request.body_json,
-      owner_id: request.owner_id,
-      category_id: request.category_id,
-      created_at: request.created_at,
-      parent_reference_id: request.parent_reference_id || null,
-      workflow_id: request.workflow_id || null,
-      workflow_version_id: request.workflow_version_id || null,
-      baseline_step_type: request.baseline_step_type || null,
-      resolved_step_type: request.resolved_step_type || null,
-    },
-    steps: (steps || []).map(s => ({
-      id: s.id,
-      approver_id: s.approver_id,
-      type: s.type,
-      stage_index: s.stage_index,
-      status: s.status,
-      acted_at: s.acted_at,
-      acted_by_id: s.acted_by_id,
-      comment: s.comment,
-      stance: s.stance || null,
-      outcome: s.outcome || null,
-      was_binding: s.was_binding !== undefined ? s.was_binding : true,
-      reservation_note: s.reservation_note || null,
-    })),
-    references: (references || []).map(r => ({
-      id: r.id,
-      target_id: r.target_id || null,
-      to_policy_id: r.to_policy_id || null,
-      relationship: r.relationship,
-    })),
-    audit_log: (auditLogs || []).map(l => ({
-      id: l.id,
-      action_type: l.action_type,
-      actor_id: l.actor_id,
-      metadata: l.metadata,
-      created_at: l.created_at,
-    }))
-  };
+  const canonicalRecord = buildCanonicalDecisionRecord({
+    request,
+    steps: steps || [],
+    references: references || [],
+  });
 
-  const canonical = JSON.stringify(canonicalData);
-  const checksum = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(canonical)
-  );
-  const checksumHex = Array.from(new Uint8Array(checksum))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
+  const checksumHex = computeCanonicalSha256(canonicalRecord);
 
   await adminClient
     .from('approval_requests')
