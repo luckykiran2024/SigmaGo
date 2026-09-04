@@ -23,6 +23,15 @@ interface ExecutiveIntelligenceConsoleProps {
   signals: IntelligenceSignal[];
   movementAnalyses: Record<StepType, StepMovementAnalysis>;
   sealedDecisions: any[];
+  coverage?: {
+    percentage: number;
+    stepResolutionCoverage: number;
+    workflowVersionCoverage: number;
+    policyLinkageCoverage: number;
+    comparablePeriodsCount: number;
+    isReliable: boolean;
+    label: string;
+  };
 }
 
 export default function ExecutiveIntelligenceConsole({
@@ -36,35 +45,32 @@ export default function ExecutiveIntelligenceConsole({
   signals,
   movementAnalyses,
   sealedDecisions,
+  coverage,
 }: ExecutiveIntelligenceConsoleProps) {
   const [activeStepDrawer, setActiveStepDrawer] = useState<StepType | null>(null);
 
   const stepsList: StepType[] = ['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS'];
 
-  const stepMeta: Record<StepType, { label: string; dotClass: string; barClass: string; rangeLabel: string }> = {
+  const stepMeta: Record<StepType, { label: string; dotClass: string; barClass: string }> = {
     STRUCTURAL: {
       label: 'Structural',
       dotClass: 'bg-[#6366F1]',
       barClass: 'bg-[#6366F1]',
-      rangeLabel: 'Historical AMJ range: 11.8%–14.6%',
     },
     TRANSACTIONAL: {
       label: 'Transactional',
       dotClass: 'bg-[#3B82F6]',
       barClass: 'bg-[#3B82F6]',
-      rangeLabel: 'Historical AMJ range: 28.0%–34.0%',
     },
     EXCEPTION: {
       label: 'Exception',
       dotClass: 'bg-[#F59E0B]',
       barClass: 'bg-[#F59E0B]',
-      rangeLabel: 'Historical AMJ range: 38.0%–42.0%',
     },
     PROCESS: {
       label: 'Process',
       dotClass: 'bg-[#0D9488]',
       barClass: 'bg-[#0D9488]',
-      rangeLabel: 'Historical AMJ range: 10.0%–14.0%',
     },
   };
 
@@ -78,14 +84,17 @@ export default function ExecutiveIntelligenceConsole({
 
   // Determine status chip for each step
   const getStepStatus = (st: StepType, item: StepShareMetric) => {
-    if (st === 'EXCEPTION') {
-      if (item.movementPp > 2.0) return { label: 'Watch', badge: 'badge-watch', desc: 'Higher than prior AMJ' };
-      if (item.movementPp > 4.0) return { label: 'Attention', badge: 'badge-attention', desc: 'Above historical baseline' };
-      return { label: 'Normal', badge: 'badge-normal', desc: 'Within expected range' };
+    if (distribution.totalComparatorDecisions === 0) {
+      return { label: 'Baseline pending', badge: 'badge-normal', desc: 'Awaiting comparable baseline period' };
     }
-    if (Math.abs(item.movementPp) <= 0.5) return { label: 'Stable', badge: 'badge-normal', desc: 'Consistent with baseline' };
-    if (item.movementPp > 0) return { label: 'Normal', badge: 'badge-normal', desc: 'Within range' };
-    return { label: 'Normal', badge: 'badge-normal', desc: 'Lower than prior AMJ' };
+    if (st === 'EXCEPTION') {
+      if (item.movementPp > 2.0) return { label: 'Watch', badge: 'badge-watch', desc: `Higher than ${comparatorDisplayName}` };
+      if (item.movementPp > 4.0) return { label: 'Attention', badge: 'badge-attention', desc: `Above baseline (${comparatorDisplayName})` };
+      return { label: 'Normal', badge: 'badge-normal', desc: 'Within expected baseline' };
+    }
+    if (Math.abs(item.movementPp) <= 0.5) return { label: 'Stable', badge: 'badge-normal', desc: `Consistent with ${comparatorDisplayName}` };
+    if (item.movementPp > 0) return { label: 'Normal', badge: 'badge-normal', desc: `Higher than ${comparatorDisplayName}` };
+    return { label: 'Normal', badge: 'badge-normal', desc: `Lower than ${comparatorDisplayName}` };
   };
 
   return (
@@ -148,13 +157,27 @@ export default function ExecutiveIntelligenceConsole({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-[4px] text-[12px] font-medium badge-reliable flex items-center gap-1.5 h-[32px]">
-              <Check className="w-3.5 h-3.5" />
-              <span>Reliable data coverage (98%)</span>
+            <span className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium flex items-center gap-1.5 h-[32px] ${
+              coverage?.isReliable ? 'badge-reliable' : 'bg-[#F2F4F7] text-[#475467]'
+            }`}>
+              {coverage?.isReliable && <Check className="w-3.5 h-3.5" />}
+              <span>{coverage?.label || 'Data coverage'}</span>
             </span>
           </div>
         </div>
       </div>
+
+      {/* Empty State Banner if no decisions in selected period */}
+      {distribution.totalCurrentDecisions === 0 && (
+        <div className="p-8 rounded-[8px] bg-white border border-[#E4E7EC] text-center space-y-2">
+          <h3 className="text-[15px] font-semibold text-[#182230]">
+            No decision data available for {periodDisplayName}
+          </h3>
+          <p className="text-[13px] text-[#475467] max-w-lg mx-auto leading-relaxed">
+            There are no decisions recorded or finalized within this selected timeframe. Historical baseline comparisons and STEP movements will calculate automatically as decisions occur.
+          </p>
+        </div>
+      )}
 
       {/* Horizontal Stacked Distribution Bar */}
       <div className="bg-white border border-[#E4E7EC] rounded-[8px] p-4 space-y-2.5">
@@ -253,9 +276,16 @@ export default function ExecutiveIntelligenceConsole({
                   </p>
 
                   {/* Baseline context */}
-                  <p className="text-[12px] text-[#475467] mt-3 pt-3 border-t border-[#F2F4F7]">
-                    {statusInfo.desc}
-                  </p>
+                  <div className="text-[12px] text-[#475467] mt-3 pt-3 border-t border-[#F2F4F7] space-y-0.5">
+                    <p>{statusInfo.desc}</p>
+                    <p className="text-[11px] text-[#667085]">
+                      {item.historicalRange
+                        ? `Observed range (${item.historicalRange.samplePeriodsCount} periods): ${(item.historicalRange.minShare * 100).toFixed(1)}%–${(item.historicalRange.maxShare * 100).toFixed(1)}%`
+                        : distribution.totalComparatorDecisions > 0
+                        ? `Prior comparable period: ${(item.comparatorShare * 100).toFixed(1)}%`
+                        : 'No historical comparator data'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Subtle Action Link */}

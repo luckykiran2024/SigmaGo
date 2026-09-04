@@ -1,6 +1,7 @@
 /**
  * STEP Distribution Engine
  * Computes S, T, E, P decision shares and percentage-point (pp) movement against comparable baselines.
+ * No synthetic ranges or placeholder fallbacks.
  */
 
 export type StepType = 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS';
@@ -14,7 +15,12 @@ export interface StepShareMetric {
   movementPp: number;            // e.g. +2.0 percentage points (+0.02)
   movementLabel: string;         // "+2.0 pp"
   status: 'NORMAL' | 'ELEVATED' | 'SIGNIFICANT_CHANGE' | 'EMERGING_PATTERN' | 'STRUCTURAL_SHIFT';
-  historicalRange: { minShare: number; maxShare: number };
+  historicalRange?: {
+    minShare: number;
+    maxShare: number;
+    periodCount: number;
+    hasHistoricalRange: boolean; // True if >= 3 comparable periods observed
+  } | null;
   confidence: 'EMERGING' | 'DEVELOPING' | 'RELIABLE' | 'STRONG' | 'INSTITUTIONAL';
 }
 
@@ -26,38 +32,60 @@ export interface StepDistributionResult {
 
 export function calculateStepDistribution(
   currentCounts: Record<StepType, number>,
-  comparatorCounts: Record<StepType, number>
+  comparatorCounts: Record<StepType, number>,
+  historicalPeriodsInput?: Array<Record<StepType, number>> | Record<StepType, { minShare: number; maxShare: number; periodCount: number }>
 ): StepDistributionResult {
-  const totalCurrent = Math.max(
-    1,
-    (currentCounts.STRUCTURAL || 0) +
+  const totalCurrent = (currentCounts.STRUCTURAL || 0) +
     (currentCounts.TRANSACTIONAL || 0) +
     (currentCounts.EXCEPTION || 0) +
-    (currentCounts.PROCESS || 0)
-  );
+    (currentCounts.PROCESS || 0);
 
-  const totalComparator = Math.max(
-    1,
-    (comparatorCounts.STRUCTURAL || 0) +
+  const totalComparator = (comparatorCounts.STRUCTURAL || 0) +
     (comparatorCounts.TRANSACTIONAL || 0) +
     (comparatorCounts.EXCEPTION || 0) +
-    (comparatorCounts.PROCESS || 0)
-  );
+    (comparatorCounts.PROCESS || 0);
 
   const stepKeys: StepType[] = ['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS'];
   const steps = {} as Record<StepType, StepShareMetric>;
+
+  // Pre-calculate shares for historical periods if array was provided
+  const historicalSharesByStep: Record<StepType, number[]> = {
+    STRUCTURAL: [],
+    TRANSACTIONAL: [],
+    EXCEPTION: [],
+    PROCESS: [],
+  };
+
+  if (Array.isArray(historicalPeriodsInput)) {
+    historicalPeriodsInput.forEach((periodCounts) => {
+      const pTotal = (periodCounts.STRUCTURAL || 0) +
+        (periodCounts.TRANSACTIONAL || 0) +
+        (periodCounts.EXCEPTION || 0) +
+        (periodCounts.PROCESS || 0);
+      if (pTotal > 0) {
+        stepKeys.forEach((st) => {
+          historicalSharesByStep[st].push((periodCounts[st] || 0) / pTotal);
+        });
+      }
+    });
+  }
 
   for (const st of stepKeys) {
     const cCount = currentCounts[st] || 0;
     const compCount = comparatorCounts[st] || 0;
 
-    const cShare = cCount / totalCurrent;
-    const compShare = compCount / totalComparator;
+    const cShare = totalCurrent > 0 ? cCount / totalCurrent : 0;
+    const compShare = totalComparator > 0 ? compCount / totalComparator : 0;
 
     // Movement in percentage points (100 * (current_share - baseline_share))
-    const movementPp = Math.round((cShare - compShare) * 1000) / 10; // e.g. +2.0
+    const movementPp = totalCurrent > 0 && totalComparator > 0
+      ? Math.round((cShare - compShare) * 1000) / 10
+      : 0;
+
     const sign = movementPp > 0 ? '+' : '';
-    const movementLabel = `${sign}${movementPp.toFixed(1)} pp`;
+    const movementLabel = totalCurrent > 0 && totalComparator > 0
+      ? `${sign}${movementPp.toFixed(1)} pp`
+      : '0.0 pp';
 
     // Contextual status classification based on magnitude of percentage point shift
     let status: StepShareMetric['status'] = 'NORMAL';
@@ -69,14 +97,39 @@ export function calculateStepDistribution(
       status = 'ELEVATED';
     }
 
-    // Historical range placeholder (± 2 pp from baseline)
-    const minShare = Math.max(0, compShare - 0.02);
-    const maxShare = Math.min(1, compShare + 0.02);
+    // Historical range derived strictly from >= 3 observed historical same-quarter periods
+    let historicalRange: StepShareMetric['historicalRange'] = undefined;
 
-    let confidence: StepShareMetric['confidence'] = 'DEVELOPING';
+    if (Array.isArray(historicalPeriodsInput)) {
+      const shares = historicalSharesByStep[st];
+      if (shares.length >= 3) {
+        historicalRange = {
+          minShare: Math.min(...shares),
+          maxShare: Math.max(...shares),
+          periodCount: shares.length,
+          samplePeriodsCount: shares.length,
+          hasHistoricalRange: true,
+        };
+      }
+    } else if (historicalPeriodsInput && (historicalPeriodsInput as any)[st]) {
+      const obs = (historicalPeriodsInput as any)[st];
+      if (obs.periodCount >= 3) {
+        historicalRange = {
+          minShare: obs.minShare,
+          maxShare: obs.maxShare,
+          periodCount: obs.periodCount,
+          samplePeriodsCount: obs.periodCount,
+          hasHistoricalRange: true,
+        };
+      }
+    }
+
+    // Dynamic confidence score based on actual decision sample size
+    let confidence: StepShareMetric['confidence'] = 'EMERGING';
     if (cCount >= 100) confidence = 'INSTITUTIONAL';
     else if (cCount >= 50) confidence = 'STRONG';
     else if (cCount >= 20) confidence = 'RELIABLE';
+    else if (cCount >= 5) confidence = 'DEVELOPING';
 
     steps[st] = {
       stepType: st,
@@ -87,7 +140,7 @@ export function calculateStepDistribution(
       movementPp,
       movementLabel,
       status,
-      historicalRange: { minShare, maxShare },
+      historicalRange,
       confidence,
     };
   }

@@ -1,4 +1,4 @@
-import { computeRequestChecksum } from '@/lib/utils/checksum';
+import { verifyDecisionCertificate, getCertificateBlocks } from '@/lib/certificate';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getRequestDetail } from '@/lib/db/requests';
@@ -6,7 +6,6 @@ import { getProfileForAuthUser } from '@/lib/db/users';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { getCertificateBlocks } from '@/lib/certificate';
 import { ShieldCheck, ArrowLeft, Printer, Link2, Award, CheckCircle2, XCircle } from 'lucide-react';
 
 function formatDate(dateStr: string | null) {
@@ -59,7 +58,8 @@ export default async function CertificatePage({
   }
 
   const certBlocks = await getCertificateBlocks(resolvedParams.id, tenantId);
-  const sha256Checksum = request.checksum_sha256 || computeRequestChecksum(request as any);
+  const verification = await verifyDecisionCertificate(resolvedParams.id, tenantId);
+  const sha256Checksum = request.checksum_sha256 || verification.calculatedChecksum;
 
   // Security Check: Restrict to authorized users of the same tenant
   const isSameTenant = loggedInPublicUser.tenant_id === tenantId;

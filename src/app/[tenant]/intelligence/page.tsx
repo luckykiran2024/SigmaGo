@@ -96,45 +96,39 @@ export default async function UserIntelligencePage({
   // Query requests for intelligence analytics
   const { data: allRequests } = await adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, category_id, categories(name, domain)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, category_id, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false });
 
-  // Separate active current requests and historical comparator requests
+  // Filter requests strictly to selected period (no synthetic fallback to allRequests)
   const currentRequests = (allRequests || []).filter((r: any) => {
     const created = new Date(r.created_at).getTime();
     return created >= new Date(periodInfo.startDate).getTime() && created <= new Date(periodInfo.endDate).getTime();
   });
-  const activeCurrentRequests = currentRequests.length > 0 ? currentRequests : (allRequests || []);
 
   const comparatorRequests = (allRequests || []).filter((r: any) => {
     const created = new Date(r.created_at).getTime();
     return created >= new Date(comparatorRange.startDate).getTime() && created <= new Date(comparatorRange.endDate).getTime();
   });
 
-  const currentCounts = {
+  const currentCounts: Record<import('@/lib/intelligence/analytics/distributions').StepType, number> = {
     STRUCTURAL: 0,
     TRANSACTIONAL: 0,
     EXCEPTION: 0,
     PROCESS: 0,
   };
 
-  activeCurrentRequests.forEach((row: any) => {
-    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as any;
-    if (currentCounts[st as keyof typeof currentCounts] !== undefined) {
-      currentCounts[st as keyof typeof currentCounts]++;
+  currentRequests.forEach((row: any) => {
+    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
+    if (currentCounts[st] !== undefined) {
+      currentCounts[st]++;
     } else {
       currentCounts.TRANSACTIONAL++;
     }
   });
 
-  // Ensure non-zero total for display
-  if (Object.values(currentCounts).reduce((a, b) => a + b, 0) === 0) {
-    currentCounts.TRANSACTIONAL = 1;
-  }
-
   // Baseline comparator counts: Real observed counts from the prior-year comparable period
-  const comparatorCounts = {
+  const comparatorCounts: Record<import('@/lib/intelligence/analytics/distributions').StepType, number> = {
     STRUCTURAL: 0,
     TRANSACTIONAL: 0,
     EXCEPTION: 0,
@@ -142,21 +136,97 @@ export default async function UserIntelligencePage({
   };
 
   comparatorRequests.forEach((row: any) => {
-    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as any;
-    if (comparatorCounts[st as keyof typeof comparatorCounts] !== undefined) {
-      comparatorCounts[st as keyof typeof comparatorCounts]++;
+    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
+    if (comparatorCounts[st] !== undefined) {
+      comparatorCounts[st]++;
     } else {
       comparatorCounts.TRANSACTIONAL++;
     }
   });
 
-  const distribution = calculateStepDistribution(currentCounts, comparatorCounts);
+  // Real historical periods for the same quarter (looking back up to 5 prior years)
+  const historicalPeriodsCounts: Array<Record<import('@/lib/intelligence/analytics/distributions').StepType, number>> = [];
+  for (let y = 1; y <= 5; y++) {
+    const pKey = `${periodInfo.year - y}-${periodInfo.quarter}`;
+    const pRange = getPeriodDateRange(pKey);
+    const pReqs = (allRequests || []).filter((r: any) => {
+      const created = new Date(r.created_at).getTime();
+      return created >= new Date(pRange.startDate).getTime() && created <= new Date(pRange.endDate).getTime();
+    });
+    if (pReqs.length > 0) {
+      const counts: Record<import('@/lib/intelligence/analytics/distributions').StepType, number> = {
+        STRUCTURAL: 0,
+        TRANSACTIONAL: 0,
+        EXCEPTION: 0,
+        PROCESS: 0,
+      };
+      pReqs.forEach((row: any) => {
+        const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
+        if (counts[st] !== undefined) counts[st]++;
+        else counts.TRANSACTIONAL++;
+      });
+      historicalPeriodsCounts.push(counts);
+    }
+  }
+
+  const distribution = calculateStepDistribution(currentCounts, comparatorCounts, historicalPeriodsCounts);
+
+  // Calculate real coverage metrics
+  const totalCurrentDecisions = currentRequests.length;
+  const resolvedCount = currentRequests.filter((r: any) => r.resolved_step_type !== null && r.resolved_step_type !== undefined).length;
+  const stepResolutionCoverage = totalCurrentDecisions > 0
+    ? resolvedCount / totalCurrentDecisions
+    : 0;
+  const workflowVersionCoverage = totalCurrentDecisions > 0
+    ? currentRequests.filter((r: any) => r.workflow_id !== null && r.workflow_id !== undefined).length / totalCurrentDecisions
+    : 0;
+  const policyLinkageCoverage = totalCurrentDecisions > 0
+    ? currentRequests.filter((r: any) => r.category_id !== null || r.categories?.governing_policy_id).length / totalCurrentDecisions
+    : 0;
+
+  const coveragePercentage = Math.round(stepResolutionCoverage * 100);
+  const coverageMetric = {
+    percentage: coveragePercentage,
+    stepResolutionCoverage,
+    workflowVersionCoverage,
+    policyLinkageCoverage,
+    comparablePeriodsCount: historicalPeriodsCounts.length,
+    isReliable: totalCurrentDecisions > 0 && coveragePercentage >= 80,
+    label: totalCurrentDecisions === 0
+      ? 'No period decisions recorded'
+      : coveragePercentage >= 80
+      ? `Reliable data coverage (${coveragePercentage}%)`
+      : `Partial data coverage (${coveragePercentage}%)`,
+  };
 
   // Fetch active workflows
   const { data: workflows } = await adminClient
     .from('workflows')
     .select('id, name, category_id, base_step_type, categories(domain)')
     .eq('tenant_id', tenant.id);
+
+  // Fetch real decision references for this tenant to compute true graph footprint
+  const { data: tenantReferences } = await adminClient
+    .from('decision_references')
+    .select('id, source_id, target_id, to_policy_id, relationship')
+    .eq('tenant_id', tenant.id);
+
+  const refsByTarget: Record<string, number> = {};
+  const refsBySource: Record<string, number> = {};
+  const exceptionRefs: Record<string, number> = {};
+
+  (tenantReferences || []).forEach((ref: any) => {
+    if (ref.target_id) {
+      refsByTarget[ref.target_id] = (refsByTarget[ref.target_id] || 0) + 1;
+    }
+    if (ref.source_id) {
+      refsBySource[ref.source_id] = (refsBySource[ref.source_id] || 0) + 1;
+    }
+    if (ref.relationship === 'EXCEPTION_TO') {
+      if (ref.target_id) exceptionRefs[ref.target_id] = (exceptionRefs[ref.target_id] || 0) + 1;
+      if (ref.source_id) exceptionRefs[ref.source_id] = (exceptionRefs[ref.source_id] || 0) + 1;
+    }
+  });
 
   // Build movement analyses for each STEP type
   const movementAnalyses: any = {};
@@ -174,7 +244,7 @@ export default async function UserIntelligencePage({
     let allocatedBaseline = 0;
 
     const matchingWorkflows = stWorkflows.map((w: any) => {
-      const cCount = activeCurrentRequests.filter((r: any) =>
+      const cCount = currentRequests.filter((r: any) =>
         (r.workflow_id === w.id || r.category_id === w.category_id) &&
         (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st
       ).length;
@@ -211,19 +281,39 @@ export default async function UserIntelligencePage({
 
     const consequentialDecisions = (allRequests || [])
       .filter((r: any) => (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st)
-      .map((r: any) => ({
-        requestId: r.id,
-        ref: r.ref,
-        subject: r.subject,
-        stepType: st,
-        directDescendants: r.blast_at_seal || 0,
-        transitiveDescendants: r.blast_at_seal || 0,
-        basedOnCount: 1,
-        exceptionCount: st === 'EXCEPTION' ? 1 : 0,
-        footprintScore: (r.blast_at_seal || 0) * 10 + 20,
-        classification: ((r.blast_at_seal || 0) > 5 ? 'STABLE_FOUNDATION' : 'EMERGING') as 'STABLE_FOUNDATION' | 'EMERGING',
-        whySurfaced: 'High organizational reliance and downstream blast radius',
-      }));
+      .map((r: any) => {
+        const directDescendants = (refsByTarget[r.id] || 0) + (r.blast_at_seal || 0);
+        const basedOnCount = refsBySource[r.id] || 0;
+        const exceptionCount = exceptionRefs[r.id] || (st === 'EXCEPTION' ? 1 : 0);
+        const footprintScore = directDescendants + basedOnCount;
+        const classification = directDescendants >= 5
+          ? 'STABLE_FOUNDATION'
+          : exceptionCount > 0
+          ? 'UNDER_PRESSURE'
+          : directDescendants > 0
+          ? 'EMERGING'
+          : 'MONITOR';
+
+        const whySurfaced = directDescendants > 0
+          ? `${directDescendants} downstream references rely on this decision`
+          : exceptionCount > 0
+          ? 'Exception reference tracked in decision graph'
+          : 'Recorded decision within tenant policy boundary';
+
+        return {
+          requestId: r.id,
+          ref: r.ref,
+          subject: r.subject,
+          stepType: st,
+          directDescendants,
+          transitiveDescendants: directDescendants,
+          basedOnCount,
+          exceptionCount,
+          footprintScore,
+          classification: classification as 'STABLE_FOUNDATION' | 'UNDER_PRESSURE' | 'EMERGING' | 'MONITOR',
+          whySurfaced,
+        };
+      });
 
     movementAnalyses[st] = analyzeStepMovement({
       stepType: st,
@@ -244,7 +334,7 @@ export default async function UserIntelligencePage({
     .eq('tenant_id', tenant.id);
 
   const dynamicExceptionSignals = (tenantPolicies || []).map((pol: any) => {
-    const curPolRequests = activeCurrentRequests.filter((r: any) =>
+    const curPolRequests = currentRequests.filter((r: any) =>
       r.categories?.governing_policy_id === pol.id || (r.categories?.domain && r.categories.domain.toLowerCase() === pol.title.toLowerCase())
     );
     const compPolRequests = comparatorRequests.filter((r: any) =>
@@ -281,8 +371,8 @@ export default async function UserIntelligencePage({
         baselineShare: distribution.steps.EXCEPTION.comparatorShare,
         topWorkflowName: topExceptionWf,
         sampleSize: distribution.totalCurrentDecisions,
-        comparablePeriodsCount: distribution.totalComparatorDecisions > 0 ? 2 : 1,
-        policyCoverage: 1.0,
+        comparablePeriodsCount: historicalPeriodsCounts.length,
+        policyCoverage: policyLinkageCoverage,
       },
       {
         stepType: 'STRUCTURAL',
@@ -291,8 +381,8 @@ export default async function UserIntelligencePage({
         baselineShare: distribution.steps.STRUCTURAL.comparatorShare,
         topWorkflowName: topStructuralWf,
         sampleSize: distribution.totalCurrentDecisions,
-        comparablePeriodsCount: distribution.totalComparatorDecisions > 0 ? 2 : 1,
-        policyCoverage: 1.0,
+        comparablePeriodsCount: historicalPeriodsCounts.length,
+        policyCoverage: policyLinkageCoverage,
       },
     ],
   });
@@ -321,6 +411,7 @@ export default async function UserIntelligencePage({
         signals={signals}
         movementAnalyses={movementAnalyses}
         sealedDecisions={isAggregateOnly ? [] : (allRequests || [])}
+        coverage={coverageMetric}
       />
     </div>
   );
