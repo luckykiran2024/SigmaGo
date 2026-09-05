@@ -156,7 +156,8 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
           relPath.includes('/api/health') ||
           relPath.includes('src/app/auth/') ||
           relPath.includes('src/app/login/') ||
-          relPath.includes('src/lib/db/digest.ts');
+          relPath.includes('src/lib/db/digest.ts') ||
+          relPath.includes('src/lib/observability');
 
         // Classify
         let classification: AdminClientCallSite['classification'] = 'UNKNOWN_REVIEW_REQUIRED';

@@ -1,15 +1,15 @@
 # Admin Client Privileged Access Inventory
 
-**Audit Date**: 2026-09-05T05:43:28.507Z
+**Audit Date**: 2026-09-05T05:56:11.527Z
 
 ## Executive Summary
 
 | Category | Count | Percentage |
 | :--- | :--- | :--- |
-| **Total Privileged Calls** | **318** | 100% |
-| TENANT_SCOPED | 224 | 70.4% |
-| PRIMARY_KEY_KEYED | 29 | 9.1% |
-| PLATFORM_PRIVILEGED | 65 | 20.4% |
+| **Total Privileged Calls** | **321** | 100% |
+| TENANT_SCOPED | 224 | 69.8% |
+| PRIMARY_KEY_KEYED | 29 | 9.0% |
+| PLATFORM_PRIVILEGED | 68 | 21.2% |
 | UNSAFE_UNSCOPED | 0 | 0.0% |
 | UNKNOWN_REVIEW_REQUIRED | 0 | 0.0% |
 
@@ -112,9 +112,9 @@
 | `src/app/[tenant]/intelligence/page.tsx:50` | `intelligence_grants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/intelligence/page.tsx:75` | `intelligence_grants` | `UPDATE` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
 | `src/app/[tenant]/intelligence/page.tsx:97` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/intelligence/page.tsx:203` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/intelligence/page.tsx:209` | `decision_references` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/intelligence/page.tsx:331` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:215` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:221` | `decision_references` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/intelligence/page.tsx:343` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/layout.tsx:39` | `tenants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/layout.tsx:48` | `approval_steps` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/layout.tsx:57` | `intelligence_grants` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
@@ -329,6 +329,9 @@
 | `src/lib/intelligence/exceptionContext.ts:78` | `policies` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
 | `src/lib/intelligence/exceptionContext.ts:99` | `decision_references` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/intelligence/exceptionContext.ts:132` | `decision_references` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/lib/observability/alerts.ts:117` | `transactional_outbox` | `SELECT` | **PLATFORM_PRIVILEGED** | Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context. |
+| `src/lib/observability/alerts.ts:122` | `transactional_outbox` | `SELECT` | **PLATFORM_PRIVILEGED** | Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context. |
+| `src/lib/observability/alerts.ts:172` | `approval_requests` | `SELECT` | **PLATFORM_PRIVILEGED** | Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context. |
 | `src/lib/participants.ts:31` | `approval_requests` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/lib/participants.ts:42` | `categories` | `SELECT` | **PRIMARY_KEY_KEYED** | Keyed by primary key ID (requires verifying tenant ownership boundary in caller). |
 | `src/lib/participants.ts:53` | `directory_persons` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |

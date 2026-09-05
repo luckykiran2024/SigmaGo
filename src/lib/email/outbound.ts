@@ -269,32 +269,6 @@ export async function sendFyiEmail(
     </div>
   `;
 
-  const { data: step, error: stepError } = await adminClient
-    .from('approval_steps')
-    .select(`
-      request_id,
-      approval_requests (
-        subject,
-        users!owner_id ( name )
-      )
-    `)
-    .eq('id', stepId)
-    .single();
-
-  if (stepError || !step) return;
-
-  const req = step.approval_requests as any;
-  const ownerName = req.users?.name || 'Unknown';
-  const viewUrl = `${APP_URL}/${tenantSubdomain}/requests/${step.request_id}`;
-  
-  const headerHtml = `
-    <div style="background-color: #101828; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
-      ${tenant?.logo_url 
-        ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 32px; display: block;" />` 
-        : `<div style="font-family: sans-serif; font-size: 18px; font-weight: 800; color: #F2F0E8;">SigmaGo | <span style="font-size: 12px; font-weight: 600; color: #A8B0A2;">${tenantName}</span></div>`
-      }
-    </div>
-  `;
 
   const { data: step, error: stepError } = await adminClient
     .from('approval_steps')

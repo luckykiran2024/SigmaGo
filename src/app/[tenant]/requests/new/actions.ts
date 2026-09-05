@@ -46,7 +46,7 @@ export async function submitNewRequest(
   }
 
   const subject = formData.get('subject') as string;
-  const categoryId = formData.get('category') as string;
+  let categoryId = formData.get('category') as string;
 
   if (!subject || !subject.trim()) {
     throw new Error('Subject is required');

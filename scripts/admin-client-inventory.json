@@ -1,9 +1,9 @@
 {
   "summary": {
-    "total": 318,
+    "total": 321,
     "tenantScoped": 224,
     "primaryKeyKeyed": 29,
-    "platformPrivileged": 65,
+    "platformPrivileged": 68,
     "unsafeUnscoped": 0,
     "unknownReview": 0
   },
@@ -1150,7 +1150,7 @@
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
-      "line": 203,
+      "line": 215,
       "snippet": "const { data: workflows } = await adminClient",
       "table": "workflows",
       "operation": "SELECT",
@@ -1162,7 +1162,7 @@
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
-      "line": 209,
+      "line": 221,
       "snippet": "const { data: tenantReferences } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
@@ -1174,7 +1174,7 @@
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
-      "line": 331,
+      "line": 343,
       "snippet": "const { data: tenantPolicies } = await adminClient",
       "table": "policies",
       "operation": "SELECT",
@@ -3751,6 +3751,42 @@
       "crossTenantPlatform": false,
       "classification": "TENANT_SCOPED",
       "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/observability/alerts.ts",
+      "line": 117,
+      "snippet": "const { count: pendingCount } = await adminClient",
+      "table": "transactional_outbox",
+      "operation": "SELECT",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
+    },
+    {
+      "file": "src/lib/observability/alerts.ts",
+      "line": 122,
+      "snippet": "const { data: oldestEvent } = await adminClient",
+      "table": "transactional_outbox",
+      "operation": "SELECT",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
+    },
+    {
+      "file": "src/lib/observability/alerts.ts",
+      "line": 172,
+      "snippet": "const { data: staleRequests } = await adminClient",
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/lib/participants.ts",
