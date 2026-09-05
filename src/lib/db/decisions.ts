@@ -169,8 +169,8 @@ export async function getDecisionRecordList(
 
     // Filter STEP types
     if (params.types && params.types.length > 0) {
-      const catStepType = req.categories?.step_type || 'TRANSACTIONAL';
-      if (!params.types.includes(catStepType)) return false;
+      const stepType = req.resolved_step_type || req.baseline_step_type || req.categories?.step_type;
+      if (!stepType || !params.types.includes(stepType)) return false;
     }
 
     // Filter Date Range
@@ -254,7 +254,7 @@ export async function getDecisionRecordList(
         ? {
             id: req.categories.id,
             name: req.categories.name,
-            step_type: req.categories.step_type || 'TRANSACTIONAL',
+            step_type: req.resolved_step_type || req.baseline_step_type || req.categories.step_type || null,
           }
         : null,
       owner: req.users

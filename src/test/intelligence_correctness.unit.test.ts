@@ -99,4 +99,67 @@ describe('Organisational Intelligence Correctness Suite (Sprint 4)', () => {
     expect(result.resolvedStepType).toBe('EXCEPTION');
     expect(result.classificationSource).toBe('EXCEPTION_RULE');
   });
+
+  it('4. Real transitive graph reach: Computes true BFS blast radius across multi-hop decision references', async () => {
+    const { DecisionGraph } = await import('@/lib/intelligence/chain/graph');
+    const graph = new DecisionGraph();
+
+    // Setup a 4-hop chain: Root -> MidA & MidB -> Leaf1 & Leaf2
+    graph.addNode({ id: 'root', ref: 'REQ-001', subject: 'Core Architecture', stepType: 'STRUCTURAL', reasoningLength: 100, isSealed: true, createdAt: new Date().toISOString() });
+    graph.addNode({ id: 'mid-a', ref: 'REQ-002', subject: 'Service A Spec', stepType: 'PROCESS', reasoningLength: 50, isSealed: true, createdAt: new Date().toISOString() });
+    graph.addNode({ id: 'mid-b', ref: 'REQ-003', subject: 'Service B Spec', stepType: 'PROCESS', reasoningLength: 50, isSealed: true, createdAt: new Date().toISOString() });
+    graph.addNode({ id: 'leaf-1', ref: 'REQ-004', subject: 'Service A Impl', stepType: 'TRANSACTIONAL', reasoningLength: 30, isSealed: true, createdAt: new Date().toISOString() });
+    graph.addNode({ id: 'leaf-2', ref: 'REQ-005', subject: 'Service B Impl', stepType: 'TRANSACTIONAL', reasoningLength: 30, isSealed: true, createdAt: new Date().toISOString() });
+
+    // Edges: source -> target
+    graph.addEdge({ sourceId: 'mid-a', targetId: 'root', relationship: 'BASED_ON' });
+    graph.addEdge({ sourceId: 'mid-b', targetId: 'root', relationship: 'BASED_ON' });
+    graph.addEdge({ sourceId: 'leaf-1', targetId: 'mid-a', relationship: 'BASED_ON' });
+    graph.addEdge({ sourceId: 'leaf-2', targetId: 'mid-b', relationship: 'BASED_ON' });
+
+    // Downward BFS: Root's blast radius must reach all 4 descendants transitively
+    const rootDescendants = graph.getTransitiveDescendants('root');
+    expect(rootDescendants.size).toBe(4);
+    expect(rootDescendants.has('mid-a')).toBe(true);
+    expect(rootDescendants.has('mid-b')).toBe(true);
+    expect(rootDescendants.has('leaf-1')).toBe(true);
+    expect(rootDescendants.has('leaf-2')).toBe(true);
+
+    // Upward BFS: Leaf 1 must reach Mid A and Root
+    const leaf1Ancestors = graph.getTransitiveAncestors('leaf-1');
+    expect(leaf1Ancestors.size).toBe(2);
+    expect(leaf1Ancestors.has('mid-a')).toBe(true);
+    expect(leaf1Ancestors.has('root')).toBe(true);
+    expect(leaf1Ancestors.has('mid-b')).toBe(false);
+  });
+
+  it('5. Unclassified decisions isolation: Never defaults unclassified decisions to TRANSACTIONAL', () => {
+    const rawRequests = [
+      { id: 'req-1', resolved_step_type: 'STRUCTURAL' },
+      { id: 'req-2', resolved_step_type: 'EXCEPTION' },
+      { id: 'req-3', resolved_step_type: null, baseline_step_type: null }, // Unclassified
+      { id: 'req-4', resolved_step_type: null, baseline_step_type: null }, // Unclassified
+    ];
+
+    const VALID_STEPS = new Set(['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS']);
+    const counts = { STRUCTURAL: 0, TRANSACTIONAL: 0, EXCEPTION: 0, PROCESS: 0 };
+    let unclassifiedCount = 0;
+
+    for (const r of rawRequests) {
+      const st = r.resolved_step_type || r.baseline_step_type;
+      if (st && VALID_STEPS.has(st)) {
+        counts[st as keyof typeof counts]++;
+      } else {
+        unclassifiedCount++;
+      }
+    }
+
+    expect(counts.STRUCTURAL).toBe(1);
+    expect(counts.EXCEPTION).toBe(1);
+    // Crucial: TRANSACTIONAL must be 0, NOT 2!
+    expect(counts.TRANSACTIONAL).toBe(0);
+    expect(counts.PROCESS).toBe(0);
+    expect(unclassifiedCount).toBe(2);
+  });
 });
+

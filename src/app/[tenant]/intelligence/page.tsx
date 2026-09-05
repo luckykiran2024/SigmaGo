@@ -111,19 +111,31 @@ export default async function UserIntelligencePage({
     return created >= new Date(comparatorRange.startDate).getTime() && created <= new Date(comparatorRange.endDate).getTime();
   });
 
+  const VALID_STEPS = new Set(['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS']);
+  const getCleanStepType = (row: any): import('@/lib/intelligence/analytics/distributions').StepType | null => {
+    if (row.resolved_step_type && VALID_STEPS.has(row.resolved_step_type)) {
+      return row.resolved_step_type;
+    }
+    if (row.baseline_step_type && VALID_STEPS.has(row.baseline_step_type)) {
+      return row.baseline_step_type;
+    }
+    return null;
+  };
+
   const currentCounts: Record<import('@/lib/intelligence/analytics/distributions').StepType, number> = {
     STRUCTURAL: 0,
     TRANSACTIONAL: 0,
     EXCEPTION: 0,
     PROCESS: 0,
   };
+  let currentUnclassifiedCount = 0;
 
   currentRequests.forEach((row: any) => {
-    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
-    if (currentCounts[st] !== undefined) {
+    const st = getCleanStepType(row);
+    if (st && currentCounts[st] !== undefined) {
       currentCounts[st]++;
     } else {
-      currentCounts.TRANSACTIONAL++;
+      currentUnclassifiedCount++;
     }
   });
 
@@ -134,13 +146,14 @@ export default async function UserIntelligencePage({
     EXCEPTION: 0,
     PROCESS: 0,
   };
+  let comparatorUnclassifiedCount = 0;
 
   comparatorRequests.forEach((row: any) => {
-    const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
-    if (comparatorCounts[st] !== undefined) {
+    const st = getCleanStepType(row);
+    if (st && comparatorCounts[st] !== undefined) {
       comparatorCounts[st]++;
     } else {
-      comparatorCounts.TRANSACTIONAL++;
+      comparatorUnclassifiedCount++;
     }
   });
 
@@ -161,9 +174,8 @@ export default async function UserIntelligencePage({
         PROCESS: 0,
       };
       pReqs.forEach((row: any) => {
-        const st = (row.resolved_step_type || row.baseline_step_type || 'TRANSACTIONAL') as import('@/lib/intelligence/analytics/distributions').StepType;
-        if (counts[st] !== undefined) counts[st]++;
-        else counts.TRANSACTIONAL++;
+        const st = getCleanStepType(row);
+        if (st && counts[st] !== undefined) counts[st]++;
       });
       historicalPeriodsCounts.push(counts);
     }
@@ -238,7 +250,7 @@ export default async function UserIntelligencePage({
   ];
 
   for (const st of stepKeys) {
-    const stWorkflows = (workflows || []).filter((w: any) => (w.base_step_type || 'TRANSACTIONAL') === st);
+    const stWorkflows = (workflows || []).filter((w: any) => w.base_step_type === st);
 
     let allocatedCurrent = 0;
     let allocatedBaseline = 0;
@@ -246,12 +258,12 @@ export default async function UserIntelligencePage({
     const matchingWorkflows = stWorkflows.map((w: any) => {
       const cCount = currentRequests.filter((r: any) =>
         (r.workflow_id === w.id || r.category_id === w.category_id) &&
-        (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st
+        getCleanStepType(r) === st
       ).length;
 
       const bCount = comparatorRequests.filter((r: any) =>
         (r.workflow_id === w.id || r.category_id === w.category_id) &&
-        (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st
+        getCleanStepType(r) === st
       ).length;
 
       allocatedCurrent += cCount;
@@ -280,7 +292,7 @@ export default async function UserIntelligencePage({
     }
 
     const consequentialDecisions = (allRequests || [])
-      .filter((r: any) => (r.resolved_step_type || r.baseline_step_type || 'TRANSACTIONAL') === st)
+      .filter((r: any) => getCleanStepType(r) === st)
       .map((r: any) => {
         const directDescendants = (refsByTarget[r.id] || 0) + (r.blast_at_seal || 0);
         const basedOnCount = refsBySource[r.id] || 0;
