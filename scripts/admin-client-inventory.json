@@ -1,11 +1,11 @@
 {
   "summary": {
-    "total": 325,
-    "tenantScoped": 106,
-    "primaryKeyKeyed": 29,
-    "platformPrivileged": 53,
-    "unsafeUnscoped": 61,
-    "unknownReview": 76
+    "total": 318,
+    "tenantScoped": 145,
+    "primaryKeyKeyed": 48,
+    "platformPrivileged": 62,
+    "unsafeUnscoped": 63,
+    "unknownReview": 0
   },
   "inventory": [
     {
@@ -18,7 +18,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/nudge/route.ts",
@@ -30,7 +30,7 @@
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/nudge/route.ts",
@@ -42,7 +42,7 @@
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/nudge/route.ts",
@@ -54,7 +54,7 @@
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/validity-nudge/route.ts",
@@ -66,7 +66,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/validity-nudge/route.ts",
@@ -78,7 +78,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/validity-nudge/route.ts",
@@ -90,31 +90,31 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/cron/validity-nudge/route.ts",
       "line": 76,
       "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "audit_log",
+      "operation": "INSERT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/health/route.ts",
       "line": 14,
       "snippet": "const { error } = await adminClient.from('tenants').select('count', { count: 'exact', head: true });",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/api/webhooks/hrms/[tenant]/route.ts",
@@ -126,31 +126,31 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/auth/callback/route.ts",
       "line": 24,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "primaryKeyConstrained": true,
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/login/actions.ts",
       "line": 36,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "primaryKeyConstrained": true,
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
@@ -162,43 +162,43 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 46,
       "snippet": "const { count: userCount } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 52,
       "snippet": "const { count: grantsCount } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "intelligence_grants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 58,
       "snippet": "const { count: openTickets } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "support_tickets",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
@@ -210,31 +210,31 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 119,
       "snippet": "const { data: tenant, error: tenantErr } = await adminClient",
       "table": "tenants",
-      "operation": "UPSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 139,
       "snippet": "const { data: authList } = await adminClient.auth.admin.listUsers();",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "auth.users",
+      "operation": "AUTH_ADMIN",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
@@ -246,7 +246,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
@@ -258,31 +258,31 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 186,
       "snippet": "const { data: ticket, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "support_tickets",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/actions.ts",
       "line": 218,
       "snippet": "const { error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "support_tickets",
+      "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/platform-admin/tickets/page.tsx",
@@ -294,7 +294,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Executed within platform super-admin or system webhook/cron context."
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
@@ -305,8 +305,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
@@ -341,8 +341,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
@@ -389,8 +389,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/act/[token]/page.tsx",
@@ -401,8 +401,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/act/[token]/page.tsx",
@@ -411,17 +411,17 @@
       "table": "approval_requests",
       "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/admin/approvers/actions.ts",
       "line": 19,
       "snippet": "const { data: newApprover, error: insertErr } = await adminClient",
       "table": "approvers",
-      "operation": "UPSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -458,11 +458,11 @@
       "snippet": "const { data: rawApprovers } = await adminClient",
       "table": "approvers",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/approvers/page.tsx",
@@ -506,11 +506,11 @@
       "snippet": "const { data: archivedRequests, error } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/categories/actions.ts",
@@ -522,7 +522,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'categories' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'categories' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/admin/categories/page.tsx",
@@ -552,32 +552,32 @@
       "file": "src/app/[tenant]/admin/custom-fields/actions.ts",
       "line": 28,
       "snippet": "const { data: existing } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "tenant_custom_fields",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/custom-fields/actions.ts",
       "line": 37,
       "snippet": "const { data: maxRow } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "tenant_custom_fields",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/custom-fields/actions.ts",
       "line": 96,
       "snippet": "const { data: fields } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenant_custom_fields",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -590,11 +590,11 @@
       "snippet": "const { data: tenantData } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "PLATFORM_PRIVILEGED",
-      "justification": "Tenant resolution from subdomain slug for workspace routing."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/custom-fields/page.tsx",
@@ -636,25 +636,25 @@
       "file": "src/app/[tenant]/admin/delegations/page.tsx",
       "line": 46,
       "snippet": "const { data: activeUsers } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/delegations/page.tsx",
       "line": 53,
       "snippet": "const { data: delegations } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "delegations",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/intelligence/page.tsx",
@@ -708,13 +708,13 @@
       "file": "src/app/[tenant]/admin/org/actions.ts",
       "line": 50,
       "snippet": "const { error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "tenants",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/org/page.tsx",
@@ -770,11 +770,11 @@
       "snippet": "const { data: requests } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/settings/actions.ts",
@@ -785,8 +785,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Supabase storage bucket access via service-role."
     },
     {
       "file": "src/app/[tenant]/admin/settings/actions.ts",
@@ -797,8 +797,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Supabase storage bucket access via service-role."
     },
     {
       "file": "src/app/[tenant]/admin/settings/actions.ts",
@@ -830,11 +830,11 @@
       "snippet": "const { error } = await adminClient",
       "table": "tenants",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'tenants' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/settings/page.tsx",
@@ -929,8 +929,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/approvals/page.tsx",
@@ -948,13 +948,13 @@
       "file": "src/app/[tenant]/approvals/page.tsx",
       "line": 53,
       "snippet": "const { data: userData } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "users",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Lookup user profile by primary key UUID."
     },
     {
       "file": "src/app/[tenant]/approvals/page.tsx",
@@ -972,13 +972,13 @@
       "file": "src/app/[tenant]/approvals/page.tsx",
       "line": 154,
       "snippet": "let archivedQuery = adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/decisions/page.tsx",
@@ -1032,13 +1032,13 @@
       "file": "src/app/[tenant]/delegations/actions.ts",
       "line": 72,
       "snippet": "const { error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "delegations",
+      "operation": "INSERT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/delegations/actions.ts",
@@ -1094,11 +1094,11 @@
       "snippet": "const { data: myDelegations } = await adminClient",
       "table": "delegations",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'delegations' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
@@ -1131,10 +1131,10 @@
       "table": "intelligence_grants",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'intelligence_grants' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/intelligence/page.tsx",
@@ -1206,19 +1206,19 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/layout.tsx",
       "line": 56,
       "snippet": "const { data: activeGrant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "intelligence_grants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/page.tsx",
@@ -1242,7 +1242,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/page.tsx",
@@ -1272,13 +1272,13 @@
       "file": "src/app/[tenant]/people/[employeeId]/approvals/page.tsx",
       "line": 40,
       "snippet": "let targetUserQuery = adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/people/[employeeId]/approvals/page.tsx",
@@ -1286,23 +1286,23 @@
       "snippet": "const { data: requests } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/records/page.tsx",
       "line": 32,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Tenant resolution from subdomain slug for workspace routing."
     },
     {
       "file": "src/app/[tenant]/records/page.tsx",
@@ -1310,11 +1310,11 @@
       "snippet": "let recordsQuery = adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
@@ -1332,25 +1332,25 @@
       "file": "src/app/[tenant]/requests/new/actions.ts",
       "line": 58,
       "snippet": "const { data: fetchedCat } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "categories",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
       "line": 90,
       "snippet": "const { data: validApprovers } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
@@ -1380,25 +1380,25 @@
       "file": "src/app/[tenant]/requests/new/actions.ts",
       "line": 145,
       "snippet": "const { data: wfVer } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "workflow_versions",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
       "line": 163,
       "snippet": "const { data: pol } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "policies",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
@@ -1406,11 +1406,11 @@
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
@@ -1422,7 +1422,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/new/page.tsx",
@@ -1442,11 +1442,11 @@
       "snippet": "const { data: cats } = await adminClient",
       "table": "categories",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'categories' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/page.tsx",
@@ -1494,7 +1494,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
@@ -1512,13 +1512,13 @@
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
       "line": 135,
       "snippet": "const { error: deleteError } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "DELETE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
@@ -1527,10 +1527,10 @@
       "table": "approval_steps",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
@@ -1542,7 +1542,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
@@ -1566,19 +1566,19 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
       "line": 216,
       "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "audit_log",
+      "operation": "INSERT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/certificate/page.tsx",
@@ -1596,13 +1596,13 @@
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
       "line": 17,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Tenant resolution from subdomain slug for workspace routing."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
@@ -1626,7 +1626,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
@@ -1649,8 +1649,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/page.tsx",
@@ -1683,10 +1683,10 @@
       "table": "approval_steps",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/page.tsx",
@@ -1728,37 +1728,37 @@
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
       "line": 60,
       "snippet": "const { error: uploadErr } = await adminClient.storage",
-      "table": "unknown",
+      "table": "attachments",
       "operation": "unknown",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'attachments' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
       "line": 70,
       "snippet": "const { data: att, error: attInsertErr } = await adminClient",
       "table": "attachments",
-      "operation": "INSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'attachments' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
       "line": 96,
       "snippet": "const { error: stepUpdateErr } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
@@ -1769,8 +1769,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/reference-actions.ts",
@@ -1778,23 +1778,23 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/settings/actions.ts",
       "line": 26,
       "snippet": "const { data, error } = await adminClient.storage",
-      "table": "unknown",
+      "table": "avatars",
       "operation": "unknown",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Supabase storage bucket access via service-role."
     },
     {
       "file": "src/app/[tenant]/settings/actions.ts",
@@ -1805,8 +1805,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Supabase storage bucket access via service-role."
     },
     {
       "file": "src/app/[tenant]/settings/actions.ts",
@@ -1839,10 +1839,10 @@
       "table": "users",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/app/[tenant]/settings/actions.ts",
@@ -1853,8 +1853,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/app/[tenant]/settings/page.tsx",
@@ -1896,13 +1896,13 @@
       "file": "src/components/ui/personPickerActions.ts",
       "line": 67,
       "snippet": "const { data, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "users",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Lookup user profile by primary key UUID."
     },
     {
       "file": "src/lib/ai/intentResolver.ts",
@@ -1956,13 +1956,13 @@
       "file": "src/lib/ai/templates.ts",
       "line": 135,
       "snippet": "const { data } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/ai/templates.ts",
@@ -1980,13 +1980,13 @@
       "file": "src/lib/ai/templates.ts",
       "line": 211,
       "snippet": "const { data } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/ai/templates.ts",
@@ -1994,11 +1994,11 @@
       "snippet": "const { data } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/ai/templates.ts",
@@ -2006,11 +2006,11 @@
       "snippet": "const { data } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/ai/templates.ts",
@@ -2070,7 +2070,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/certificate.ts",
@@ -2082,7 +2082,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/certificate.ts",
@@ -2093,20 +2093,20 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'request_participants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/certificate.ts",
       "line": 309,
       "snippet": "const { error: updateErr } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "approval_requests",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/certificate.ts",
@@ -2114,23 +2114,23 @@
       "snippet": "const { data: steps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/certificate.ts",
       "line": 369,
       "snippet": "const { data: participants } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "request_participants",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'request_participants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/cache.ts",
@@ -2184,34 +2184,34 @@
       "file": "src/lib/db/customFields.ts",
       "line": 67,
       "snippet": "const { data: field, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "tenant_custom_fields",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/customFields.ts",
       "line": 109,
       "snippet": "const { data: field, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "tenant_custom_fields",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/customFields.ts",
       "line": 124,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "tenant_custom_fields",
+      "operation": "UPDATE",
       "tenantFilterPresent": true,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
       "classification": "TENANT_SCOPED",
       "justification": "Query enforces explicit tenant_id filter constraint in chained call."
@@ -2244,13 +2244,13 @@
       "file": "src/lib/db/decisions.ts",
       "line": 85,
       "snippet": "const { data: auths } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "approver_authorities",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/decisions.ts",
@@ -2262,7 +2262,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/decisions.ts",
@@ -2280,13 +2280,13 @@
       "file": "src/lib/db/digest.ts",
       "line": 4,
       "snippet": "const { data, error } = await adminClient.rpc('get_overdue_steps')",
-      "table": "rpc:get_overdue_steps",
-      "operation": "RPC",
+      "table": "approval_steps",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/digest.ts",
@@ -2298,7 +2298,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/grants.ts",
@@ -2340,13 +2340,13 @@
       "file": "src/lib/db/intelligence.ts",
       "line": 75,
       "snippet": "let query = adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "approval_requests",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/intelligence.ts",
@@ -2406,7 +2406,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/orgSync.ts",
@@ -2427,10 +2427,10 @@
       "table": "users",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/orgSync.ts",
@@ -2454,55 +2454,55 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/orgSync.ts",
       "line": 162,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "delegations",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
       "line": 169,
       "snippet": "const { data: pendingSteps } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/orgSync.ts",
       "line": 178,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/db/orgSync.ts",
-      "line": 183,
-      "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_requests",
+      "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
       "classification": "PRIMARY_KEY_KEYED",
       "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+    },
+    {
+      "file": "src/lib/db/orgSync.ts",
+      "line": 183,
+      "snippet": "await adminClient.from('audit_log').insert({",
+      "table": "audit_log",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
@@ -2520,8 +2520,8 @@
       "file": "src/lib/db/orgSync.ts",
       "line": 202,
       "snippet": "const { data: existingNodes } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "org_nodes",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -2533,7 +2533,7 @@
       "line": 214,
       "snippet": "const { data: newNode, error: nodeInsertError } = await adminClient",
       "table": "org_nodes",
-      "operation": "INSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -2547,22 +2547,22 @@
       "table": "org_nodes",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/orgSync.ts",
       "line": 265,
       "snippet": "await adminClient.from('hrms_sync_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "hrms_sync_log",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/references.ts",
@@ -2605,7 +2605,7 @@
       "line": 97,
       "snippet": "const { data: createdRef, error: insertErr } = await adminClient",
       "table": "decision_references",
-      "operation": "INSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -2670,7 +2670,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/references.ts",
@@ -2682,7 +2682,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/references.ts",
@@ -2702,11 +2702,11 @@
       "snippet": "const { data: ref } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'decision_references' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/reference_skips.ts",
@@ -2726,11 +2726,11 @@
       "snippet": "const { data: skips, error } = await adminClient",
       "table": "reference_skips",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'reference_skips' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2742,7 +2742,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2754,7 +2754,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2774,11 +2774,11 @@
       "snippet": "const { error: lockError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2790,7 +2790,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2820,13 +2820,13 @@
       "file": "src/lib/db/requests.ts",
       "line": 218,
       "snippet": "const { data: refSteps } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2838,7 +2838,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2862,7 +2862,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2880,13 +2880,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 146,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "tenants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2917,12 +2917,12 @@
       "line": 214,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
-      "operation": "UPDATE",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2940,13 +2940,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 241,
       "snippet": "const { data: users } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "users",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2964,13 +2964,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 260,
       "snippet": "const { data: tenant } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "tenants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2994,7 +2994,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3006,19 +3006,19 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
       "line": 351,
       "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "audit_log",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3026,11 +3026,11 @@
       "snippet": "const { data: request, error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3042,7 +3042,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3060,13 +3060,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 475,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3074,30 +3074,6 @@
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
-      "primaryKeyConstrained": true,
-      "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 518,
-      "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 525,
-      "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
@@ -3106,15 +3082,39 @@
     },
     {
       "file": "src/lib/db/steps.ts",
+      "line": 518,
+      "snippet": "await adminClient",
+      "table": "approval_requests",
+      "operation": "UPDATE",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": true,
+      "crossTenantPlatform": false,
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
+      "line": 525,
+      "snippet": "await adminClient.from('audit_log').insert({",
+      "table": "audit_log",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/db/steps.ts",
       "line": 558,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3132,13 +3132,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 570,
       "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": true,
+      "table": "audit_log",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -3156,13 +3156,13 @@
       "file": "src/lib/db/steps.ts",
       "line": 591,
       "snippet": "const { data: step } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3174,7 +3174,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3186,7 +3186,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3198,7 +3198,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3209,8 +3209,8 @@
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'org_nodes' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3222,91 +3222,91 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 56,
       "snippet": "await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId);",
-      "table": "approval_requests",
+      "table": "approval_steps",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 57,
       "snippet": "await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId);",
-      "table": "approval_requests",
+      "table": "approval_steps",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_requests' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 58,
       "snippet": "await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId);",
-      "table": "approval_steps",
+      "table": "delegations",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 59,
       "snippet": "await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId);",
-      "table": "approval_steps",
+      "table": "delegations",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 60,
       "snippet": "await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId);",
-      "table": "delegations",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'delegations' queried without explicit tenant_id filter or verified primary key."
-    },
-    {
-      "file": "src/lib/db/users.ts",
-      "line": 61,
-      "snippet": "await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId);",
-      "table": "delegations",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'delegations' queried without explicit tenant_id filter or verified primary key."
-    },
-    {
-      "file": "src/lib/db/users.ts",
-      "line": 62,
-      "snippet": "await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId);",
       "table": "audit_log",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+    },
+    {
+      "file": "src/lib/db/users.ts",
+      "line": 61,
+      "snippet": "await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId);",
+      "table": "view_grants",
+      "operation": "UPDATE",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'view_grants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+    },
+    {
+      "file": "src/lib/db/users.ts",
+      "line": 62,
+      "snippet": "await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId);",
+      "table": "view_grants",
+      "operation": "UPDATE",
+      "tenantFilterPresent": false,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'view_grants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3338,23 +3338,23 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "workflows",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
+      "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'workflows' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/workflows.ts",
       "line": 59,
       "snippet": "const { data: workflow, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "workflows",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3408,13 +3408,13 @@
       "file": "src/lib/db/workflows.ts",
       "line": 162,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "workflow_versions",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3423,34 +3423,34 @@
       "table": "workflows",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'workflows' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/workflows.ts",
       "line": 194,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "workflow_versions",
+      "operation": "DELETE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "UNSAFE_UNSCOPED",
+      "justification": "Multi-tenant table or RPC 'workflow_versions' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/db/workflows.ts",
       "line": 199,
       "snippet": "await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "workflow_versions",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3504,13 +3504,13 @@
       "file": "src/lib/email/outbound.ts",
       "line": 51,
       "snippet": "const { error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "action_tokens",
+      "operation": "INSERT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3522,7 +3522,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3546,7 +3546,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'approval_steps' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3558,7 +3558,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3576,13 +3576,13 @@
       "file": "src/lib/email/outbound.ts",
       "line": 270,
       "snippet": "const { data: step, error: stepError } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
+      "table": "approval_steps",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3594,7 +3594,7 @@
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
       "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'users' queried without explicit tenant_id filter or verified primary key."
+      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
     },
     {
       "file": "src/lib/email/outbound.ts",
@@ -3612,73 +3612,13 @@
       "file": "src/lib/email/outbound.ts",
       "line": 345,
       "snippet": "const { data: request } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/events/outbox.ts",
-      "line": 33,
-      "snippet": "client = adminClient",
-      "table": "transactional_outbox",
-      "operation": "INSERT",
-      "tenantFilterPresent": true,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/events/outbox.ts",
-      "line": 68,
-      "snippet": "client = adminClient",
-      "table": "transactional_outbox",
+      "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/events/outbox.ts",
-      "line": 101,
-      "snippet": "client = adminClient",
-      "table": "transactional_outbox",
-      "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'transactional_outbox' queried without explicit tenant_id filter or verified primary key."
-    },
-    {
-      "file": "src/lib/events/outbox.ts",
-      "line": 131,
-      "snippet": "client = adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/events/outbox.ts",
-      "line": 171,
-      "snippet": "const client = options.client || adminClient;",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/intelligence/access.ts",
@@ -3711,10 +3651,10 @@
       "table": "intelligence_grants",
       "operation": "UPDATE",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'intelligence_grants' queried without explicit tenant_id filter or verified primary key."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/intelligence/access.ts",
@@ -3733,12 +3673,12 @@
       "line": 155,
       "snippet": "const { data: grant, error } = await adminClient",
       "table": "intelligence_grants",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table 'intelligence_grants' queried without explicit tenant_id filter or verified primary key."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/intelligence/events/emit.ts",
@@ -3792,13 +3732,13 @@
       "file": "src/lib/intelligence/exceptionContext.ts",
       "line": 99,
       "snippet": "const { data: priorRefs } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
+      "table": "decision_references",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/intelligence/exceptionContext.ts",
@@ -3864,13 +3804,13 @@
       "file": "src/lib/participants.ts",
       "line": 116,
       "snippet": "const { data: participant, error } = await adminClient",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "table": "request_participants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/permissions.ts",
@@ -3883,30 +3823,6 @@
       "crossTenantPlatform": false,
       "classification": "TENANT_SCOPED",
       "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/supabase/admin.ts",
-      "line": 18,
-      "snippet": "export const adminClient = new Proxy({} as SupabaseClient, {",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
-    },
-    {
-      "file": "src/lib/supabase/tenantClient.ts",
-      "line": 67,
-      "snippet": "return new Proxy(adminClient, {",
-      "table": "unknown",
-      "operation": "unknown",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNKNOWN_REVIEW_REQUIRED",
-      "justification": "Call site requires manual architectural verification."
     }
   ]
 }

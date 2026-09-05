@@ -34,7 +34,24 @@ export interface CertificateBlocks {
   participation: CertificateParticipantEntry[];
 }
 
-export interface CanonicalDecisionRecord {
+export interface CanonicalAuthorityStepV1 {
+  id: string;
+  stageIndex: number;
+  orderIndex: number;
+  approver: string;
+  status: string;
+  actedAt: string | null;
+  stance: string | null;
+  outcome: string | null;
+  wasBinding: boolean | null;
+  reservationNote: string | null;
+}
+
+export interface CanonicalAuthorityStepV2 extends CanonicalAuthorityStepV1 {
+  comment: string | null;
+}
+
+export interface CanonicalDecisionRecordV1 {
   canonicalVersion: 1;
   id: string;
   tenantId: string;
@@ -50,18 +67,7 @@ export interface CanonicalDecisionRecord {
   workflowVersionId: string | null;
   baselineStepType: string | null;
   resolvedStepType: string | null;
-  authoritySteps: Array<{
-    id: string;
-    stageIndex: number;
-    orderIndex: number;
-    approver: string;
-    status: string;
-    actedAt: string | null;
-    stance: string | null;
-    outcome: string | null;
-    wasBinding: boolean | null;
-    reservationNote: string | null;
-  }>;
+  authoritySteps: CanonicalAuthorityStepV1[];
   decisionReferences: Array<{
     id: string;
     targetId: string | null;
@@ -79,6 +85,43 @@ export interface CanonicalDecisionRecord {
     isAuthoritative: false;
   }>;
 }
+
+export interface CanonicalDecisionRecordV2 {
+  canonicalVersion: 2;
+  id: string;
+  tenantId: string;
+  subject: string | null;
+  body: any;
+  conditions: any[];
+  customFields: any;
+  beneficiaryId: string | null;
+  ownerId: string | null;
+  version: number;
+  parentReferenceId: string | null;
+  workflowId: string | null;
+  workflowVersionId: string | null;
+  baselineStepType: string | null;
+  resolvedStepType: string | null;
+  authoritySteps: CanonicalAuthorityStepV2[];
+  decisionReferences: Array<{
+    id: string;
+    targetId: string | null;
+    toPolicyId: string | null;
+    relationship: string;
+  }>;
+  participationRecords: Array<{
+    id: string;
+    email: string;
+    role: string;
+    isExternal: boolean;
+    state: string;
+    respondedAt: string | null;
+    comment: string | null;
+    isAuthoritative: false;
+  }>;
+}
+
+export type CanonicalDecisionRecord = CanonicalDecisionRecordV1 | CanonicalDecisionRecordV2;
 
 /**
  * Normalizes timestamp into a strict ISO-8601 string or null.
@@ -147,15 +190,17 @@ export function canonicalizeJson(value: any): string {
 
 /**
  * Single canonical decision serializer for sealing, verification, and certificate rendering.
- * NEVER duplicate this canonical structure.
+ * Supports version 1 (legacy without approver comment) and version 2 (with approver comment).
  */
 export function buildCanonicalDecisionRecord(params: {
   request: any;
   steps: any[];
   references?: any[];
   participants?: any[];
+  version?: 1 | 2;
 }): CanonicalDecisionRecord {
   const req = params.request;
+  const version = params.version ?? 2;
 
   // 1. Sort authority steps deterministically by stage_index, order_index, id
   const sortedSteps = [...(params.steps || [])].sort((a, b) => {
@@ -193,8 +238,56 @@ export function buildCanonicalDecisionRecord(params: {
     return String(a.id || '').localeCompare(String(b.id || ''));
   });
 
+  if (version === 1) {
+    return {
+      canonicalVersion: 1,
+      id: req.id,
+      tenantId: req.tenant_id || req.tenantId,
+      subject: normalizeNullableText(req.subject),
+      body: req.body_json || req.body || {},
+      conditions: Array.isArray(req.conditions) ? req.conditions : [],
+      customFields: req.custom_fields || req.customFields || {},
+      beneficiaryId: req.beneficiary_id || req.beneficiaryId || null,
+      ownerId: req.owner_id || req.ownerId || null,
+      version: req.version || 1,
+      parentReferenceId: req.parent_reference_id || req.parentReferenceId || null,
+      workflowId: req.workflow_id || req.workflowId || null,
+      workflowVersionId: req.workflow_version_id || req.workflowVersionId || null,
+      baselineStepType: req.baseline_step_type || req.baselineStepType || null,
+      resolvedStepType: req.resolved_step_type || req.resolvedStepType || null,
+      authoritySteps: sortedSteps.map((s) => ({
+        id: s.id,
+        stageIndex: s.stage_index ?? s.stageIndex ?? 0,
+        orderIndex: s.order_index ?? s.orderIndex ?? s.order ?? 0,
+        approver: s.approver_id || s.approver || '',
+        status: s.status,
+        actedAt: normalizeTimestamp(s.acted_at || s.actedAt),
+        stance: s.stance || null,
+        outcome: s.outcome || null,
+        wasBinding: normalizeBinding(s.was_binding ?? s.wasBinding),
+        reservationNote: normalizeNullableText(s.reservation_note ?? s.reservationNote),
+      })),
+      decisionReferences: sortedReferences.map((r) => ({
+        id: r.id,
+        targetId: r.target_id || r.targetId || null,
+        toPolicyId: r.to_policy_id || r.toPolicyId || null,
+        relationship: r.relationship,
+      })),
+      participationRecords: sortedParticipants.map((p) => ({
+        id: p.id,
+        email: p.email,
+        role: p.role,
+        isExternal: Boolean(p.is_external ?? p.isExternal),
+        state: p.state,
+        respondedAt: normalizeTimestamp(p.responded_at || p.respondedAt),
+        comment: normalizeNullableText(p.comment),
+        isAuthoritative: false as const,
+      })),
+    };
+  }
+
   return {
-    canonicalVersion: 1,
+    canonicalVersion: 2,
     id: req.id,
     tenantId: req.tenant_id || req.tenantId,
     subject: normalizeNullableText(req.subject),
@@ -220,6 +313,7 @@ export function buildCanonicalDecisionRecord(params: {
       outcome: s.outcome || null,
       wasBinding: normalizeBinding(s.was_binding ?? s.wasBinding),
       reservationNote: normalizeNullableText(s.reservation_note ?? s.reservationNote),
+      comment: normalizeNullableText(s.comment),
     })),
     decisionReferences: sortedReferences.map((r) => ({
       id: r.id,
@@ -256,7 +350,7 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
   // 1. Fetch approval request record
   const { data: request, error: fetchErr } = await adminClient
     .from('approval_requests')
-    .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version, parent_reference_id, workflow_id, workflow_version_id, baseline_step_type, resolved_step_type, checksum_sha256, finalized_at')
+    .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version, parent_reference_id, workflow_id, workflow_version_id, baseline_step_type, resolved_step_type, checksum_sha256, finalized_at, canonical_version, seal_algorithm')
     .eq('id', requestId)
     .eq('tenant_id', tenantId)
     .maybeSingle();
@@ -265,10 +359,10 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
     throw new Error(`Request ${requestId} not found for tenant ${tenantId}`);
   }
 
-  // 2. Fetch steps
+  // 2. Fetch steps including approver comments and reasons
   const { data: steps } = await adminClient
     .from('approval_steps')
-    .select('id, stage_index, order_index, approver_id, status, acted_at, stance, outcome, was_binding, reservation_note')
+    .select('id, stage_index, order_index, approver_id, status, acted_at, stance, outcome, was_binding, reservation_note, comment')
     .eq('request_id', requestId)
     .order('order_index', { ascending: true });
 
@@ -302,23 +396,39 @@ export async function generateChecksumAndFinalize(
 ): Promise<FinalizeResult | null> {
   try {
     const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
-    const canonicalRecord = buildCanonicalDecisionRecord(inputs);
+    const canonicalRecord = buildCanonicalDecisionRecord({ ...inputs, version: 2 });
     const checksum = computeCanonicalSha256(canonicalRecord);
     const finalizedAt = new Date().toISOString();
 
-    const { error: updateErr } = await adminClient
-      .from('approval_requests')
-      .update({
-        checksum_sha256: checksum,
-        finalized_at: finalizedAt,
-      })
-      .eq('id', requestId)
-      .eq('tenant_id', tenantId);
+    // Invoke atomic sigmago_finalize_seal if available
+    const { error: rpcErr } = await adminClient.rpc('sigmago_finalize_seal', {
+      p_request_id: requestId,
+      p_tenant_id: tenantId,
+      p_checksum: checksum,
+      p_canonical_version: 2,
+      p_seal_algorithm: 'SHA-256',
+    });
 
-    if (updateErr) {
-      console.error(`generateChecksumAndFinalize: Failed to update request ${requestId}`, updateErr);
-      alertSealFailure(`Failed to update seal checksum for request ${requestId}: ${updateErr.message}`, { tenantId, requestId });
-      return null;
+    if (rpcErr) {
+      console.warn(`generateChecksumAndFinalize: RPC fallback to direct update: ${rpcErr.message}`);
+      const { error: updateErr } = await adminClient
+        .from('approval_requests')
+        .update({
+          status: 'approved',
+          checksum_sha256: checksum,
+          canonical_version: 2,
+          seal_algorithm: 'SHA-256',
+          sealed_at: finalizedAt,
+          finalized_at: finalizedAt,
+        })
+        .eq('id', requestId)
+        .eq('tenant_id', tenantId);
+
+      if (updateErr) {
+        console.error(`generateChecksumAndFinalize: Failed to update request ${requestId}`, updateErr);
+        alertSealFailure(`Failed to update seal checksum for request ${requestId}: ${updateErr.message}`, { tenantId, requestId });
+        return null;
+      }
     }
 
     return {
@@ -336,16 +446,20 @@ export async function generateChecksumAndFinalize(
 
 /**
  * External cryptographic verification function.
- * Loads evidence via loadCanonicalDecisionInputs, re-canonicalizes, and compares checksums.
+ * Dispatches verification by stored canonical_version (1 vs 2).
  */
 export async function verifyDecisionCertificate(requestId: string, tenantId: string) {
   const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
-  const canonicalRecord = buildCanonicalDecisionRecord(inputs);
+  const reqVersion = inputs.request.canonical_version;
+  const version: 1 | 2 = reqVersion === 1 ? 1 : 2;
+
+  const canonicalRecord = buildCanonicalDecisionRecord({ ...inputs, version });
   const calculatedChecksum = computeCanonicalSha256(canonicalRecord);
   const storedChecksum = inputs.request.checksum_sha256;
 
   return {
     isValid: Boolean(storedChecksum && storedChecksum.toLowerCase() === calculatedChecksum.toLowerCase()),
+    canonicalVersion: version,
     storedChecksum,
     calculatedChecksum,
     finalizedAt: inputs.request.finalized_at,

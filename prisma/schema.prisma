@@ -101,6 +101,7 @@ model approval_requests {
   checksum_sha256                                                              String?
   sealed_at                                                                    DateTime?                @db.Timestamptz(6)
   seal_algorithm                                                               String?                  @default("SHA-256")
+  canonical_version                                                            Int?                     @default(2)
   canonical_form_version                                                       String?                  @default("1.0")
   conditions                                                                   Json                     @default("[]")
   created_at                                                                   DateTime                 @default(now()) @db.Timestamptz(6)

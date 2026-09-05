@@ -1,7 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { encryptSecret, decryptSecret, isEncryptedSecret } from './secrets';
 
 describe('AES-256-GCM Secrets Encryption Unit Tests (src/lib/crypto/secrets.unit.test.ts)', () => {
+  const TEST_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+  const originalEnv = process.env.SECRET_ENCRYPTION_KEY;
+
+  beforeEach(() => {
+    process.env.SECRET_ENCRYPTION_KEY = TEST_KEY;
+  });
+
+  afterEach(() => {
+    process.env.SECRET_ENCRYPTION_KEY = originalEnv;
+  });
+
   it('1. Encrypts plaintext secret and returns formatted ciphertext with IV and Auth Tag', () => {
     const secret = 'sk_test_super_secret_key_12345';
     const encrypted = encryptSecret(secret);
@@ -36,4 +47,11 @@ describe('AES-256-GCM Secrets Encryption Unit Tests (src/lib/crypto/secrets.unit
     const encrypted = encryptSecret('plaintext_secret_value');
     expect(isEncryptedSecret(encrypted)).toBe(true);
   });
+
+  it('5. Strictly fails fast when SECRET_ENCRYPTION_KEY is missing or empty', () => {
+    delete process.env.SECRET_ENCRYPTION_KEY;
+    expect(() => encryptSecret('my_secret')).toThrow(/FATAL: SECRET_ENCRYPTION_KEY environment variable is missing/);
+    expect(() => decryptSecret('v1:0123456789abcdef01234567:0123456789abcdef0123456789abcdef:1234')).toThrow(/FATAL: SECRET_ENCRYPTION_KEY environment variable is missing/);
+  });
 });
+

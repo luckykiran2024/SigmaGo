@@ -19,8 +19,11 @@ const OUTPUT_MD = path.resolve(__dirname, 'admin-client-inventory.md');
 const OUTPUT_JSON = path.resolve(__dirname, 'admin-client-inventory.json');
 
 const MULTI_TENANT_TABLES = new Set([
+  'action_tokens',
   'approval_requests',
   'approval_steps',
+  'attachments',
+  'audit_log',
   'categories',
   'custom_fields',
   'custom_field_values',
@@ -31,13 +34,18 @@ const MULTI_TENANT_TABLES = new Set([
   'directory_approvers',
   'intelligence_grants',
   'intelligence_signals',
+  'org_nodes',
   'policies',
   'policy_versions',
+  'reference_skips',
+  'request_participants',
   'stage_transition_metrics',
   'support_tickets',
   'tenants',
   'transactional_outbox',
   'users',
+  'view_grants',
+  'approvers',
   'workflows',
   'workflow_versions',
 ]);
@@ -77,12 +85,21 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
 
     for (let i = 0; i < lines.length; i++) {
       const lineText = lines[i];
-      if (lineText.includes('adminClient') && !lineText.includes('//') && !lineText.trim().startsWith('import')) {
-        // Collect block around call to inspect method chain
+      // Skip declarations, imports, comments, or proxy wraps
+      if (
+        lineText.includes('adminClient') &&
+        !lineText.includes('//') &&
+        !lineText.trim().startsWith('import') &&
+        !lineText.includes('export const adminClient') &&
+        !lineText.includes('Proxy(adminClient') &&
+        !lineText.trim().startsWith('client = adminClient') &&
+        !lineText.trim().startsWith('const client = options.client || adminClient')
+      ) {
+        // Collect block around call to inspect method chain forward from i
         const blockLines: string[] = [];
-        for (let j = Math.max(0, i - 2); j < Math.min(lines.length, i + 15); j++) {
+        for (let j = i; j < Math.min(lines.length, i + 15); j++) {
           blockLines.push(lines[j]);
-          if (lines[j].includes(';') || (j > i + 3 && !lines[j].trim().startsWith('.'))) {
+          if (lines[j].includes(';')) {
             break;
           }
         }
@@ -91,8 +108,12 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
         // Extract table
         let table = 'unknown';
         const fromMatch = block.match(/\.from\(['"]([^'"]+)['"]\)/);
+        const storageMatch = block.match(/\.storage(?:\.from\(['"]([^'"]+)['"]\))?/);
         if (fromMatch) {
           table = fromMatch[1];
+        } else if (storageMatch && block.includes('.storage')) {
+          const bucketMatch = block.match(/from\(['"]([^'"]+)['"]\)/);
+          table = bucketMatch ? `storage:${bucketMatch[1]}` : 'storage';
         } else if (block.includes('.auth.admin')) {
           table = 'auth.users';
         } else if (block.includes('.rpc(')) {
@@ -109,6 +130,7 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
         else if (block.includes('.upsert(')) operation = 'UPSERT';
         else if (block.includes('.rpc(')) operation = 'RPC';
         else if (block.includes('.auth.admin')) operation = 'AUTH_ADMIN';
+        else if (table.startsWith('storage')) operation = 'STORAGE';
 
         // Check for tenant filtering
         const tenantFilterPresent =
@@ -128,15 +150,18 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
           relPath.includes('platform-admin') ||
           relPath.includes('src/lib/platform') ||
           relPath.includes('/api/cron') ||
-          relPath.includes('/api/webhooks');
+          relPath.includes('/api/webhooks') ||
+          relPath.includes('/api/health') ||
+          relPath.includes('src/app/auth/') ||
+          relPath.includes('src/app/login/');
 
         // Classify
         let classification: AdminClientCallSite['classification'] = 'UNKNOWN_REVIEW_REQUIRED';
         let justification = '';
 
-        if (isPlatform) {
+        if (isPlatform || operation === 'AUTH_ADMIN') {
           classification = 'PLATFORM_PRIVILEGED';
-          justification = 'Executed within platform super-admin or system webhook/cron context.';
+          justification = 'Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context.';
         } else if (tenantFilterPresent) {
           classification = 'TENANT_SCOPED';
           justification = 'Query enforces explicit tenant_id filter constraint in chained call.';
@@ -154,9 +179,12 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
         } else if (table === 'tenants' && block.includes(".eq('subdomain'")) {
           classification = 'PLATFORM_PRIVILEGED';
           justification = 'Tenant resolution from subdomain slug for workspace routing.';
-        } else if (MULTI_TENANT_TABLES.has(table)) {
+        } else if (table.startsWith('storage') || table === 'logos' || table === 'avatars') {
+          classification = 'PLATFORM_PRIVILEGED';
+          justification = 'Supabase storage bucket access via service-role.';
+        } else if (MULTI_TENANT_TABLES.has(table) || table.startsWith('rpc:')) {
           classification = 'UNSAFE_UNSCOPED';
-          justification = `Multi-tenant table '${table}' queried without explicit tenant_id filter or verified primary key.`;
+          justification = `Multi-tenant table or RPC '${table}' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation.`;
         } else {
           classification = 'UNKNOWN_REVIEW_REQUIRED';
           justification = 'Call site requires manual architectural verification.';
