@@ -42,8 +42,7 @@ export async function resumeRequestAction(
   const { data: steps } = await adminClient
     .from('approval_steps')
     .select('approver_id')
-    .eq('request_id', requestId)
-    .eq('tenant_id', tenant.id);
+    .eq('request_id', requestId);
 
   const pathApproverIds = steps?.map(s => s.approver_id) || [];
   const isOwner = request.owner_id === profile.id;

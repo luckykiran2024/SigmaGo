@@ -5,15 +5,9 @@ import { submitSupportTicketAction } from '@/app/platform-admin/actions';
 import { LifeBuoy, CheckCircle2, AlertTriangle, Send } from 'lucide-react';
 
 export default function SupportTicketModal({
-  tenantId,
-  userId,
-  userEmail,
   isOpen,
   onClose,
 }: {
-  tenantId: string;
-  userId?: string;
-  userEmail: string;
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -33,9 +27,6 @@ export default function SupportTicketModal({
 
     try {
       const res = await submitSupportTicketAction({
-        tenantId,
-        userId,
-        requesterEmail: userEmail,
         subject,
         description,
         priority,

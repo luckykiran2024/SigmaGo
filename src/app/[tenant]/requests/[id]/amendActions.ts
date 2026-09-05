@@ -37,8 +37,7 @@ export async function amendPathAction(
   const { data: currentSteps, error: fetchStepsError } = await adminClient
     .from('approval_steps')
     .select('*')
-    .eq('request_id', requestId)
-    .eq('tenant_id', tenant.id);
+    .eq('request_id', requestId);
 
   if (fetchStepsError || !currentSteps) throw new Error('Failed to load request steps');
 
@@ -137,8 +136,7 @@ export async function amendPathAction(
     const { error: deleteError } = await adminClient
       .from('approval_steps')
       .delete()
-      .in('id', stepsToDelete.map(s => s.id))
-      .eq('tenant_id', tenant.id);
+      .in('id', stepsToDelete.map(s => s.id));
     if (deleteError) throw deleteError;
   }
 
@@ -160,15 +158,13 @@ export async function amendPathAction(
           order_index: step.order_index,
           status: 'waiting' // reset status to waiting to let advanceChain evaluate correctly
         })
-        .eq('id', step.id)
-        .eq('tenant_id', tenant.id);
+        .eq('id', step.id);
       if (updateError) throw updateError;
     } else {
       // Insert new step
       const { error: insertError } = await adminClient
         .from('approval_steps')
         .insert({
-          tenant_id: tenant.id,
           request_id: requestId,
           approver_id: step.approverId,
           type: step.type,

@@ -19,12 +19,18 @@ export async function signIn(formData: FormData) {
     return redirect(`/login?message=${encodeURIComponent(error?.message || 'Login failed')}`);
   }
 
-  // Check for platform super admin account
-  const isSuperAdmin =
-    email.toLowerCase().trim() === 'admin@sigmago.com' ||
-    email.toLowerCase().trim() === 'superadmin@sigmago.com';
+  // Check for platform admin via environment config and app_metadata
+  // Aligns with assertPlatformAdmin() in src/lib/platform/auth.ts
+  const normalizedEmail = email.toLowerCase().trim();
+  const envAdmins = process.env.PLATFORM_ADMIN_EMAILS;
+  const configuredAdmins = envAdmins
+    ? envAdmins.toLowerCase().split(',').map((e) => e.trim()).filter(Boolean)
+    : [];
+  const isPlatformAdmin =
+    configuredAdmins.includes(normalizedEmail) ||
+    signInData.user.app_metadata?.is_platform_admin === true;
 
-  if (isSuperAdmin) {
+  if (isPlatformAdmin) {
     return redirect('/platform-admin');
   }
 

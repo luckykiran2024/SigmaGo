@@ -116,7 +116,6 @@ export async function submitRequest(requestId: string, userId: string, tenantId:
     .from('approval_steps')
     .update({ status: 'pending', entered_at: new Date().toISOString() })
     .eq('request_id', requestId)
-    .eq('tenant_id', tenantId)
     .eq('type', 'REFERENCE');
 
   if (refError) throw refError;
@@ -221,7 +220,6 @@ async function triggerFyiEmails(requestId: string, tenantId: string) {
       .from('approval_steps')
       .select('id, approver:users!approver_id(email)')
       .eq('request_id', requestId)
-      .eq('tenant_id', tenantId)
       .eq('type', 'REFERENCE');
 
     if (refSteps && refSteps.length > 0) {

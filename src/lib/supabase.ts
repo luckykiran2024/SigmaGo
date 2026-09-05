@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const createSafeStorage = () => {
   const inMemoryStore = new Map<string, string>();
@@ -42,7 +42,7 @@ const createSafeStorage = () => {
   };
 };
 
-// For frontend / standard client requests
+// For frontend / standard client requests (anon key, user-session scope)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: createSafeStorage(),
@@ -50,10 +50,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// For secure backend operations
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key';
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-  },
-});
+/**
+ * @deprecated Use `import { adminClient } from '@/lib/supabase/admin'` instead.
+ * This re-export exists only for backward compatibility during migration.
+ */
+export { adminClient as supabaseAdmin } from '@/lib/supabase/admin';
+

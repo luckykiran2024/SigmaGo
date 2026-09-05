@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { adminClient } from '@/lib/supabase/admin';
 
 export interface PlatformAdminIdentity {
   userId: string;
@@ -11,9 +10,13 @@ export interface PlatformAdminIdentity {
  * Air-tight Platform Admin Authorization Guard
  *
  * Prevents standard tenant administrators from accessing platform-wide controls.
- * Access is restricted to:
- * 1. Configured PLATFORM_ADMIN_EMAILS in environment
- * 2. Authenticated users with explicit is_platform_admin === true flag or verified @sigmago.com domain
+ * Access is restricted to ONLY:
+ * 1. Users with explicit `is_platform_admin === true` in `app_metadata` (server-controlled, NOT user-controlled)
+ * 2. Users whose email is in the explicitly configured `PLATFORM_ADMIN_EMAILS` environment variable
+ *
+ * SECURITY: user_metadata is user-writable and MUST NOT be trusted.
+ * SECURITY: Domain wildcards (e.g. @sigmago.com) are NOT permitted.
+ * SECURITY: No default admin emails are baked in—PLATFORM_ADMIN_EMAILS must be explicitly configured.
  */
 export async function assertPlatformAdmin(): Promise<PlatformAdminIdentity> {
   const supabase = await createClient();
@@ -27,20 +30,20 @@ export async function assertPlatformAdmin(): Promise<PlatformAdminIdentity> {
   }
 
   const email = (user.email || '').toLowerCase().trim();
-  const configuredAdmins = (process.env.PLATFORM_ADMIN_EMAILS || 'admin@sigmago.com,superadmin@sigmago.com')
-    .toLowerCase()
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean);
 
-  const isConfiguredEmail = configuredAdmins.includes(email) || email.endsWith('@sigmago.com');
+  // 1. Check explicit PLATFORM_ADMIN_EMAILS (required in production)
+  const envAdmins = process.env.PLATFORM_ADMIN_EMAILS;
+  const configuredAdmins = envAdmins
+    ? envAdmins.toLowerCase().split(',').map((e) => e.trim()).filter(Boolean)
+    : [];
 
-  // Check if user has explicit is_platform_admin flag in user_metadata or app_metadata
-  const isMetadataPlatformAdmin =
-    user.app_metadata?.is_platform_admin === true ||
-    user.user_metadata?.is_platform_admin === true;
+  const isConfiguredEmail = configuredAdmins.includes(email);
 
-  if (!isConfiguredEmail && !isMetadataPlatformAdmin) {
+  // 2. Check app_metadata ONLY (server-controlled, NOT user-writable)
+  // SECURITY: user_metadata is user-writable and MUST NOT be trusted for admin checks
+  const isAppMetadataAdmin = user.app_metadata?.is_platform_admin === true;
+
+  if (!isConfiguredEmail && !isAppMetadataAdmin) {
     throw new Error('Forbidden: Platform Administrator privileges required. Standard tenant administrators are not authorized.');
   }
 

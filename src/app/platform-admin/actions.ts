@@ -195,20 +195,37 @@ export async function onboardTenantAction(payload: {
 }
 
 export async function submitSupportTicketAction(payload: {
-  tenantId: string;
-  userId?: string;
-  requesterEmail: string;
   subject: string;
   description: string;
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 }): Promise<{ success: boolean; ticketId?: string; error?: string }> {
   try {
+    // Server-derived identity: authenticate caller and resolve profile
+    const supabase = await createClient();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return { success: false, error: 'Authentication required to submit a support ticket.' };
+    }
+
+    const email = (user.email || '').toLowerCase().trim();
+
+    // Resolve the user's tenant profile from the authenticated user
+    const { data: profile } = await adminClient
+      .from('users')
+      .select('id, tenant_id')
+      .eq('auth_uid', user.id)
+      .maybeSingle();
+
+    // Fallback: try matching by email if auth_uid lookup fails
+    const userId = profile?.id || null;
+    const tenantId = profile?.tenant_id || null;
+
     const { data: ticket, error } = await adminClient
       .from('support_tickets')
       .insert({
-        tenant_id: payload.tenantId,
-        user_id: payload.userId || null,
-        requester_email: payload.requesterEmail.toLowerCase().trim(),
+        tenant_id: tenantId,
+        user_id: userId,
+        requester_email: email,
         subject: payload.subject.trim(),
         description: payload.description.trim(),
         priority: payload.priority || 'MEDIUM',

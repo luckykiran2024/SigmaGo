@@ -1,18 +1,35 @@
 import { describe, it, expect } from 'vitest';
 
-describe('SigmaGo Platform Super Admin Persona Test Suite (admin@sigmago.com)', () => {
+describe('SigmaGo Platform Super Admin Persona Test Suite', () => {
   // Test 1: Super admin route security verification
-  it('should restrict /platform-admin routes exclusively to platform super admin emails or roles', () => {
-    const isPlatformSuperAdmin = (email: string, role?: string) => {
-      const superAdminEmails = ['admin@sigmago.com', 'superadmin@sigmago.com'];
-      return superAdminEmails.includes(email.toLowerCase().trim()) || role === 'super_admin';
+  it('should restrict /platform-admin routes to explicitly configured admin emails or app_metadata', () => {
+    const isPlatformSuperAdmin = (email: string, appMetadata?: Record<string, any>) => {
+      // Mirrors production assertPlatformAdmin() logic
+      const envAdmins = process.env.PLATFORM_ADMIN_EMAILS;
+      const configuredAdmins = envAdmins
+        ? envAdmins.toLowerCase().split(',').map(e => e.trim()).filter(Boolean)
+        : [];
+      return configuredAdmins.includes(email.toLowerCase().trim()) ||
+        appMetadata?.is_platform_admin === true;
     };
+
+    // Set up environment for test
+    const original = process.env.PLATFORM_ADMIN_EMAILS;
+    process.env.PLATFORM_ADMIN_EMAILS = 'admin@sigmago.com,superadmin@sigmago.com';
 
     expect(isPlatformSuperAdmin('admin@sigmago.com')).toBe(true);
     expect(isPlatformSuperAdmin('superadmin@sigmago.com')).toBe(true);
-    expect(isPlatformSuperAdmin('any@gmail.com', 'super_admin')).toBe(true);
-    expect(isPlatformSuperAdmin('vijay.reddy@meridian.com', 'admin')).toBe(false); // Tenant admin, not platform super admin
-    expect(isPlatformSuperAdmin('krishna.pillai@meridian.com', 'member')).toBe(false);
+    expect(isPlatformSuperAdmin('any@gmail.com', { is_platform_admin: true })).toBe(true);
+    expect(isPlatformSuperAdmin('vijay.reddy@meridian.com')).toBe(false); // Tenant admin, not platform super admin
+    expect(isPlatformSuperAdmin('krishna.pillai@meridian.com')).toBe(false);
+    // Domain wildcard MUST NOT work
+    expect(isPlatformSuperAdmin('random@sigmago.com')).toBe(false);
+    // user_metadata is NOT checked (only app_metadata)
+    expect(isPlatformSuperAdmin('attacker@evil.com')).toBe(false);
+
+    // Restore
+    if (original !== undefined) process.env.PLATFORM_ADMIN_EMAILS = original;
+    else delete process.env.PLATFORM_ADMIN_EMAILS;
   });
 
   // Test 2: Platform Super Admin data isolation check

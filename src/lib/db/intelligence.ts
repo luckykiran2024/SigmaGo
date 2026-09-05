@@ -167,8 +167,8 @@ export async function getPolicyHealthMetrics(
     // 5. Calculate Average Decision Velocity (hours from entered_at to acted_at)
     const { data: completedSteps } = await adminClient
       .from('approval_steps')
-      .select('entered_at, acted_at')
-      .eq('tenant_id', tenantId)
+      .select('entered_at, acted_at, approval_requests!inner(tenant_id)')
+      .eq('approval_requests.tenant_id', tenantId)
       .not('acted_at', 'is', null)
       .limit(100);
 

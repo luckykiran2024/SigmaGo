@@ -21,12 +21,17 @@ export default async function TenantLayout({
     redirect('/login');
   }
 
-  // Enforce Super Admin isolation: Platform Super Admin operators do not view tenant approval queues
-  const isSuperAdminEmail =
-    user.email === 'admin@sigmago.com' ||
-    user.email === 'superadmin@sigmago.com';
+  // Enforce Super Admin isolation: Platform admins do not view tenant approval queues
+  const normalizedEmail = (user.email || '').toLowerCase().trim();
+  const envAdmins = process.env.PLATFORM_ADMIN_EMAILS;
+  const configuredAdmins = envAdmins
+    ? envAdmins.toLowerCase().split(',').map((e: string) => e.trim()).filter(Boolean)
+    : [];
+  const isPlatformAdmin =
+    configuredAdmins.includes(normalizedEmail) ||
+    user.app_metadata?.is_platform_admin === true;
 
-  if (isSuperAdminEmail) {
+  if (isPlatformAdmin) {
     redirect('/platform-admin');
   }
 
@@ -47,10 +52,10 @@ export default async function TenantLayout({
   // Fetch pending approval count for Navbar pip
   const { count: pendingCount } = await adminClient
     .from('approval_steps')
-    .select('id', { count: 'exact', head: true })
+    .select('id, approval_requests!inner(tenant_id)', { count: 'exact', head: true })
     .eq('approver_id', profile.id)
     .eq('status', 'pending')
-    .eq('tenant_id', profile.tenant_id);
+    .eq('approval_requests.tenant_id', profile.tenant_id);
 
   // Check if user holds an explicit active Intelligence Access Grant (§ Build Prompt #17 Decoupled Access Control)
   const userEmail = (profile.email || user.email || '').toLowerCase().trim();

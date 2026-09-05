@@ -407,69 +407,109 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
 /**
  * Calculates a canonical SHA-256 checksum for an approved request payload
  * and persists the cryptographic seal on the request.
+ *
+ * Implements fork-proof ledger concurrency serialization:
+ * On ERRCODE = 40001 (serialization_failure) from sigmago_finalize_seal,
+ * the function re-queries the advanced ledger head, recomputes the
+ * canonical record with the new previousSealHash, re-hashes and re-signs,
+ * then retries. Up to MAX_SEAL_RETRIES attempts with exponential backoff.
  */
 export async function generateChecksumAndFinalize(
   requestId: string,
   tenantId: string
 ): Promise<FinalizeResult | null> {
-  try {
-    // 1. Resolve previous seal hash in the tenant chain (Append-Only Cryptographic Ledger)
-    const { data: previousApproved } = await adminClient
-      .from('approval_requests')
-      .select('checksum_sha256')
-      .eq('tenant_id', tenantId)
-      .eq('status', 'approved')
-      .not('checksum_sha256', 'is', null)
-      .neq('id', requestId)
-      .order('finalized_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const MAX_SEAL_RETRIES = 3;
 
-    const previousSealHash =
-      previousApproved?.checksum_sha256 ||
-      'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
+  for (let attempt = 0; attempt < MAX_SEAL_RETRIES; attempt++) {
+    try {
+      // 1. Resolve previous seal hash in the tenant chain (Append-Only Cryptographic Ledger)
+      const { data: previousApproved } = await adminClient
+        .from('approval_requests')
+        .select('checksum_sha256')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'approved')
+        .not('checksum_sha256', 'is', null)
+        .neq('id', requestId)
+        .order('finalized_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
-    inputs.request.previous_seal_hash = previousSealHash;
+      const previousSealHash =
+        previousApproved?.checksum_sha256 ||
+        'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
 
-    const canonicalRecord = buildCanonicalDecisionRecord({ ...inputs, version: 2 });
-    const checksum = computeCanonicalSha256(canonicalRecord);
-    const finalizedAt = new Date().toISOString();
+      const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
+      inputs.request.previous_seal_hash = previousSealHash;
 
-    // 2. Generate asymmetric Ed25519 PKI digital signature
-    const { signDecisionSeal } = await import('@/lib/crypto/pki');
-    const { signatureB64, keyId } = signDecisionSeal(checksum);
+      const canonicalRecord = buildCanonicalDecisionRecord({ ...inputs, version: 2 });
+      const checksum = computeCanonicalSha256(canonicalRecord);
+      const finalizedAt = new Date().toISOString();
 
-    // 3. Invoke authoritative atomic sigmago_finalize_seal RPC
-    const { error: rpcErr } = await adminClient.rpc('sigmago_finalize_seal', {
-      p_request_id: requestId,
-      p_tenant_id: tenantId,
-      p_checksum: checksum,
-      p_canonical_version: 2,
-      p_seal_algorithm: 'SHA-256+Ed25519',
-      p_previous_seal_hash: previousSealHash,
-      p_seal_signature: signatureB64,
-      p_key_id: keyId,
-    });
+      // 2. Generate asymmetric Ed25519 PKI digital signature
+      const { signDecisionSeal } = await import('@/lib/crypto/pki');
+      const { signatureB64, keyId } = signDecisionSeal(checksum);
 
-    if (rpcErr) {
-      const errMsg = `Authoritative sigmago_finalize_seal RPC failed for request ${requestId}: ${rpcErr.message}. Refusing fallback; request remains in 'FINALIZING'.`;
-      console.error(errMsg);
-      alertSealFailure(errMsg, { tenantId, requestId });
-      throw new Error(errMsg);
+      // 3. Invoke authoritative atomic sigmago_finalize_seal RPC
+      const { error: rpcErr } = await adminClient.rpc('sigmago_finalize_seal', {
+        p_request_id: requestId,
+        p_tenant_id: tenantId,
+        p_checksum: checksum,
+        p_canonical_version: 2,
+        p_seal_algorithm: 'SHA-256+Ed25519',
+        p_previous_seal_hash: previousSealHash,
+        p_seal_signature: signatureB64,
+        p_key_id: keyId,
+      });
+
+      if (rpcErr) {
+        // Check for serialization failure (40001) — concurrent seal moved the ledger head
+        const isSerializationFailure =
+          rpcErr.code === '40001' ||
+          rpcErr.message?.includes('serialization') ||
+          rpcErr.message?.includes('40001');
+
+        if (isSerializationFailure && attempt < MAX_SEAL_RETRIES - 1) {
+          // Exponential backoff: 100ms, 400ms, 900ms
+          const backoffMs = Math.pow(attempt + 1, 2) * 100;
+          console.warn(
+            `[SEAL] Ledger serialization conflict on attempt ${attempt + 1}/${MAX_SEAL_RETRIES} ` +
+            `for request ${requestId}. Retrying in ${backoffMs}ms with re-queried ledger head.`
+          );
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+          continue; // Re-query ledger head, recompute hash, re-sign, retry
+        }
+
+        const errMsg = `Authoritative sigmago_finalize_seal RPC failed for request ${requestId}: ${rpcErr.message}. Refusing fallback; request remains in 'FINALIZING'.`;
+        console.error(errMsg);
+        alertSealFailure(errMsg, { tenantId, requestId });
+        throw new Error(errMsg);
+      }
+
+      return {
+        requestId,
+        tenantId,
+        checksum,
+        finalizedAt,
+      };
+    } catch (err) {
+      // Re-throw serialization-related errors so the loop can handle them
+      if (err instanceof Error && err.message.includes('sigmago_finalize_seal RPC failed')) {
+        throw err;
+      }
+      // On unexpected errors, alert and re-throw
+      console.error('generateChecksumAndFinalize error:', err);
+      alertSealFailure(
+        `Exception during seal generation for request ${requestId}: ${err instanceof Error ? err.message : String(err)}`,
+        { tenantId, requestId }
+      );
+      throw err;
     }
-
-    return {
-      requestId,
-      tenantId,
-      checksum,
-      finalizedAt,
-    };
-  } catch (err) {
-    console.error('generateChecksumAndFinalize error:', err);
-    alertSealFailure(`Exception during seal generation for request ${requestId}: ${err instanceof Error ? err.message : String(err)}`, { tenantId, requestId });
-    throw err;
   }
+
+  // Should never reach here, but fail-closed
+  const errMsg = `Seal generation exhausted all ${MAX_SEAL_RETRIES} retries for request ${requestId}`;
+  alertSealFailure(errMsg, { tenantId, requestId });
+  throw new Error(errMsg);
 }
 
 /**
