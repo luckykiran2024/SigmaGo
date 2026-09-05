@@ -1366,8 +1366,8 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 132,
-      "snippet": "const { data: wf } = await adminClient",
+      "line": 134,
+      "snippet": "let wfQuery = adminClient",
       "table": "workflows",
       "operation": "SELECT",
       "tenantFilterPresent": true,
@@ -1378,7 +1378,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 145,
+      "line": 159,
       "snippet": "const { data: wfVer } = await adminClient",
       "table": "workflow_versions",
       "operation": "SELECT",
@@ -1390,7 +1390,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 163,
+      "line": 183,
       "snippet": "const { data: pol } = await adminClient",
       "table": "policies",
       "operation": "SELECT",
@@ -1402,7 +1402,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 302,
+      "line": 322,
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
@@ -1414,7 +1414,7 @@
     },
     {
       "file": "src/app/[tenant]/requests/new/actions.ts",
-      "line": 326,
+      "line": 346,
       "snippet": "await adminClient",
       "table": "decision_references",
       "operation": "INSERT",

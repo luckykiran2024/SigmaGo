@@ -93,12 +93,16 @@ export function evaluateClassificationRules(params: RuleEvaluationParams): RuleE
     let breached = false;
     switch (rule.operator) {
       case '>':
+      case 'VALUE_MAX':
+      case 'PERCENTAGE_MAX':
+      case 'COUNT_MAX':
         breached = isNumericComparison ? enteredNum > targetNum : false;
         break;
       case '>=':
         breached = isNumericComparison ? enteredNum >= targetNum : false;
         break;
       case '<':
+      case 'VALUE_MIN':
         breached = isNumericComparison ? enteredNum < targetNum : false;
         break;
       case '<=':
@@ -112,15 +116,39 @@ export function evaluateClassificationRules(params: RuleEvaluationParams): RuleE
       case 'NOT_EQUALS':
         breached = String(rawVal).toLowerCase().trim() !== String(rule.value).toLowerCase().trim();
         break;
+      case 'CONTAINS':
+        breached = String(rawVal).toLowerCase().includes(String(rule.value).toLowerCase().trim());
+        break;
+      case 'ENUM_ALLOWED':
+        if (Array.isArray(rule.value)) {
+          const allowed = rule.value.map((v: any) => String(v).toLowerCase().trim());
+          breached = !allowed.includes(String(rawVal).toLowerCase().trim());
+        } else {
+          breached = String(rawVal).toLowerCase().trim() !== String(rule.value).toLowerCase().trim();
+        }
+        break;
+      case 'DATE_WINDOW': {
+        const rawDate = new Date(String(rawVal)).getTime();
+        if (!isNaN(rawDate)) {
+          const windowDays = !isNaN(targetNum) ? targetNum : 30;
+          const diffDays = Math.abs(rawDate - Date.now()) / (1000 * 60 * 60 * 24);
+          breached = diffDays > windowDays;
+        }
+        break;
+      }
     }
 
     if (breached) {
+      const ruleVersion = rule.version || rule.classification_rule_schema_version || 1;
       return {
         isBreached: true,
         resolvedStepType: rule.breachStepType || 'EXCEPTION',
         classificationSource: 'EXCEPTION_RULE',
-        classificationReason: rule.reason || `Breached rule condition: ${rule.field} ${rule.operator} ${rule.value}`,
-        breachedRule: rule,
+        classificationReason: rule.reason || `Breached rule (v${ruleVersion}): ${rule.field} ${rule.operator} ${rule.value}`,
+        breachedRule: {
+          ...rule,
+          version: ruleVersion,
+        },
       };
     }
   }

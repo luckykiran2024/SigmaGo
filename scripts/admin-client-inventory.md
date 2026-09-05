@@ -1,6 +1,6 @@
 # Admin Client Privileged Access Inventory
 
-**Audit Date**: 2026-09-05T05:38:01.382Z
+**Audit Date**: 2026-09-05T05:43:28.507Z
 
 ## Executive Summary
 
@@ -130,11 +130,11 @@
 | `src/app/[tenant]/requests/new/actions.ts:58` | `categories` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/requests/new/actions.ts:90` | `users` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/requests/new/actions.ts:107` | `users` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/requests/new/actions.ts:132` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/requests/new/actions.ts:145` | `workflow_versions` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/requests/new/actions.ts:163` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/requests/new/actions.ts:302` | `approval_requests` | `UPDATE` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
-| `src/app/[tenant]/requests/new/actions.ts:326` | `decision_references` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/requests/new/actions.ts:134` | `workflows` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/requests/new/actions.ts:159` | `workflow_versions` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/requests/new/actions.ts:183` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/requests/new/actions.ts:322` | `approval_requests` | `UPDATE` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
+| `src/app/[tenant]/requests/new/actions.ts:346` | `decision_references` | `INSERT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/requests/new/page.tsx:25` | `tenants` | `SELECT` | **PLATFORM_PRIVILEGED** | Tenant resolution from subdomain slug for workspace routing. |
 | `src/app/[tenant]/requests/new/page.tsx:39` | `categories` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |
 | `src/app/[tenant]/requests/new/page.tsx:52` | `policies` | `SELECT` | **TENANT_SCOPED** | Query enforces explicit tenant_id filter constraint in chained call. |

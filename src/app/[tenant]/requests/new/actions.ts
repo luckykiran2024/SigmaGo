@@ -116,7 +116,9 @@ export async function submitNewRequest(
     }
   }
 
-  // 2. Resolve workflow identity, version, SLA, and STEP classification
+  // 2. Resolve workflow identity, active version, SLA, governing policy snapshot, and STEP classification
+  const requestedWorkflowId = (formData.get('workflow_id') || formData.get('workflowId')) as string | null;
+
   let workflowId: string | null = null;
   let workflowVersionId: string | null = null;
   let baselineStepType: any = 'TRANSACTIONAL';
@@ -128,37 +130,55 @@ export async function submitNewRequest(
   let governingPolicyBound: any = null;
   let workflowRulesJson: any = null;
 
-  if (categoryId) {
-    const { data: wf } = await adminClient
-      .from('workflows')
-      .select('id, name, base_step_type, governing_policy_id, default_sla_hours, current_version_number, classification_rules_json')
-      .eq('category_id', categoryId)
+  // Workflow-first lookup: by explicit workflowId or categoryId or tenant default active workflow
+  let wfQuery = adminClient
+    .from('workflows')
+    .select('id, name, category_id, base_step_type, governing_policy_id, default_sla_hours, current_version_number, classification_rules_json')
+    .eq('tenant_id', tenantData.id);
+
+  if (requestedWorkflowId) {
+    wfQuery = wfQuery.eq('id', requestedWorkflowId);
+  } else if (categoryId) {
+    wfQuery = wfQuery.eq('category_id', categoryId);
+  } else {
+    wfQuery = wfQuery.eq('is_active', true).limit(1);
+  }
+
+  const { data: wf } = await wfQuery.maybeSingle();
+
+  if (wf) {
+    workflowId = wf.id;
+    if (!categoryId && wf.category_id) {
+      categoryId = wf.category_id;
+    }
+    baselineStepType = wf.base_step_type || 'TRANSACTIONAL';
+    expectedSlaHours = wf.default_sla_hours || null;
+    workflowRulesJson = wf.classification_rules_json;
+
+    // Load current active immutable workflow version
+    const { data: wfVer } = await adminClient
+      .from('workflow_versions')
+      .select('*')
+      .eq('workflow_id', wf.id)
       .eq('tenant_id', tenantData.id)
+      .is('effective_to', null)
+      .order('version_number', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (wf) {
-      workflowId = wf.id;
-      baselineStepType = wf.base_step_type || 'TRANSACTIONAL';
-      expectedSlaHours = wf.default_sla_hours || null;
-      workflowRulesJson = wf.classification_rules_json;
-
-      const { data: wfVer } = await adminClient
-        .from('workflow_versions')
-        .select('*')
-        .eq('workflow_id', wf.id)
-        .eq('tenant_id', tenantData.id)
-        .is('effective_to', null)
-        .order('version_number', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (wfVer) {
-        workflowVersionId = wfVer.id;
-        workflowSnapshot = wfVer;
+    if (wfVer) {
+      workflowVersionId = wfVer.id;
+      workflowSnapshot = wfVer;
+      baselineStepType = wfVer.base_step_type || baselineStepType;
+      if (wfVer.default_sla_hours !== null && wfVer.default_sla_hours !== undefined) {
+        expectedSlaHours = wfVer.default_sla_hours;
+      }
+      if (wfVer.classification_rules_json && Object.keys(wfVer.classification_rules_json).length > 0) {
+        workflowRulesJson = wfVer.classification_rules_json;
       }
     }
 
-    const effectivePolicyId = wf?.governing_policy_id || cat?.governing_policy_id;
+    const effectivePolicyId = wfVer?.governing_policy_id_snapshot || wf.governing_policy_id || cat?.governing_policy_id;
     if (effectivePolicyId) {
       const { data: pol } = await adminClient
         .from('policies')

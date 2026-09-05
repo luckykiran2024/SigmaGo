@@ -8,6 +8,13 @@ export type ClassificationRuleType =
   | 'CUSTOM';
 
 export type ClassificationRuleOperator =
+  | 'VALUE_MAX'
+  | 'VALUE_MIN'
+  | 'PERCENTAGE_MAX'
+  | 'COUNT_MAX'
+  | 'DATE_WINDOW'
+  | 'ENUM_ALLOWED'
+  | 'CONTAINS'
   | '>='
   | '<='
   | '>'
@@ -15,15 +22,16 @@ export type ClassificationRuleOperator =
   | '=='
   | '!='
   | 'EQUALS'
-  | 'NOT_EQUALS'
-  | 'CONTAINS';
+  | 'NOT_EQUALS';
 
 export interface ClassificationRule {
   id?: string;
+  version?: number;
+  classification_rule_schema_version?: number;
   type?: ClassificationRuleType;
   field: string;
   operator: ClassificationRuleOperator;
-  value: number | string | boolean;
+  value: number | string | boolean | string[] | any;
   breachStepType?: 'EXCEPTION' | 'STRUCTURAL';
   reason?: string;
 }
