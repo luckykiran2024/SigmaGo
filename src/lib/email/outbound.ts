@@ -115,11 +115,20 @@ export async function sendApprovalActionEmail(
   stepId: string,
   approverEmail: string
 ): Promise<void> {
-  // Check user notification preferences first
+  // Resolve tenant info first
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('id, name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+
+  // Check user notification preferences within tenant
   const { data: recipientProfile } = await adminClient
     .from('users')
     .select('user_settings')
     .eq('email', approverEmail)
+    .eq('tenant_id', tenant?.id)
     .maybeSingle();
 
   const settings = (recipientProfile?.user_settings || {}) as any;
@@ -127,14 +136,6 @@ export async function sendApprovalActionEmail(
     console.log(`Skipping sendApprovalActionEmail to ${approverEmail} due to preferences.`);
     return;
   }
-
-  // Resolve tenant info
-  const { data: tenant } = await adminClient
-    .from('tenants')
-    .select('name, logo_url')
-    .eq('subdomain', tenantSubdomain)
-    .single();
-  const tenantName = tenant ? tenant.name : 'Workspace';
   
   const headerHtml = `
     <div style="background-color: #101828; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
@@ -237,11 +238,20 @@ export async function sendFyiEmail(
   stepId: string,
   recipientEmail: string
 ): Promise<void> {
-  // Check user notification preferences first
+  // Resolve tenant info
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('id, name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+
+  // Check user notification preferences first strictly within tenant
   const { data: recipientProfile } = await adminClient
     .from('users')
     .select('user_settings')
     .eq('email', recipientEmail)
+    .eq('tenant_id', tenant?.id || '')
     .maybeSingle();
 
   const settings = (recipientProfile?.user_settings || {}) as any;
@@ -249,14 +259,6 @@ export async function sendFyiEmail(
     console.log(`Skipping sendFyiEmail to ${recipientEmail} due to preferences.`);
     return;
   }
-
-  // Resolve tenant info
-  const { data: tenant } = await adminClient
-    .from('tenants')
-    .select('name, logo_url')
-    .eq('subdomain', tenantSubdomain)
-    .single();
-  const tenantName = tenant ? tenant.name : 'Workspace';
   
   const headerHtml = `
     <div style="background-color: #101828; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
@@ -284,22 +286,82 @@ export async function sendFyiEmail(
   const req = step.approval_requests as any;
   const ownerName = req.users?.name || 'Unknown';
   const viewUrl = `${APP_URL}/${tenantSubdomain}/requests/${step.request_id}`;
-
-  const subject = `[FYI] ${req.subject}`;
-  const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #F7F8FA; color: #4B5347;">
-      ${headerHtml}
-      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">FYI: Request Notification</h2>
-      <p style="font-size: 14px; color: #4B5347;">You are receiving this reference notification for a request submitted by <strong>${ownerName}</strong>.</p>
-      
-      <div style="margin: 20px 0;">
-        <p style="font-size: 14px; color: #17200F; font-weight: bold;">Subject: ${req.subject}</p>
-      </div>
-
-      <div style="margin: 25px 0; text-align: center;">
-        <a href="${viewUrl}" style="background-color: #C9A227; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Open in SigmaGo</a>
-      </div>
+  
+  const headerHtml = `
+    <div style="background-color: #101828; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
+      ${tenant?.logo_url 
+        ? `<img src="${tenant.logo_url}" alt="${tenantName}" style="max-height: 32px; display: block;" />` 
+        : `<div style="font-family: sans-serif; font-size: 18px; font-weight: 800; color: #F2F0E8;">SigmaGo | <span style="font-size: 12px; font-weight: 600; color: #A8B0A2;">${tenantName}</span></div>`
+      }
     </div>
+  `;
+
+  const { data: step, error: stepError } = await adminClient
+    .from('approval_steps')
+    .select(`
+      id,
+      approval_requests!request_id (
+        id,
+        ref,
+        subject,
+        owner:users!owner_id ( name )
+      )
+    `)
+    .eq('id', stepId)
+    .single();
+
+  if (stepError || !step || !step.approval_requests) {
+    console.error("sendFyiEmail: Failed to load step details:", stepError);
+    return;
+  }
+
+  const req = step.approval_requests as any;
+  const ownerName = req.owner?.name || 'A team member';
+
+  const subject = `FYI: ${ownerName} submitted "${req.subject}" (${req.ref})`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 20px;">
+        <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 24px;">
+          ${headerHtml}
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0 0 8px 0;">FYI: Request Submitted</h2>
+            <p style="font-size: 14px; color: #4b5563; margin: 0; line-height: 1.5;">
+              You have been included as an informed participant on this request. No approval action is required from you.
+            </p>
+          </div>
+
+          <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Reference</div>
+            <div style="font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 12px;">${req.ref}</div>
+            
+            <div style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Subject</div>
+            <div style="font-size: 15px; font-weight: 500; color: #111827; margin-bottom: 12px;">${req.subject}</div>
+
+            <div style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Submitted By</div>
+            <div style="font-size: 14px; color: #111827;">${ownerName}</div>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="https://${tenantSubdomain}.sigmago.app/requests/${req.id}" style="display: inline-block; background-color: #111827; color: #ffffff; font-size: 14px; font-weight: 500; text-decoration: none; padding: 10px 20px; border-radius: 6px;">
+              View Request in SigmaGo
+            </a>
+          </div>
+
+          <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; text-align: center;">
+            <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+              This is an informational notification from SigmaGo.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
   `;
 
   await sendOutboundEmail(recipientEmail, subject, html);
@@ -312,11 +374,20 @@ export async function sendDiscussionNotificationEmail(
   raiserName: string,
   ownerEmail: string
 ): Promise<void> {
-  // Check user notification preferences first
+  // Resolve tenant info first
+  const { data: tenant } = await adminClient
+    .from('tenants')
+    .select('id, name, logo_url')
+    .eq('subdomain', tenantSubdomain)
+    .single();
+  const tenantName = tenant ? tenant.name : 'Workspace';
+
+  // Check user notification preferences within tenant
   const { data: recipientProfile } = await adminClient
     .from('users')
     .select('user_settings')
     .eq('email', ownerEmail)
+    .eq('tenant_id', tenant?.id)
     .maybeSingle();
 
   const settings = (recipientProfile?.user_settings || {}) as any;
@@ -325,14 +396,6 @@ export async function sendDiscussionNotificationEmail(
     return;
   }
 
-  // Resolve tenant info
-  const { data: tenant } = await adminClient
-    .from('tenants')
-    .select('name, logo_url')
-    .eq('subdomain', tenantSubdomain)
-    .single();
-  const tenantName = tenant ? tenant.name : 'Workspace';
-  
   const headerHtml = `
     <div style="background-color: #101828; padding: 20px; border-top-left-radius: 12px; border-top-right-radius: 12px; margin: -20px -20px 20px -20px; text-align: left;">
       ${tenant?.logo_url 
@@ -346,6 +409,7 @@ export async function sendDiscussionNotificationEmail(
     .from('approval_requests')
     .select('subject')
     .eq('id', requestId)
+    .eq('tenant_id', tenant?.id)
     .single();
 
   if (!request) return;

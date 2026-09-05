@@ -45,6 +45,7 @@ export async function actOnStep(payload: {
       .from('approval_steps')
       .select('id, status, acted_at')
       .eq('idempotency_key', payload.idempotencyKey)
+      .eq('tenant_id', payload.tenantId)
       .maybeSingle();
 
     if (existingStep) {
@@ -140,6 +141,7 @@ export async function actOnStep(payload: {
           .from('approval_steps')
           .select('id')
           .eq('request_id', rpcRes.request_id)
+          .eq('tenant_id', payload.tenantId)
           .eq('stage_index', rpcRes.next_stage_index)
           .eq('status', 'pending');
 
@@ -248,13 +250,15 @@ export async function actOnStep(payload: {
     const { error: reqError } = await adminClient
       .from('approval_requests')
       .update({ status: 'in_discussion' })
-      .eq('id', step.request_id);
+      .eq('id', step.request_id)
+      .eq('tenant_id', payload.tenantId);
 
     if (reqError) throw reqError;
 
     const { data: users } = await adminClient
       .from('users')
       .select('id, name, employee_id')
+      .eq('tenant_id', payload.tenantId)
       .in('id', [payload.actorId, checkStep.approver_id]);
 
     const actorUser = users?.find(u => u.id === payload.actorId);
@@ -265,6 +269,7 @@ export async function actOnStep(payload: {
       .from('approval_requests')
       .select('owner_id, owner:users!owner_id(email)')
       .eq('id', step.request_id)
+      .eq('tenant_id', payload.tenantId)
       .single();
 
     const ownerEmail = (request?.owner as any)?.email;
@@ -356,6 +361,7 @@ export async function actOnStep(payload: {
   const { data: users } = await adminClient
     .from('users')
     .select('id, name, employee_id')
+    .eq('tenant_id', payload.tenantId)
     .in('id', [payload.actorId, checkStep.approver_id]);
 
   const actorUser = users?.find(u => u.id === payload.actorId);
@@ -419,7 +425,8 @@ export async function advanceChain(requestId: string, tenantId: string) {
   const { data: steps, error } = await adminClient
     .from('approval_steps')
     .select('*')
-    .eq('request_id', requestId);
+    .eq('request_id', requestId)
+    .eq('tenant_id', tenantId);
 
   if (error) throw error;
   if (!steps || steps.length === 0) return;
@@ -459,7 +466,8 @@ export async function advanceChain(requestId: string, tenantId: string) {
           await adminClient
             .from('approval_steps')
             .update({ status: 'pending', entered_at: new Date().toISOString() })
-            .eq('id', generalStep.id);
+            .eq('id', generalStep.id)
+            .eq('tenant_id', tenantId);
 
           triggerStepEmail(generalStep.id, tenantId).catch(console.error);
 
@@ -489,7 +497,8 @@ export async function advanceChain(requestId: string, tenantId: string) {
           await adminClient
             .from('approval_steps')
             .update({ status: 'pending', entered_at: new Date().toISOString() })
-            .in('id', ids);
+            .in('id', ids)
+            .eq('tenant_id', tenantId);
 
           const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
           // Trigger emails and emit STEP_ENTERED

@@ -1,10 +1,10 @@
 {
   "summary": {
     "total": 318,
-    "tenantScoped": 145,
-    "primaryKeyKeyed": 48,
-    "platformPrivileged": 62,
-    "unsafeUnscoped": 63,
+    "tenantScoped": 224,
+    "primaryKeyKeyed": 29,
+    "platformPrivileged": 65,
+    "unsafeUnscoped": 0,
     "unknownReview": 0
   },
   "inventory": [
@@ -38,7 +38,7 @@
       "snippet": "const { data: req } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -50,7 +50,7 @@
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -62,7 +62,7 @@
       "snippet": "const { data: requests, error } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -74,7 +74,7 @@
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -86,7 +86,7 @@
       "snippet": "const { data: basisRefs } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -98,7 +98,7 @@
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -134,7 +134,7 @@
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -146,7 +146,7 @@
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -254,7 +254,7 @@
       "snippet": "await adminClient.from('users').upsert(",
       "table": "users",
       "operation": "UPSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": true,
       "classification": "PLATFORM_PRIVILEGED",
@@ -303,10 +303,10 @@
       "table": "action_tokens",
       "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Lookup on action_tokens table by unique cryptographic token."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
@@ -338,59 +338,59 @@
       "snippet": "const { error: tokenUpdateError } = await adminClient",
       "table": "action_tokens",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
-      "line": 75,
+      "line": 76,
       "snippet": "const { error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
-      "line": 83,
+      "line": 85,
       "snippet": "const { data: actorUser } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Lookup user profile by primary key UUID."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
-      "line": 90,
+      "line": 93,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/act/[token]/actions.ts",
-      "line": 105,
+      "line": 109,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/act/[token]/page.tsx",
@@ -399,10 +399,10 @@
       "table": "action_tokens",
       "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'action_tokens' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Lookup on action_tokens table by unique cryptographic token."
     },
     {
       "file": "src/app/[tenant]/act/[token]/page.tsx",
@@ -410,11 +410,11 @@
       "snippet": "const { data: request, error: requestError } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/approvers/actions.ts",
@@ -518,11 +518,11 @@
       "snippet": "const { error } = await adminClient",
       "table": "categories",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'categories' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/admin/categories/page.tsx",
@@ -780,8 +780,8 @@
       "file": "src/app/[tenant]/admin/settings/actions.ts",
       "line": 21,
       "snippet": "const { data, error } = await adminClient.storage",
-      "table": "logos",
-      "operation": "unknown",
+      "table": "storage:logos",
+      "operation": "STORAGE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -792,8 +792,8 @@
       "file": "src/app/[tenant]/admin/settings/actions.ts",
       "line": 34,
       "snippet": "const { data: { publicUrl } } = adminClient.storage",
-      "table": "logos",
-      "operation": "unknown",
+      "table": "storage:logos",
+      "operation": "STORAGE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -926,11 +926,11 @@
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/approvals/page.tsx",
@@ -1034,11 +1034,11 @@
       "snippet": "const { error } = await adminClient",
       "table": "delegations",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/delegations/actions.ts",
@@ -1070,11 +1070,11 @@
       "snippet": "const { error } = await adminClient",
       "table": "delegations",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/delegations/page.tsx",
@@ -1190,11 +1190,11 @@
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Lookup on tenants table by unique primary key ID."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/layout.tsx",
@@ -1202,15 +1202,15 @@
       "snippet": "const { count: pendingCount } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/layout.tsx",
-      "line": 56,
+      "line": 57,
       "snippet": "const { data: activeGrant } = await adminClient",
       "table": "intelligence_grants",
       "operation": "SELECT",
@@ -1238,15 +1238,15 @@
       "snippet": "const { data: pendingSteps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/page.tsx",
-      "line": 95,
+      "line": 97,
       "snippet": "const { data: mySubmissions } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -1258,7 +1258,7 @@
     },
     {
       "file": "src/app/[tenant]/page.tsx",
-      "line": 104,
+      "line": 106,
       "snippet": "const { data: sealedDecisions } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -1418,11 +1418,11 @@
       "snippet": "await adminClient",
       "table": "decision_references",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/new/page.tsx",
@@ -1490,95 +1490,95 @@
       "snippet": "const { data: currentSteps, error: fetchStepsError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 117,
+      "line": 118,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 135,
+      "line": 137,
       "snippet": "const { error: deleteError } = await adminClient",
       "table": "approval_steps",
       "operation": "DELETE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 151,
+      "line": 154,
       "snippet": "const { error: updateError } = await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 164,
+      "line": 168,
       "snippet": "const { error: insertError } = await adminClient",
       "table": "approval_steps",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 179,
+      "line": 184,
       "snippet": "const { error: unlockRequestError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 189,
+      "line": 195,
       "snippet": "const { data: usersInfo } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/amendActions.ts",
-      "line": 216,
+      "line": 223,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/certificate/page.tsx",
@@ -1610,47 +1610,47 @@
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
-      "line": 41,
+      "line": 42,
       "snippet": "const { data: steps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
-      "line": 56,
+      "line": 58,
       "snippet": "const { error: updateError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/discussionActions.ts",
-      "line": 64,
+      "line": 67,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/page.tsx",
@@ -1718,23 +1718,23 @@
       "snippet": "const { data: step } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
       "line": 60,
       "snippet": "const { error: uploadErr } = await adminClient.storage",
-      "table": "attachments",
-      "operation": "unknown",
+      "table": "storage:attachments",
+      "operation": "STORAGE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'attachments' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Supabase storage bucket access via service-role."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
@@ -1742,11 +1742,11 @@
       "snippet": "const { data: att, error: attInsertErr } = await adminClient",
       "table": "attachments",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'attachments' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
@@ -1754,23 +1754,23 @@
       "snippet": "const { error: stepUpdateErr } = await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/recordOfflineAction.ts",
-      "line": 116,
+      "line": 117,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/app/[tenant]/requests/[id]/reference-actions.ts",
@@ -1788,8 +1788,8 @@
       "file": "src/app/[tenant]/settings/actions.ts",
       "line": 26,
       "snippet": "const { data, error } = await adminClient.storage",
-      "table": "avatars",
-      "operation": "unknown",
+      "table": "storage:avatars",
+      "operation": "STORAGE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -1800,8 +1800,8 @@
       "file": "src/app/[tenant]/settings/actions.ts",
       "line": 34,
       "snippet": "const { data: { publicUrl } } = adminClient.storage",
-      "table": "avatars",
-      "operation": "unknown",
+      "table": "storage:avatars",
+      "operation": "STORAGE",
       "tenantFilterPresent": false,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -2050,58 +2050,10 @@
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 257,
+      "line": 351,
       "snippet": "const { data: request, error: fetchErr } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": true,
-      "primaryKeyConstrained": true,
-      "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/certificate.ts",
-      "line": 269,
-      "snippet": "const { data: steps } = await adminClient",
-      "table": "approval_steps",
-      "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/certificate.ts",
-      "line": 276,
-      "snippet": "const { data: references } = await adminClient",
-      "table": "decision_references",
-      "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/certificate.ts",
-      "line": 282,
-      "snippet": "const { data: participants } = await adminClient",
-      "table": "request_participants",
-      "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'request_participants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/certificate.ts",
-      "line": 309,
-      "snippet": "const { error: updateErr } = await adminClient",
-      "table": "approval_requests",
-      "operation": "UPDATE",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
@@ -2114,23 +2066,83 @@
       "snippet": "const { data: steps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/certificate.ts",
-      "line": 369,
+      "line": 371,
+      "snippet": "const { data: references } = await adminClient",
+      "table": "decision_references",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/certificate.ts",
+      "line": 378,
       "snippet": "const { data: participants } = await adminClient",
       "table": "request_participants",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'request_participants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/certificate.ts",
+      "line": 407,
+      "snippet": "const { error: rpcErr } = await adminClient.rpc('sigmago_finalize_seal', {",
+      "table": "rpc",
+      "operation": "RPC",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/certificate.ts",
+      "line": 417,
+      "snippet": "const { error: updateErr } = await adminClient",
+      "table": "approval_requests",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/certificate.ts",
+      "line": 480,
+      "snippet": "const { data: steps } = await adminClient",
+      "table": "approval_steps",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/certificate.ts",
+      "line": 487,
+      "snippet": "const { data: participants } = await adminClient",
+      "table": "request_participants",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/cache.ts",
@@ -2258,11 +2270,11 @@
       "snippet": "let query = adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/decisions.ts",
@@ -2282,11 +2294,11 @@
       "snippet": "const { data, error } = await adminClient.rpc('get_overdue_steps')",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/lib/db/digest.ts",
@@ -2294,11 +2306,11 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "crossTenantPlatform": true,
+      "classification": "PLATFORM_PRIVILEGED",
+      "justification": "Executed within platform super-admin, auth admin identity, health check, or system webhook/cron context."
     },
     {
       "file": "src/lib/db/grants.ts",
@@ -2402,11 +2414,11 @@
       "snippet": "const { data: completedSteps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
@@ -2437,7 +2449,7 @@
       "line": 125,
       "snippet": "const { data: newUser, error: insertError } = await adminClient",
       "table": "users",
-      "operation": "INSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -2450,15 +2462,15 @@
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 162,
+      "line": 163,
       "snippet": "await adminClient",
       "table": "delegations",
       "operation": "UPDATE",
@@ -2470,31 +2482,31 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 169,
+      "line": 170,
       "snippet": "const { data: pendingSteps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 178,
+      "line": 180,
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 183,
+      "line": 186,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -2506,7 +2518,7 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 197,
+      "line": 200,
       "snippet": "const { data: allUsers } = await adminClient",
       "table": "users",
       "operation": "SELECT",
@@ -2518,7 +2530,7 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 202,
+      "line": 205,
       "snippet": "const { data: existingNodes } = await adminClient",
       "table": "org_nodes",
       "operation": "SELECT",
@@ -2530,7 +2542,7 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 214,
+      "line": 217,
       "snippet": "const { data: newNode, error: nodeInsertError } = await adminClient",
       "table": "org_nodes",
       "operation": "SELECT",
@@ -2542,7 +2554,7 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 248,
+      "line": 251,
       "snippet": "await adminClient",
       "table": "org_nodes",
       "operation": "UPDATE",
@@ -2554,7 +2566,7 @@
     },
     {
       "file": "src/lib/db/orgSync.ts",
-      "line": 265,
+      "line": 268,
       "snippet": "await adminClient.from('hrms_sync_log').insert({",
       "table": "hrms_sync_log",
       "operation": "INSERT",
@@ -2666,11 +2678,11 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/references.ts",
@@ -2678,11 +2690,11 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "decision_references",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'decision_references' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/references.ts",
@@ -2726,11 +2738,11 @@
       "snippet": "const { data: skips, error } = await adminClient",
       "table": "reference_skips",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'reference_skips' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2738,11 +2750,11 @@
       "snippet": "const { data: request, error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2750,11 +2762,11 @@
       "snippet": "const { error: stepsError } = await adminClient",
       "table": "approval_steps",
       "operation": "INSERT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/requests.ts",
@@ -2763,7 +2775,7 @@
       "table": "audit_log",
       "operation": "INSERT",
       "tenantFilterPresent": true,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
       "classification": "TENANT_SCOPED",
       "justification": "Query enforces explicit tenant_id filter constraint in chained call."
@@ -2774,27 +2786,27 @@
       "snippet": "const { error: lockError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/requests.ts",
-      "line": 114,
+      "line": 115,
       "snippet": "const { error: refError } = await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/requests.ts",
-      "line": 129,
+      "line": 131,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -2806,7 +2818,7 @@
     },
     {
       "file": "src/lib/db/requests.ts",
-      "line": 211,
+      "line": 213,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -2818,15 +2830,15 @@
     },
     {
       "file": "src/lib/db/requests.ts",
-      "line": 218,
+      "line": 220,
       "snippet": "const { data: refSteps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
@@ -2834,16 +2846,16 @@
       "snippet": "const { data: existingStep } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 92,
-      "snippet": "const { data: rpcRes, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {",
+      "line": 94,
+      "snippet": "const { data, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {",
       "table": "rpc",
       "operation": "RPC",
       "tenantFilterPresent": true,
@@ -2854,19 +2866,19 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 122,
+      "line": 140,
       "snippet": "const { data: nextSteps } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 139,
+      "line": 158,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -2878,7 +2890,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 146,
+      "line": 165,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -2890,7 +2902,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 178,
+      "line": 194,
       "snippet": "const { data: checkStep, error: checkError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2902,7 +2914,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 196,
+      "line": 212,
       "snippet": "const { data: delegation } = await adminClient",
       "table": "delegations",
       "operation": "SELECT",
@@ -2914,7 +2926,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 214,
+      "line": 230,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -2926,43 +2938,43 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 234,
+      "line": 250,
       "snippet": "const { error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 241,
+      "line": 258,
       "snippet": "const { data: users } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 250,
+      "line": 268,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 260,
+      "line": 279,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -2974,7 +2986,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 277,
+      "line": 296,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -2986,31 +2998,31 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 320,
+      "line": 339,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
-      "operation": "UPDATE",
+      "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 342,
+      "line": 361,
       "snippet": "const { data: users } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 351,
+      "line": 371,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -3022,7 +3034,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 392,
+      "line": 412,
       "snippet": "const { data: request, error: reqError } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -3034,43 +3046,43 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 405,
+      "line": 425,
       "snippet": "const { data: steps, error } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 445,
+      "line": 466,
       "snippet": "await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 475,
+      "line": 497,
       "snippet": "await adminClient",
       "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 508,
+      "line": 531,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -3082,31 +3094,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 518,
-      "snippet": "await adminClient",
-      "table": "approval_requests",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": true,
-      "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 525,
-      "snippet": "await adminClient.from('audit_log').insert({",
-      "table": "audit_log",
-      "operation": "INSERT",
-      "tenantFilterPresent": true,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "TENANT_SCOPED",
-      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
-    },
-    {
-      "file": "src/lib/db/steps.ts",
-      "line": 558,
+      "line": 577,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
@@ -3118,7 +3106,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 565,
+      "line": 584,
       "snippet": "await adminClient",
       "table": "approval_requests",
       "operation": "UPDATE",
@@ -3130,7 +3118,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 570,
+      "line": 589,
       "snippet": "await adminClient.from('audit_log').insert({",
       "table": "audit_log",
       "operation": "INSERT",
@@ -3142,7 +3130,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 583,
+      "line": 602,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -3154,7 +3142,7 @@
     },
     {
       "file": "src/lib/db/steps.ts",
-      "line": 591,
+      "line": 610,
       "snippet": "const { data: step } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -3170,11 +3158,11 @@
       "snippet": "const { data: existingProfile } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3182,11 +3170,11 @@
       "snippet": "const { data: csvProfile } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
@@ -3194,143 +3182,143 @@
       "snippet": "const { data: dupProfile } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
-      "line": 49,
+      "line": 50,
       "snippet": "await adminClient",
       "table": "org_nodes",
       "operation": "DELETE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'org_nodes' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/db/users.ts",
-      "line": 55,
-      "snippet": "await adminClient.from('approval_requests').update({ owner_id: newId }).eq('owner_id', oldId);",
-      "table": "approval_requests",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_requests' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/db/users.ts",
-      "line": 56,
-      "snippet": "await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId);",
-      "table": "approval_steps",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 57,
-      "snippet": "await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId);",
-      "table": "approval_steps",
+      "snippet": "await adminClient.from('approval_requests').update({ owner_id: newId }).eq('owner_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "approval_requests",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 58,
-      "snippet": "await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId);",
-      "table": "delegations",
+      "snippet": "await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 59,
-      "snippet": "await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId);",
-      "table": "delegations",
+      "snippet": "await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "approval_steps",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'delegations' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 60,
-      "snippet": "await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId);",
-      "table": "audit_log",
+      "snippet": "await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "delegations",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'audit_log' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 61,
-      "snippet": "await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId);",
-      "table": "view_grants",
+      "snippet": "await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "delegations",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'view_grants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
       "line": 62,
-      "snippet": "await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId);",
-      "table": "view_grants",
+      "snippet": "await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "audit_log",
       "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'view_grants' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
-      "line": 65,
+      "line": 63,
+      "snippet": "await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "view_grants",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/db/users.ts",
+      "line": 64,
+      "snippet": "await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId).eq('tenant_id', csvProfile.tenant_id);",
+      "table": "view_grants",
+      "operation": "UPDATE",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/db/users.ts",
+      "line": 67,
       "snippet": "await adminClient",
       "table": "users",
       "operation": "DELETE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/users.ts",
-      "line": 72,
+      "line": 75,
       "snippet": "const { data: updatedProfile, error: linkError } = await adminClient",
       "table": "users",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Lookup user profile by primary key UUID."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3338,11 +3326,11 @@
       "snippet": "const { data, error } = await adminClient",
       "table": "workflows",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'workflows' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3421,12 +3409,12 @@
       "line": 172,
       "snippet": "const { data, error } = await adminClient",
       "table": "workflows",
-      "operation": "UPDATE",
-      "tenantFilterPresent": false,
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
@@ -3434,15 +3422,15 @@
       "snippet": "await adminClient",
       "table": "workflow_versions",
       "operation": "DELETE",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'workflow_versions' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/db/workflows.ts",
-      "line": 199,
+      "line": 200,
       "snippet": "await adminClient",
       "table": "workflow_versions",
       "operation": "UPDATE",
@@ -3454,7 +3442,7 @@
     },
     {
       "file": "src/lib/db/workflows.ts",
-      "line": 212,
+      "line": 213,
       "snippet": "const { data, error } = await adminClient",
       "table": "workflow_versions",
       "operation": "SELECT",
@@ -3466,7 +3454,7 @@
     },
     {
       "file": "src/lib/db/workflows.ts",
-      "line": 227,
+      "line": 228,
       "snippet": "const { data, error } = await adminClient",
       "table": "workflow_versions",
       "operation": "SELECT",
@@ -3478,7 +3466,7 @@
     },
     {
       "file": "src/lib/db/workflows.ts",
-      "line": 239,
+      "line": 240,
       "snippet": "const { error } = await adminClient",
       "table": "workflows",
       "operation": "DELETE",
@@ -3490,7 +3478,7 @@
     },
     {
       "file": "src/lib/db/workflows.ts",
-      "line": 250,
+      "line": 251,
       "snippet": "const { data, error } = await adminClient",
       "table": "workflows",
       "operation": "SELECT",
@@ -3515,18 +3503,6 @@
     {
       "file": "src/lib/email/outbound.ts",
       "line": 119,
-      "snippet": "const { data: recipientProfile } = await adminClient",
-      "table": "users",
-      "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/email/outbound.ts",
-      "line": 132,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -3538,31 +3514,31 @@
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 149,
+      "line": 127,
+      "snippet": "const { data: recipientProfile } = await adminClient",
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/email/outbound.ts",
+      "line": 150,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'approval_steps' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 241,
-      "snippet": "const { data: recipientProfile } = await adminClient",
-      "table": "users",
-      "operation": "SELECT",
-      "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
-      "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
-    },
-    {
-      "file": "src/lib/email/outbound.ts",
-      "line": 254,
+      "line": 242,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -3574,7 +3550,19 @@
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 270,
+      "line": 250,
+      "snippet": "const { data: recipientProfile } = await adminClient",
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/email/outbound.ts",
+      "line": 272,
       "snippet": "const { data: step, error: stepError } = await adminClient",
       "table": "approval_steps",
       "operation": "SELECT",
@@ -3586,19 +3574,19 @@
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 316,
-      "snippet": "const { data: recipientProfile } = await adminClient",
-      "table": "users",
+      "line": 299,
+      "snippet": "const { data: step, error: stepError } = await adminClient",
+      "table": "approval_steps",
       "operation": "SELECT",
       "tenantFilterPresent": false,
-      "primaryKeyConstrained": false,
+      "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "UNSAFE_UNSCOPED",
-      "justification": "Multi-tenant table or RPC 'users' queried without explicit tenant_id filter or verified primary key. Scheduled for Sprint 3 remediation."
+      "classification": "PRIMARY_KEY_KEYED",
+      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 329,
+      "line": 378,
       "snippet": "const { data: tenant } = await adminClient",
       "table": "tenants",
       "operation": "SELECT",
@@ -3610,15 +3598,27 @@
     },
     {
       "file": "src/lib/email/outbound.ts",
-      "line": 345,
+      "line": 386,
+      "snippet": "const { data: recipientProfile } = await adminClient",
+      "table": "users",
+      "operation": "SELECT",
+      "tenantFilterPresent": true,
+      "primaryKeyConstrained": false,
+      "crossTenantPlatform": false,
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
+    },
+    {
+      "file": "src/lib/email/outbound.ts",
+      "line": 408,
       "snippet": "const { data: request } = await adminClient",
       "table": "approval_requests",
       "operation": "SELECT",
-      "tenantFilterPresent": false,
+      "tenantFilterPresent": true,
       "primaryKeyConstrained": true,
       "crossTenantPlatform": false,
-      "classification": "PRIMARY_KEY_KEYED",
-      "justification": "Keyed by primary key ID (requires verifying tenant ownership boundary in caller)."
+      "classification": "TENANT_SCOPED",
+      "justification": "Query enforces explicit tenant_id filter constraint in chained call."
     },
     {
       "file": "src/lib/intelligence/access.ts",
@@ -3661,7 +3661,7 @@
       "line": 117,
       "snippet": "const { data: grant, error } = await adminClient",
       "table": "intelligence_grants",
-      "operation": "UPSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,
@@ -3793,7 +3793,7 @@
       "line": 83,
       "snippet": "const { data: participant, error } = await adminClient",
       "table": "request_participants",
-      "operation": "UPSERT",
+      "operation": "SELECT",
       "tenantFilterPresent": true,
       "primaryKeyConstrained": false,
       "crossTenantPlatform": false,

@@ -32,7 +32,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   const publicUser = await getProfileForAuthUser(user.id, user.email || '');
   const userName = publicUser?.name || user.email?.split('@')[0] || 'Member';
 
-  // 2. Fetch pending approval steps for user
+  // 2. Fetch pending approval steps for user strictly within this tenant
   const { data: pendingSteps } = await adminClient
     .from('approval_steps')
     .select(`
@@ -41,12 +41,13 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
       order_index,
       entered_at,
       status,
-      approval_requests (
+      approval_requests!inner (
         id,
         ref,
         subject,
         category_id,
         owner_id,
+        tenant_id,
         created_at,
         users!owner_id (name, department),
         categories (name, step_type)
@@ -54,6 +55,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
     `)
     .eq('approver_id', publicUser?.id)
     .eq('status', 'pending')
+    .eq('approval_requests.tenant_id', tenantId)
     .order('entered_at', { ascending: true });
 
   // Deduplicate requests

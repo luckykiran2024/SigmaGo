@@ -65,6 +65,7 @@ export default async function ConfirmActionPage({
       owner:users!owner_id ( name )
     `)
     .eq('id', tokenData.request_id)
+    .eq('tenant_id', tokenData.tenant_id)
     .single();
 
   if (requestError || !request) {

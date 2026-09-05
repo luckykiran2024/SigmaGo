@@ -25,11 +25,12 @@ export async function resumeRequestAction(
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) throw new Error('User profile not found');
 
-  // Fetch the request status and owner
+  // Fetch the request status and owner strictly within tenant
   const { data: request } = await adminClient
     .from('approval_requests')
     .select('status, owner_id')
     .eq('id', requestId)
+    .eq('tenant_id', tenant.id)
     .single();
 
   if (!request) throw new Error('Request not found');
@@ -41,7 +42,8 @@ export async function resumeRequestAction(
   const { data: steps } = await adminClient
     .from('approval_steps')
     .select('approver_id')
-    .eq('request_id', requestId);
+    .eq('request_id', requestId)
+    .eq('tenant_id', tenant.id);
 
   const pathApproverIds = steps?.map(s => s.approver_id) || [];
   const isOwner = request.owner_id === profile.id;
@@ -56,7 +58,8 @@ export async function resumeRequestAction(
   const { error: updateError } = await adminClient
     .from('approval_requests')
     .update({ status: 'pending' })
-    .eq('id', requestId);
+    .eq('id', requestId)
+    .eq('tenant_id', tenant.id);
 
   if (updateError) throw updateError;
 

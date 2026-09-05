@@ -37,7 +37,8 @@ export async function amendPathAction(
   const { data: currentSteps, error: fetchStepsError } = await adminClient
     .from('approval_steps')
     .select('*')
-    .eq('request_id', requestId);
+    .eq('request_id', requestId)
+    .eq('tenant_id', tenant.id);
 
   if (fetchStepsError || !currentSteps) throw new Error('Failed to load request steps');
 
@@ -118,6 +119,7 @@ export async function amendPathAction(
     .from('approval_requests')
     .select('owner_id')
     .eq('id', requestId)
+    .eq('tenant_id', tenant.id)
     .single();
 
   if (!request) throw new Error('Request not found');
@@ -135,7 +137,8 @@ export async function amendPathAction(
     const { error: deleteError } = await adminClient
       .from('approval_steps')
       .delete()
-      .in('id', stepsToDelete.map(s => s.id));
+      .in('id', stepsToDelete.map(s => s.id))
+      .eq('tenant_id', tenant.id);
     if (deleteError) throw deleteError;
   }
 
@@ -157,13 +160,15 @@ export async function amendPathAction(
           order_index: step.order_index,
           status: 'waiting' // reset status to waiting to let advanceChain evaluate correctly
         })
-        .eq('id', step.id);
+        .eq('id', step.id)
+        .eq('tenant_id', tenant.id);
       if (updateError) throw updateError;
     } else {
       // Insert new step
       const { error: insertError } = await adminClient
         .from('approval_steps')
         .insert({
+          tenant_id: tenant.id,
           request_id: requestId,
           approver_id: step.approverId,
           type: step.type,
@@ -179,7 +184,8 @@ export async function amendPathAction(
   const { error: unlockRequestError } = await adminClient
     .from('approval_requests')
     .update({ status: 'pending' })
-    .eq('id', requestId);
+    .eq('id', requestId)
+    .eq('tenant_id', tenant.id);
   if (unlockRequestError) throw unlockRequestError;
 
   // Run advance logic to activate the first waiting stage
@@ -189,6 +195,7 @@ export async function amendPathAction(
   const { data: usersInfo } = await adminClient
     .from('users')
     .select('id, name, employee_id')
+    .eq('tenant_id', tenant.id)
     .in('id', [
       profile.id,
       ...currentSteps.map(s => s.approver_id),

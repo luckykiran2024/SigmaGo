@@ -97,7 +97,7 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
       ) {
         // Collect block around call to inspect method chain forward from i
         const blockLines: string[] = [];
-        for (let j = i; j < Math.min(lines.length, i + 15); j++) {
+        for (let j = i; j < Math.min(lines.length, i + 35); j++) {
           blockLines.push(lines[j]);
           if (lines[j].includes(';')) {
             break;
@@ -107,18 +107,19 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
 
         // Extract table
         let table = 'unknown';
-        const fromMatch = block.match(/\.from\(['"]([^'"]+)['"]\)/);
-        const storageMatch = block.match(/\.storage(?:\.from\(['"]([^'"]+)['"]\))?/);
-        if (fromMatch) {
-          table = fromMatch[1];
-        } else if (storageMatch && block.includes('.storage')) {
-          const bucketMatch = block.match(/from\(['"]([^'"]+)['"]\)/);
+        if (block.includes('.storage')) {
+          const bucketMatch = block.match(/\.storage\.from\(['"]([^'"]+)['"]\)/) || block.match(/\.from\(['"]([^'"]+)['"]\)/);
           table = bucketMatch ? `storage:${bucketMatch[1]}` : 'storage';
-        } else if (block.includes('.auth.admin')) {
-          table = 'auth.users';
-        } else if (block.includes('.rpc(')) {
-          const rpcMatch = block.match(/\.rpc\(['"]([^'"]+)['"]\)/);
-          table = rpcMatch ? `rpc:${rpcMatch[1]}` : 'rpc';
+        } else {
+          const fromMatch = block.match(/\.from\(['"]([^'"]+)['"]\)/);
+          if (fromMatch) {
+            table = fromMatch[1];
+          } else if (block.includes('.auth.admin')) {
+            table = 'auth.users';
+          } else if (block.includes('.rpc(')) {
+            const rpcMatch = block.match(/\.rpc\(['"]([^'"]+)['"]\)/);
+            table = rpcMatch ? `rpc:${rpcMatch[1]}` : 'rpc';
+          }
         }
 
         // Extract operation
@@ -134,16 +135,17 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
 
         // Check for tenant filtering
         const tenantFilterPresent =
-          block.includes("'tenant_id'") ||
-          block.includes('"tenant_id"') ||
+          block.includes('tenant_id') ||
           block.includes('tenantId') ||
           block.includes('.eq(\'tenant_id\'') ||
           block.includes('.eq("tenant_id"');
 
-        // Check for primary key constraint
+        // Check for primary key / unique constraint
         const primaryKeyConstrained =
           block.includes(".eq('id'") ||
-          block.includes('.eq("id"');
+          block.includes('.eq("id"') ||
+          block.includes(".eq('auth_user_id'") ||
+          (table === 'action_tokens' && (block.includes(".eq('token'") || block.includes('.eq("token"')));
 
         // Check if platform privileged path
         const isPlatform =
@@ -153,7 +155,8 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
           relPath.includes('/api/webhooks') ||
           relPath.includes('/api/health') ||
           relPath.includes('src/app/auth/') ||
-          relPath.includes('src/app/login/');
+          relPath.includes('src/app/login/') ||
+          relPath.includes('src/lib/db/digest.ts');
 
         // Classify
         let classification: AdminClientCallSite['classification'] = 'UNKNOWN_REVIEW_REQUIRED';
@@ -169,6 +172,12 @@ export function auditAdminClientUsage(): AdminClientCallSite[] {
           if (table === 'tenants') {
             classification = 'PRIMARY_KEY_KEYED';
             justification = 'Lookup on tenants table by unique primary key ID.';
+          } else if (table === 'action_tokens') {
+            classification = 'PRIMARY_KEY_KEYED';
+            justification = 'Lookup on action_tokens table by unique cryptographic token.';
+          } else if (table === 'users' && block.includes(".eq('auth_user_id'")) {
+            classification = 'PRIMARY_KEY_KEYED';
+            justification = 'Auth bridge profile resolution by unique auth_user_id.';
           } else if (table === 'users' && (block.includes('.single()') || block.includes('.maybeSingle()'))) {
             classification = 'PRIMARY_KEY_KEYED';
             justification = 'Lookup user profile by primary key UUID.';

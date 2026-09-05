@@ -34,7 +34,10 @@ export async function createCategoryAction(
 
   const { error } = await adminClient
     .from('categories')
-    .insert(insertPayload);
+    .insert({
+      tenant_id: tenantId,
+      ...insertPayload
+    });
 
   if (error) {
     console.error("Error creating category:", error);

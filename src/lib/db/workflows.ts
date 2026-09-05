@@ -195,6 +195,7 @@ export async function updateWorkflow(
       .from('workflow_versions')
       .delete()
       .eq('workflow_id', workflowId)
+      .eq('tenant_id', tenantId)
       .eq('version_number', nextVersionNumber);
     await adminClient
       .from('workflow_versions')

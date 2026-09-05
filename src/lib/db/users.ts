@@ -35,6 +35,7 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
       .from('users')
       .select('id')
       .ilike('email', normalizedEmail)
+      .eq('tenant_id', csvProfile.tenant_id)
       .not('auth_user_id', 'is', null) // has auth_user_id set
       .neq('id', csvProfile.id)        // and is a different row from csvProfile
       .maybeSingle();
@@ -49,23 +50,25 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
       await adminClient
         .from('org_nodes')
         .delete()
-        .eq('user_id', oldId);
+        .eq('user_id', oldId)
+        .eq('tenant_id', csvProfile.tenant_id);
 
-      // Update references in other tables to point to the CSV-imported profile
-      await adminClient.from('approval_requests').update({ owner_id: newId }).eq('owner_id', oldId);
-      await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId);
-      await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId);
-      await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId);
-      await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId);
-      await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId);
-      await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId);
-      await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId);
+      // Update references in other tables strictly within this tenant
+      await adminClient.from('approval_requests').update({ owner_id: newId }).eq('owner_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('view_grants').update({ grantee_id: newId }).eq('grantee_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('view_grants').update({ granted_by_id: newId }).eq('granted_by_id', oldId).eq('tenant_id', csvProfile.tenant_id);
 
       // Delete the duplicate auth-only profile
       await adminClient
         .from('users')
         .delete()
-        .eq('id', oldId);
+        .eq('id', oldId)
+        .eq('tenant_id', csvProfile.tenant_id);
     }
 
     // Link the auth user to the existing CSV imported record
@@ -73,6 +76,7 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
       .from('users')
       .update({ auth_user_id: authUserId })
       .eq('id', csvProfile.id)
+      .eq('tenant_id', csvProfile.tenant_id)
       .select('id, tenant_id, name, email, role, status, avatar_url')
       .single();
 

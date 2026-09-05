@@ -42,13 +42,12 @@ describe('Parallel Approval Concurrency & Idempotency Key Suite (Sprint 2)', () 
     };
 
     // Mock DB finding step with same idempotency key
-    (adminClient.from as any).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: existingStep, error: null }),
-        }),
-      }),
-    });
+    const chainableMock: any = {
+      select: vi.fn(() => chainableMock),
+      eq: vi.fn(() => chainableMock),
+      maybeSingle: vi.fn().mockResolvedValue({ data: existingStep, error: null }),
+    };
+    (adminClient.from as any).mockReturnValue(chainableMock);
 
     const result = await actOnStep({
       stepId: 'step-p1',
@@ -185,18 +184,15 @@ describe('Parallel Approval Concurrency & Idempotency Key Suite (Sprint 2)', () 
       };
     });
 
-    (adminClient.from as any).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          single: vi.fn().mockResolvedValue({ data: { workflow_id: null }, error: null }),
-        }),
-      }),
-      update: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-      }),
+    const chainableMock: any = {
+      select: vi.fn(() => chainableMock),
+      eq: vi.fn(() => chainableMock),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      single: vi.fn().mockResolvedValue({ data: { workflow_id: null }, error: null }),
+      update: vi.fn(() => chainableMock),
       insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    });
+    };
+    (adminClient.from as any).mockReturnValue(chainableMock);
 
     const [res1, res2] = await Promise.all([
       actOnStep({

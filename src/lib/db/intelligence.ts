@@ -168,6 +168,7 @@ export async function getPolicyHealthMetrics(
     const { data: completedSteps } = await adminClient
       .from('approval_steps')
       .select('entered_at, acted_at')
+      .eq('tenant_id', tenantId)
       .not('acted_at', 'is', null)
       .limit(100);
 

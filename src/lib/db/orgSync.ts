@@ -153,11 +153,12 @@ export async function syncOrganization(
   }
 
   for (const userId of deactivated) {
-    // Archive requests raised by the user who is deactivating
+    // Archive requests raised by the user who is deactivating strictly within this tenant
     await adminClient
       .from('approval_requests')
       .update({ archived: true })
-      .eq('owner_id', userId);
+      .eq('owner_id', userId)
+      .eq('tenant_id', tenantId);
 
     await adminClient
       .from('delegations')
@@ -168,9 +169,10 @@ export async function syncOrganization(
 
     const { data: pendingSteps } = await adminClient
       .from('approval_steps')
-      .select('id, request_id, approval_requests(id, owner_id)')
+      .select('id, request_id, approval_requests!inner(id, owner_id, tenant_id)')
       .eq('approver_id', userId)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .eq('approval_requests.tenant_id', tenantId);
 
     for (const step of pendingSteps || []) {
       const requestId = step.request_id;
@@ -178,7 +180,8 @@ export async function syncOrganization(
       await adminClient
         .from('approval_requests')
         .update({ status: 'blocked' })
-        .eq('id', requestId);
+        .eq('id', requestId)
+        .eq('tenant_id', tenantId);
 
       await adminClient.from('audit_log').insert({
         tenant_id: tenantId,

@@ -4,7 +4,7 @@ import { Client } from 'pg';
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
 
-describe('PostgreSQL Real Integration Test Suite (src/test/integration/postgres_integration.test.ts)', () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)('PostgreSQL Real Integration Test Suite (src/test/integration/postgres_integration.test.ts)', () => {
   let db: Client;
   let supabaseAdmin: ReturnType<typeof createClient>;
 

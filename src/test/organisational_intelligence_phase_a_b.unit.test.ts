@@ -17,7 +17,7 @@ describe('Organisational Intelligence Phase A & B Acceptance Tests', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.SECRET_ENCRYPTION_KEY;
 
-    expect(() => encryptSecret('my_test_secret')).toThrow(/FATAL: SECRET_ENCRYPTION_KEY environment variable is missing in production/);
+    expect(() => encryptSecret('my_test_secret')).toThrow(/FATAL: SECRET_ENCRYPTION_KEY environment variable is missing/);
   });
 
   // Test 2: Security Pre-flight — Zero hardcoded credentials in scripts

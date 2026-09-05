@@ -106,7 +106,8 @@ export async function recordOfflineAction(formData: FormData) {
       ratification_due_at: ratificationDue,
       ratification_status: 'pending'
     })
-    .eq('id', stepId);
+    .eq('id', stepId)
+    .eq('tenant_id', step.tenant_id);
 
   if (stepUpdateErr) {
     throw new Error(`Failed to update step status: ${stepUpdateErr.message}`);

@@ -158,15 +158,14 @@ describe('Deterministic Concurrency Barrier & Fault-Injection Suite (Sprint 2)',
       eq: vi.fn().mockResolvedValue({ data: null, error: null }),
     });
 
-    (adminClient.from as any).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-          single: vi.fn().mockResolvedValue({ data: { workflow_id: null }, error: null }),
-        }),
-      }),
+    const chainableMock: any = {
+      select: vi.fn(() => chainableMock),
+      eq: vi.fn(() => chainableMock),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      single: vi.fn().mockResolvedValue({ data: { workflow_id: null }, error: null }),
       update: updateSpy,
-    });
+    };
+    (adminClient.from as any).mockReturnValue(chainableMock);
 
     (adminClient.rpc as any).mockResolvedValue({
       data: {

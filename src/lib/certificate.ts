@@ -364,19 +364,22 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
     .from('approval_steps')
     .select('id, stage_index, order_index, approver_id, status, acted_at, stance, outcome, was_binding, reservation_note, comment')
     .eq('request_id', requestId)
+    .eq('tenant_id', tenantId)
     .order('order_index', { ascending: true });
 
-  // 3. Fetch decision references
+  // 3. Fetch decision references strictly within tenant
   const { data: references } = await adminClient
     .from('decision_references')
     .select('id, target_id, to_policy_id, relationship')
-    .eq('source_id', requestId);
+    .eq('source_id', requestId)
+    .eq('tenant_id', tenantId);
 
-  // 4. Fetch participants
+  // 4. Fetch participants strictly within tenant
   const { data: participants } = await adminClient
     .from('request_participants')
     .select('id, email, role, is_external, state, responded_at, comment')
-    .eq('request_id', requestId);
+    .eq('request_id', requestId)
+    .eq('tenant_id', tenantId);
 
   return {
     request,
@@ -478,12 +481,14 @@ export async function getCertificateBlocks(
     .from('approval_steps')
     .select('order_index, status, acted_at, users_approval_steps_approver_idTousers(name, email)')
     .eq('request_id', requestId)
+    .eq('tenant_id', tenantId)
     .order('order_index', { ascending: true });
 
   const { data: participants } = await adminClient
     .from('request_participants')
     .select('role, email, is_external, state, responded_at, comment')
-    .eq('request_id', requestId);
+    .eq('request_id', requestId)
+    .eq('tenant_id', tenantId);
 
   const authority: CertificateAuthorityStep[] = (steps || []).map((s: any) => ({
     stage: (s.order_index ?? 0) + 1,

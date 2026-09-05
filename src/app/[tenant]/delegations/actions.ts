@@ -135,7 +135,8 @@ export async function revokeDelegationAction(
   const { error } = await adminClient
     .from('delegations')
     .update({ status: 'revoked' })
-    .eq('id', delegationId);
+    .eq('id', delegationId)
+    .eq('tenant_id', tenant.id);
 
   if (error) {
     throw new Error(error.message);

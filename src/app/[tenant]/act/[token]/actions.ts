@@ -59,7 +59,8 @@ export async function confirmEmailAction(
   const { error: tokenUpdateError } = await adminClient
     .from('action_tokens')
     .update({ used_at: new Date().toISOString() })
-    .eq('token', token);
+    .eq('token', token)
+    .eq('tenant_id', tenant.id);
 
   if (tokenUpdateError) {
     throw new Error('Failed to consume token');
@@ -75,7 +76,8 @@ export async function confirmEmailAction(
     const { error: reqError } = await adminClient
       .from('approval_requests')
       .update({ status: 'in_discussion' })
-      .eq('id', tokenData.request_id);
+      .eq('id', tokenData.request_id)
+      .eq('tenant_id', tenant.id);
 
     if (reqError) throw reqError;
 
@@ -84,6 +86,7 @@ export async function confirmEmailAction(
       .from('users')
       .select('name, email')
       .eq('id', tokenData.approver_id)
+      .eq('tenant_id', tenant.id)
       .single();
 
     // Fetch owner email
@@ -91,6 +94,7 @@ export async function confirmEmailAction(
       .from('approval_requests')
       .select('owner_id, owner:users!owner_id(email)')
       .eq('id', tokenData.request_id)
+      .eq('tenant_id', tenant.id)
       .single();
 
     const ownerEmail = (request?.owner as any)?.email;

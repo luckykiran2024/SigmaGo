@@ -49,7 +49,8 @@ export default async function TenantLayout({
     .from('approval_steps')
     .select('id', { count: 'exact', head: true })
     .eq('approver_id', profile.id)
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .eq('tenant_id', profile.tenant_id);
 
   // Check if user holds an explicit active Intelligence Access Grant (§ Build Prompt #17 Decoupled Access Control)
   const userEmail = (profile.email || user.email || '').toLowerCase().trim();
