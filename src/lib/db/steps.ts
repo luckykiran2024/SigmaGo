@@ -88,8 +88,9 @@ export async function actOnStep(payload: {
   }
 
   // 2. Attempt atomic transactional execution via PostgreSQL RPC
+  let rpcRes: any = null;
   try {
-    const { data: rpcRes, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {
+    const { data, error: rpcErr } = await adminClient.rpc('sigmago_act_on_step', {
       p_step_id: payload.stepId,
       p_actor_id: payload.actorId,
       p_tenant_id: payload.tenantId,
@@ -105,75 +106,88 @@ export async function actOnStep(payload: {
       p_idempotency_key: payload.idempotencyKey || null,
     });
 
-    if (!rpcErr && rpcRes) {
-      if (rpcRes.already_processed) {
-        return {
-          success: true,
-          alreadyProcessed: true,
-          stepId: rpcRes.step_id,
-          status: rpcRes.status,
-        };
+    if (rpcErr) {
+      if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+        throw new Error(`Authoritative transaction failed in database RPC: ${rpcErr.message}`);
       }
-
-      if (rpcRes.finalized && rpcRes.request_id) {
-        await finalizeRequest(rpcRes.request_id, payload.tenantId);
-      } else if (rpcRes.stage_advanced && rpcRes.next_stage_index !== undefined) {
-        try {
-          const { data: nextSteps } = await adminClient
-            .from('approval_steps')
-            .select('id')
-            .eq('request_id', rpcRes.request_id)
-            .eq('stage_index', rpcRes.next_stage_index)
-            .eq('status', 'pending');
-
-          for (const ns of nextSteps || []) {
-            triggerStepEmail(ns.id, payload.tenantId).catch(console.error);
-          }
-        } catch (err) {
-          console.error('Non-blocking: Failed to trigger next stage notification emails:', err);
-        }
-      }
-
-      if (payload.action === 'discuss' && rpcRes.request_id) {
-        try {
-          const { data: request } = await adminClient
-            .from('approval_requests')
-            .select('owner_id, owner:users!owner_id(email)')
-            .eq('id', rpcRes.request_id)
-            .single();
-
-          const ownerEmail = (request?.owner as any)?.email;
-          const { data: tenant } = await adminClient
-            .from('tenants')
-            .select('subdomain')
-            .eq('id', payload.tenantId)
-            .single();
-
-          if (ownerEmail && tenant) {
-            const { sendDiscussionNotificationEmail } = await import('../email/outbound');
-            await sendDiscussionNotificationEmail(
-              tenant.subdomain,
-              rpcRes.request_id,
-              payload.comment || 'No comment provided.',
-              'An approver',
-              ownerEmail
-            ).catch(console.error);
-          }
-        } catch (e) {
-          console.error('Error triggering discussion email:', e);
-        }
-      }
-
-      return {
-        success: true,
-        ...rpcRes,
-      };
+      console.warn('RPC sigmago_act_on_step returned error, falling back to application path in development:', rpcErr);
+    } else {
+      rpcRes = data;
     }
   } catch (rpcException) {
-    console.warn('RPC sigmago_act_on_step threw, falling back to application path:', rpcException);
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+      throw rpcException;
+    }
+    console.warn('RPC sigmago_act_on_step threw, falling back to application path in development:', rpcException);
   }
 
-  // 3. Fallback application path (for testing and environments without RPC)
+  if (rpcRes) {
+    if (rpcRes.already_processed) {
+      return {
+        success: true,
+        alreadyProcessed: true,
+        stepId: rpcRes.step_id,
+        status: rpcRes.status,
+      };
+    }
+
+    // Two-Phase Finalization: if final stage, seal with non-null cryptographic checksum
+    if ((rpcRes.finalized || rpcRes.needs_seal || rpcRes.request_status === 'FINALIZING') && rpcRes.request_id) {
+      await finalizeRequest(rpcRes.request_id, payload.tenantId);
+    } else if (rpcRes.stage_advanced && rpcRes.next_stage_index !== undefined) {
+      try {
+        const { data: nextSteps } = await adminClient
+          .from('approval_steps')
+          .select('id')
+          .eq('request_id', rpcRes.request_id)
+          .eq('stage_index', rpcRes.next_stage_index)
+          .eq('status', 'pending');
+
+        for (const ns of nextSteps || []) {
+          triggerStepEmail(ns.id, payload.tenantId).catch(console.error);
+        }
+      } catch (err) {
+        console.error('Non-blocking: Failed to trigger next stage notification emails:', err);
+      }
+    }
+
+    if (payload.action === 'discuss' && rpcRes.request_id) {
+      try {
+        const { data: request } = await adminClient
+          .from('approval_requests')
+          .select('owner_id, owner:users!owner_id(email)')
+          .eq('id', rpcRes.request_id)
+          .single();
+
+        const ownerEmail = (request?.owner as any)?.email;
+        const { data: tenant } = await adminClient
+          .from('tenants')
+          .select('subdomain')
+          .eq('id', payload.tenantId)
+          .single();
+
+        if (ownerEmail && tenant) {
+          const { sendDiscussionNotificationEmail } = await import('../email/outbound');
+          await sendDiscussionNotificationEmail(
+            tenant.subdomain,
+            rpcRes.request_id,
+            payload.comment || 'No comment provided.',
+            'An approver',
+            ownerEmail
+          ).catch(console.error);
+        }
+      } catch (e) {
+        console.error('Error triggering discussion email:', e);
+      }
+    }
+
+    return {
+      success: true,
+      ...rpcRes,
+    };
+  }
+
+  // 3. Fallback application path (for local testing environments without RPC)
   // Verify step is pending and actor is authorized (is direct approver, or has active delegation)
   const { data: checkStep, error: checkError } = await adminClient
     .from('approval_steps')
@@ -513,23 +527,17 @@ async function finalizeRequest(requestId: string, tenantId: string) {
 
   const { generateChecksumAndFinalize } = await import('@/lib/certificate');
   const finalizeRes = await generateChecksumAndFinalize(requestId, tenantId);
-  const checksumHex = finalizeRes?.checksum || null;
 
-  await adminClient
-    .from('approval_requests')
-    .update({
-      status: 'approved',
-    })
-    .eq('id', requestId);
+  if (!finalizeRes || !finalizeRes.checksum) {
+    const errMsg = `FATAL: Cryptographic sealing failed for request ${requestId}. Refusing to transition to 'approved' without a non-null SHA-256 seal. Request remains in 'FINALIZING' state for investigation.`;
+    console.error(errMsg);
+    throw new Error(errMsg);
+  }
 
-  await adminClient.from('audit_log').insert({
-    tenant_id:   tenantId,
-    request_id:  requestId,
-    actor_id:    null,
-    action_type: 'request_finalized',
-    metadata:    { checksum: checksumHex }
-  });
+  const checksumHex = finalizeRes.checksum;
 
+  // The database status is transitioned to 'approved' atomically inside sigmago_finalize_seal
+  // called by generateChecksumAndFinalize. We emit the decision events here:
   const { emitDecisionEvent } = await import('@/lib/intelligence/events/emit');
   await emitDecisionEvent({
     tenantId: tenantId,
@@ -550,8 +558,10 @@ async function finalizeRequest(requestId: string, tenantId: string) {
     eventType: 'REQUEST_SEALED',
     baselineStepType: request?.baseline_step_type || null,
     resolvedStepType: request?.resolved_step_type || null,
-    eventPayload: { checksum: checksumHex, algorithm: 'SHA-256', canonicalVersion: 1 }
+    eventPayload: { checksum: checksumHex, algorithm: 'SHA-256', canonicalVersion: 2 }
   });
+
+  return finalizeRes;
 }
 
 async function rejectRequest(requestId: string, tenantId: string) {
