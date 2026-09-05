@@ -30,6 +30,7 @@ export interface EmitDecisionEventPayload {
   workflowId?: string | null;
   workflowVersionId?: string | null;
   eventType: DecisionEventType;
+  eventSchemaVersion?: number;
   eventAt?: string;
   actorId?: string | null;
   stepId?: string | null;

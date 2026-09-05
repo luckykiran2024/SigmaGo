@@ -25,7 +25,10 @@ export async function emitDecisionEvent(payload: EmitDecisionEventPayload): Prom
         stance:              payload.stance || null,
         outcome:             payload.outcome || null,
         was_binding:         payload.wasBinding !== undefined ? payload.wasBinding : null,
-        event_payload:       payload.eventPayload || {},
+        event_payload:       {
+          event_schema_version: payload.eventSchemaVersion || 1,
+          ...(payload.eventPayload || {}),
+        },
         correlation_id:      payload.correlationId || null,
       });
 
