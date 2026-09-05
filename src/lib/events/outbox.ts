@@ -16,14 +16,23 @@ export interface OutboxRecord {
   aggregate_type: string;
   aggregate_id: string;
   payload: Record<string, any>;
-  status: 'PENDING' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
+  status: 'PENDING' | 'PROCESSING' | 'PROCESSED' | 'FAILED' | 'DEAD_LETTER';
   retry_count: number;
   error_message?: string | null;
   created_at: string;
   processed_at?: string | null;
 }
 
-const MAX_RETRIES = 3;
+export const MAX_RETRIES = 5;
+
+/**
+ * Computes exponential backoff delay with jitter.
+ */
+export function computeBackoffDelayMs(retryCount: number): number {
+  const baseDelay = Math.pow(2, retryCount) * 1000;
+  const jitter = Math.floor(Math.random() * 500);
+  return Math.min(baseDelay + jitter, 3600000);
+}
 
 /**
  * Inserts an event into the transactional outbox table.
@@ -136,7 +145,8 @@ export async function markOutboxEventFailed(
 ): Promise<boolean> {
   try {
     const nextRetry = currentRetryCount + 1;
-    const newStatus = nextRetry >= MAX_RETRIES ? 'FAILED' : 'PENDING';
+    const isExhausted = nextRetry >= MAX_RETRIES;
+    const newStatus = isExhausted ? 'DEAD_LETTER' : 'PENDING';
 
     const { error } = await client
       .from('transactional_outbox')
@@ -151,6 +161,21 @@ export async function markOutboxEventFailed(
       console.error(`[Outbox] Failed to mark event ${eventId} failure:`, error.message);
       return false;
     }
+
+    if (isExhausted) {
+      console.warn(`[Outbox DLQ] Event ${eventId} moved to DEAD_LETTER after ${MAX_RETRIES} attempts.`);
+      try {
+        const { alertAggregateWorkerFailure } = await import('@/lib/observability/alerts');
+        alertAggregateWorkerFailure(
+          'TransactionalOutboxDLQ',
+          `Event ${eventId} permanently failed after ${MAX_RETRIES} attempts: ${errorMessage}`,
+          'system'
+        );
+      } catch (alertErr) {
+        console.error('[Outbox] Failed to dispatch DLQ alert:', alertErr);
+      }
+    }
+
     return true;
   } catch (err: any) {
     console.error(`[Outbox] Error updating event ${eventId} failure:`, err.message);
@@ -251,4 +276,40 @@ export async function processOutboxBatch(
   }
 
   return { processed, failed };
+}
+
+/**
+ * Runs a continuous outbox worker cycle until queue is drained or maxCycles reached.
+ */
+export async function runOutboxWorkerCycle(
+  handler: OutboxEventHandler,
+  options?: { batchSize?: number; tenantId?: string; maxCycles?: number; client?: any }
+): Promise<{ cyclesCompleted: number; totalProcessed: number; totalFailed: number }> {
+  const batchSize = options?.batchSize || 50;
+  const maxCycles = options?.maxCycles || 10;
+  const client = options?.client || adminClient;
+
+  let cyclesCompleted = 0;
+  let totalProcessed = 0;
+  let totalFailed = 0;
+
+  for (let i = 0; i < maxCycles; i++) {
+    const { processed, failed } = await processOutboxBatch({
+      limit: batchSize,
+      tenantId: options?.tenantId,
+      handler,
+      client,
+    });
+
+    cyclesCompleted++;
+    totalProcessed += processed;
+    totalFailed += failed;
+
+    // Stop if no records were processed or failed in this cycle
+    if (processed === 0 && failed === 0) {
+      break;
+    }
+  }
+
+  return { cyclesCompleted, totalProcessed, totalFailed };
 }

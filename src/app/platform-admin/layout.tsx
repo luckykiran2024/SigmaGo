@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
-import { getProfileForAuthUser } from '@/lib/db/users';
+import { assertPlatformAdmin } from '@/lib/platform/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Activity, PlusCircle, LifeBuoy, LogOut } from 'lucide-react';
@@ -10,22 +9,10 @@ export default async function PlatformAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
-
-  // Allow super admin emails or super_admin role
-  const isSuperAdminEmail =
-    user.email === 'admin@sigmago.com' ||
-    user.email === 'superadmin@sigmago.com' ||
-    user.email?.includes('sigmago');
-
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
-
-  if (!isSuperAdminEmail && profile?.role !== 'admin' && profile?.role !== 'owner') {
+  let adminUser: { email?: string } | null = null;
+  try {
+    adminUser = await assertPlatformAdmin();
+  } catch {
     redirect('/login');
   }
 
@@ -78,7 +65,7 @@ export default async function PlatformAdminLayout({
 
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-[12px] font-bold text-white truncate">{user.email}</p>
+              <p className="text-[12px] font-bold text-white truncate">{adminUser?.email || 'admin@sigmago.com'}</p>
               <p className="text-[10px] font-medium text-[#94A3B8]">Platform Super Admin Operator</p>
             </div>
 

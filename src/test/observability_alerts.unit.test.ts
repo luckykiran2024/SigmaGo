@@ -32,7 +32,7 @@ describe('Sprint 7: Production Observability & Alerting Suite', () => {
   // 1. Approval RPC Failure Alert
   it('1. Emits structured error alert on Approval RPC failure', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alert = alertApprovalRpcFailure('req-123', 'tenant-alpha', 'PGRST116: Deadlock detected');
+    const alert: any = alertApprovalRpcFailure('req-123', 'tenant-alpha', 'PGRST116: Deadlock detected');
 
     expect(alert).toBeDefined();
     expect(alert.level).toBe('error');
@@ -45,7 +45,7 @@ describe('Sprint 7: Production Observability & Alerting Suite', () => {
   // 2. Seal Generation Failure Alert
   it('2. Emits fatal alert on cryptographic seal generation failure', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alert = alertSealGenerationFailure('req-456', 'tenant-beta', 'KMS key unavailable');
+    const alert: any = alertSealGenerationFailure('req-456', 'tenant-beta', 'KMS key unavailable');
 
     expect(alert).toBeDefined();
     expect(alert.level).toBe('fatal');
@@ -56,7 +56,7 @@ describe('Sprint 7: Production Observability & Alerting Suite', () => {
   // 3. Seal Verification Mismatch Alert
   it('3. Emits fatal alert when cryptographic seal does not match recalculated hash', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alert = alertSealVerificationMismatch('req-789', 'tenant-gamma', 'hash_abc123', 'hash_xyz789');
+    const alert: any = alertSealVerificationMismatch('req-789', 'tenant-gamma', 'hash_abc123', 'hash_xyz789');
 
     expect(alert).toBeDefined();
     expect(alert.level).toBe('fatal');
@@ -69,7 +69,7 @@ describe('Sprint 7: Production Observability & Alerting Suite', () => {
   // 4. Cross-Tenant Violation Alert
   it('4. Emits error alert on attempted cross-tenant access', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alert = alertCrossTenantViolation('user-attacker', 'tenant-victim', 'tenant-attacker');
+    const alert: any = alertCrossTenantViolation('user-attacker', 'tenant-victim', 'tenant-attacker');
 
     expect(alert).toBeDefined();
     expect(alert.level).toBe('error');
@@ -83,7 +83,7 @@ describe('Sprint 7: Production Observability & Alerting Suite', () => {
   // 5. Aggregate Worker Failure Alert
   it('5. Emits error alert when background aggregate worker fails', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alert = alertAggregateWorkerFailure('OutboxBatchProcessor', 'Network timeout', 'tenant-delta');
+    const alert: any = alertAggregateWorkerFailure('OutboxBatchProcessor', 'Network timeout', 'tenant-delta');
 
     expect(alert).toBeDefined();
     expect(alert.level).toBe('error');

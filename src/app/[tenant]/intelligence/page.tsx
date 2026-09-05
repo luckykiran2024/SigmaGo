@@ -96,7 +96,7 @@ export default async function UserIntelligencePage({
   // Query requests for intelligence analytics
   const { data: allRequests } = await adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, category_id, categories(name, domain, governing_policy_id)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false });
 
@@ -183,17 +183,52 @@ export default async function UserIntelligencePage({
 
   const distribution = calculateStepDistribution(currentCounts, comparatorCounts, historicalPeriodsCounts);
 
-  // Calculate real coverage metrics
+  // Fetch active workflows
+  const { data: workflows } = await adminClient
+    .from('workflows')
+    .select('id, name, category_id, base_step_type, categories(domain)')
+    .eq('tenant_id', tenant.id);
+
+  // Fetch real decision references for this tenant to compute true graph footprint & policy linkage
+  const { data: tenantReferences } = await adminClient
+    .from('decision_references')
+    .select('id, source_id, target_id, to_policy_id, relationship')
+    .eq('tenant_id', tenant.id);
+
+  const refsByTarget: Record<string, number> = {};
+  const refsBySource: Record<string, number> = {};
+  const exceptionRefs: Record<string, number> = {};
+  const policyRefRequestIds = new Set<string>();
+
+  (tenantReferences || []).forEach((ref: any) => {
+    if (ref.target_id) {
+      refsByTarget[ref.target_id] = (refsByTarget[ref.target_id] || 0) + 1;
+    }
+    if (ref.source_id) {
+      refsBySource[ref.source_id] = (refsBySource[ref.source_id] || 0) + 1;
+      if (ref.to_policy_id) {
+        policyRefRequestIds.add(ref.source_id);
+      }
+    }
+    if (ref.relationship === 'EXCEPTION_TO') {
+      if (ref.target_id) exceptionRefs[ref.target_id] = (exceptionRefs[ref.target_id] || 0) + 1;
+      if (ref.source_id) exceptionRefs[ref.source_id] = (exceptionRefs[ref.source_id] || 0) + 1;
+    }
+  });
+
+  // Calculate real coverage metrics (NO artificial inflation)
   const totalCurrentDecisions = currentRequests.length;
   const resolvedCount = currentRequests.filter((r: any) => r.resolved_step_type !== null && r.resolved_step_type !== undefined).length;
   const stepResolutionCoverage = totalCurrentDecisions > 0
     ? resolvedCount / totalCurrentDecisions
     : 0;
+  // Strict: must check actual workflow_version_id pinning
   const workflowVersionCoverage = totalCurrentDecisions > 0
-    ? currentRequests.filter((r: any) => r.workflow_id !== null && r.workflow_id !== undefined).length / totalCurrentDecisions
+    ? currentRequests.filter((r: any) => r.workflow_version_id !== null && r.workflow_version_id !== undefined).length / totalCurrentDecisions
     : 0;
+  // Strict: must check actual governing policy linkage (never plain category_id presence)
   const policyLinkageCoverage = totalCurrentDecisions > 0
-    ? currentRequests.filter((r: any) => r.category_id !== null || r.categories?.governing_policy_id).length / totalCurrentDecisions
+    ? currentRequests.filter((r: any) => !!(r.categories?.governing_policy_id || policyRefRequestIds.has(r.id))).length / totalCurrentDecisions
     : 0;
 
   const coveragePercentage = Math.round(stepResolutionCoverage * 100);
@@ -211,32 +246,53 @@ export default async function UserIntelligencePage({
       : `Partial data coverage (${coveragePercentage}%)`,
   };
 
-  // Fetch active workflows
-  const { data: workflows } = await adminClient
-    .from('workflows')
-    .select('id, name, category_id, base_step_type, categories(domain)')
-    .eq('tenant_id', tenant.id);
+  // Build workflow category index for strict single-bucket allocation (§ Audit Rule)
+  const workflowsByCategory: Record<string, any[]> = {};
+  (workflows || []).forEach((w: any) => {
+    if (w.category_id) {
+      if (!workflowsByCategory[w.category_id]) workflowsByCategory[w.category_id] = [];
+      workflowsByCategory[w.category_id].push(w);
+    }
+  });
 
-  // Fetch real decision references for this tenant to compute true graph footprint
-  const { data: tenantReferences } = await adminClient
-    .from('decision_references')
-    .select('id, source_id, target_id, to_policy_id, relationship')
-    .eq('tenant_id', tenant.id);
+  // Strict Contributor Allocation Rule:
+  // 1. workflow_id exists -> allocate only to that workflow
+  // 2. workflow_id absent + category maps to exactly one workflow -> legacy category fallback
+  // 3. otherwise -> Unallocated legacy decisions
+  // A decision NEVER falls into multiple workflows.
+  const resolveRequestWorkflowId = (r: any): string | null => {
+    if (r.workflow_id) {
+      return r.workflow_id;
+    }
+    if (r.category_id && workflowsByCategory[r.category_id]?.length === 1) {
+      return workflowsByCategory[r.category_id][0].id;
+    }
+    return null;
+  };
 
-  const refsByTarget: Record<string, number> = {};
-  const refsBySource: Record<string, number> = {};
-  const exceptionRefs: Record<string, number> = {};
+  // Build DecisionGraph for multi-hop BFS transitive reach (§ Audit Requirement)
+  const { DecisionGraph } = await import('@/lib/intelligence/chain/graph');
+  const decisionGraph = new DecisionGraph();
+
+  (allRequests || []).forEach((r: any) => {
+    decisionGraph.addNode({
+      id: r.id,
+      ref: r.ref,
+      subject: r.subject,
+      stepType: getCleanStepType(r) || 'TRANSACTIONAL',
+      reasoningLength: 0,
+      isSealed: !!r.checksum_sha256,
+      createdAt: r.created_at,
+    });
+  });
 
   (tenantReferences || []).forEach((ref: any) => {
-    if (ref.target_id) {
-      refsByTarget[ref.target_id] = (refsByTarget[ref.target_id] || 0) + 1;
-    }
-    if (ref.source_id) {
-      refsBySource[ref.source_id] = (refsBySource[ref.source_id] || 0) + 1;
-    }
-    if (ref.relationship === 'EXCEPTION_TO') {
-      if (ref.target_id) exceptionRefs[ref.target_id] = (exceptionRefs[ref.target_id] || 0) + 1;
-      if (ref.source_id) exceptionRefs[ref.source_id] = (exceptionRefs[ref.source_id] || 0) + 1;
+    if (ref.source_id && ref.target_id) {
+      decisionGraph.addEdge({
+        sourceId: ref.source_id,
+        targetId: ref.target_id,
+        relationship: ref.relationship,
+      });
     }
   });
 
@@ -257,13 +313,11 @@ export default async function UserIntelligencePage({
 
     const matchingWorkflows = stWorkflows.map((w: any) => {
       const cCount = currentRequests.filter((r: any) =>
-        (r.workflow_id === w.id || r.category_id === w.category_id) &&
-        getCleanStepType(r) === st
+        resolveRequestWorkflowId(r) === w.id && getCleanStepType(r) === st
       ).length;
 
       const bCount = comparatorRequests.filter((r: any) =>
-        (r.workflow_id === w.id || r.category_id === w.category_id) &&
-        getCleanStepType(r) === st
+        resolveRequestWorkflowId(r) === w.id && getCleanStepType(r) === st
       ).length;
 
       allocatedCurrent += cCount;
@@ -284,7 +338,7 @@ export default async function UserIntelligencePage({
     if (unallocatedCurrent > 0 || unallocatedBaseline > 0 || matchingWorkflows.length === 0) {
       matchingWorkflows.push({
         workflowId: `wf-default-${st}`,
-        workflowName: matchingWorkflows.length === 0 ? `Standard ${st} Decisions` : `Other ${st} Decisions`,
+        workflowName: matchingWorkflows.length === 0 ? `Standard ${st} Decisions` : `Unallocated Legacy ${st} Decisions`,
         domain: 'GENERAL',
         currentCount: unallocatedCurrent,
         baselineCount: unallocatedBaseline,
@@ -294,20 +348,22 @@ export default async function UserIntelligencePage({
     const consequentialDecisions = (allRequests || [])
       .filter((r: any) => getCleanStepType(r) === st)
       .map((r: any) => {
-        const directDescendants = (refsByTarget[r.id] || 0) + (r.blast_at_seal || 0);
+        const transitiveDescendants = decisionGraph.getTransitiveDescendants(r.id);
+        const transitiveCount = transitiveDescendants.size;
+        const directDescendants = refsByTarget[r.id] || 0;
         const basedOnCount = refsBySource[r.id] || 0;
         const exceptionCount = exceptionRefs[r.id] || (st === 'EXCEPTION' ? 1 : 0);
-        const footprintScore = directDescendants + basedOnCount;
-        const classification = directDescendants >= 5
+        const footprintScore = transitiveCount + basedOnCount;
+        const classification = transitiveCount >= 5
           ? 'STABLE_FOUNDATION'
           : exceptionCount > 0
           ? 'UNDER_PRESSURE'
-          : directDescendants > 0
+          : transitiveCount > 0
           ? 'EMERGING'
           : 'MONITOR';
 
-        const whySurfaced = directDescendants > 0
-          ? `${directDescendants} downstream references rely on this decision`
+        const whySurfaced = transitiveCount > 0
+          ? `${transitiveCount} downstream decision${transitiveCount > 1 ? 's rely' : ' relies'} on this node (multi-hop graph reach)`
           : exceptionCount > 0
           ? 'Exception reference tracked in decision graph'
           : 'Recorded decision within tenant policy boundary';
@@ -318,7 +374,7 @@ export default async function UserIntelligencePage({
           subject: r.subject,
           stepType: st,
           directDescendants,
-          transitiveDescendants: directDescendants,
+          transitiveDescendants: transitiveCount,
           basedOnCount,
           exceptionCount,
           footprintScore,

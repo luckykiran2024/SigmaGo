@@ -64,7 +64,7 @@ describe('intelligence.test.ts — Metrics, Policy Chains & Access Control (Test
       created_at: '2026-01-01T00:00:00Z',
     };
 
-    const simulateUserDeletion = (refRecord: typeof decisionReference, deletedUserId: string) => {
+    const simulateUserDeletion = (refRecord: any, deletedUserId: string) => {
       if (refRecord.created_by_user_id === deletedUserId) {
         return {
           ...refRecord,
@@ -74,7 +74,7 @@ describe('intelligence.test.ts — Metrics, Policy Chains & Access Control (Test
       return refRecord;
     };
 
-    const preservedRef = simulateUserDeletion(decisionReference, 'user-deleted-999');
+    const preservedRef: any = simulateUserDeletion(decisionReference, 'user-deleted-999');
 
     expect(preservedRef).toBeDefined();
     expect(preservedRef.id).toBe('ref-101');

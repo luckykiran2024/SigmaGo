@@ -55,8 +55,8 @@ export async function getProfileForAuthUser(authUserId: string, email: string) {
 
       // Update references in other tables strictly within this tenant
       await adminClient.from('approval_requests').update({ owner_id: newId }).eq('owner_id', oldId).eq('tenant_id', csvProfile.tenant_id);
-      await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId).eq('tenant_id', csvProfile.tenant_id);
-      await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId).eq('tenant_id', csvProfile.tenant_id);
+      await adminClient.from('approval_steps').update({ approver_id: newId }).eq('approver_id', oldId);
+      await adminClient.from('approval_steps').update({ acted_by_id: newId }).eq('acted_by_id', oldId);
       await adminClient.from('delegations').update({ delegator_id: newId }).eq('delegator_id', oldId).eq('tenant_id', csvProfile.tenant_id);
       await adminClient.from('delegations').update({ delegate_id: newId }).eq('delegate_id', oldId).eq('tenant_id', csvProfile.tenant_id);
       await adminClient.from('audit_log').update({ actor_id: newId }).eq('actor_id', oldId).eq('tenant_id', csvProfile.tenant_id);

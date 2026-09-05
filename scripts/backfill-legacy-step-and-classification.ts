@@ -16,6 +16,7 @@ export interface BackfillSummary {
   transactionalCount: number;
   exceptionCount: number;
   processCount: number;
+  unknownCount: number;
 }
 
 export async function runBackfill(client?: any): Promise<BackfillSummary> {
@@ -33,6 +34,7 @@ export async function runBackfill(client?: any): Promise<BackfillSummary> {
     transactionalCount: 0,
     exceptionCount: 0,
     processCount: 0,
+    unknownCount: 0,
   };
 
   try {
@@ -76,41 +78,39 @@ export async function runBackfill(client?: any): Promise<BackfillSummary> {
         continue;
       }
 
-      // Determine step type
-      let resolvedType: 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS' = 'TRANSACTIONAL';
+      // Determine step type strictly from authoritative domain sources (NO keyword heuristics)
+      let resolvedType: 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS' | null = null;
+      let classificationSource = 'UNKNOWN';
 
       if (exceptionRequestIds.has(row.id)) {
         resolvedType = 'EXCEPTION';
+        classificationSource = 'EXCEPTION_LINK';
       } else if (row.wf_step_type && ['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS'].includes(row.wf_step_type)) {
         resolvedType = row.wf_step_type;
+        classificationSource = 'WORKFLOW_RULE';
       } else if (row.cat_step_type && ['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS'].includes(row.cat_step_type)) {
         resolvedType = row.cat_step_type;
+        classificationSource = 'CATEGORY_DEFAULT';
       } else {
-        const sub = (row.subject || '').toLowerCase();
-        if (sub.includes('policy') || sub.includes('board') || sub.includes('strategic') || sub.includes('charter') || sub.includes('governance')) {
-          resolvedType = 'STRUCTURAL';
-        } else if (sub.includes('exception') || sub.includes('waiver') || sub.includes('deviation') || sub.includes('override')) {
-          resolvedType = 'EXCEPTION';
-        } else if (sub.includes('vendor') || sub.includes('onboarding') || sub.includes('access') || sub.includes('routine')) {
-          resolvedType = 'PROCESS';
-        } else {
-          resolvedType = 'TRANSACTIONAL';
-        }
+        // Strict Integrity: Do NOT guess or hallucinate STEP types using keyword heuristics.
+        // Decisions without authoritative workflow/category context remain UNKNOWN.
+        resolvedType = null;
+        classificationSource = 'UNKNOWN';
       }
 
       const baselineType = row.baseline_step_type || resolvedType;
 
-      // Idempotently update only the unclassified record
+      // Idempotently update the record
       await pgClient.query(
         `
         UPDATE approval_requests
         SET 
           resolved_step_type = COALESCE(resolved_step_type, $1),
           baseline_step_type = COALESCE(baseline_step_type, $2),
-          classification_source = COALESCE(classification_source, 'BACKFILL_HEURISTIC')
-        WHERE id = $3;
+          classification_source = COALESCE(classification_source, $3)
+        WHERE id = $4;
       `,
-        [resolvedType, baselineType, row.id]
+        [resolvedType, baselineType, classificationSource, row.id]
       );
 
       summary.backfilledRequests++;
@@ -118,6 +118,7 @@ export async function runBackfill(client?: any): Promise<BackfillSummary> {
       else if (resolvedType === 'TRANSACTIONAL') summary.transactionalCount++;
       else if (resolvedType === 'EXCEPTION') summary.exceptionCount++;
       else if (resolvedType === 'PROCESS') summary.processCount++;
+      else summary.unknownCount++;
     }
 
     return summary;

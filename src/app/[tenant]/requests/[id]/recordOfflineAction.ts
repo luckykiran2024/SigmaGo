@@ -42,6 +42,7 @@ export async function recordOfflineAction(formData: FormData) {
   if (step.status !== 'pending') throw new Error('Only pending steps can be recorded offline');
 
   const reqOwnerId = (step.approval_requests as any)?.owner_id;
+  const requestTenantId = (step.approval_requests as any)?.tenant_id;
   const isOwner = reqOwnerId === profile.id;
   const role = (profile.role || '').toLowerCase();
   const isAdmin = role === 'admin' || role === 'super_admin';
@@ -54,7 +55,7 @@ export async function recordOfflineAction(formData: FormData) {
   let evidenceFileId: string | null = null;
   if (evidenceFile && evidenceFile.name && evidenceFile.size > 0) {
     const fileExt = evidenceFile.name.split('.').pop();
-    const storagePath = `${step.tenant_id}/${requestId}/evidence_${Date.now()}.${fileExt}`;
+    const storagePath = `${requestTenantId}/${requestId}/evidence_${Date.now()}.${fileExt}`;
     
     const arrayBuffer = await evidenceFile.arrayBuffer();
     const { error: uploadErr } = await adminClient.storage
@@ -106,8 +107,7 @@ export async function recordOfflineAction(formData: FormData) {
       ratification_due_at: ratificationDue,
       ratification_status: 'pending'
     })
-    .eq('id', stepId)
-    .eq('tenant_id', step.tenant_id);
+    .eq('id', stepId);
 
   if (stepUpdateErr) {
     throw new Error(`Failed to update step status: ${stepUpdateErr.message}`);
@@ -115,7 +115,7 @@ export async function recordOfflineAction(formData: FormData) {
 
   // 4. Log audit entry
   await adminClient.from('audit_log').insert({
-    tenant_id: step.tenant_id,
+    tenant_id: requestTenantId,
     request_id: requestId,
     actor_id: profile.id,
     action_type: 'recorded_offline_approval',
@@ -130,7 +130,7 @@ export async function recordOfflineAction(formData: FormData) {
   });
 
   // 5. Advance workflow chain
-  await advanceChain(requestId, step.tenant_id);
+  await advanceChain(requestId, requestTenantId);
 
   revalidatePath(`/${tenant}/requests/${requestId}`);
   return { success: true };

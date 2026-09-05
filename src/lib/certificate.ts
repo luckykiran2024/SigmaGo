@@ -102,6 +102,7 @@ export interface CanonicalDecisionRecordV2 {
   workflowVersionId: string | null;
   baselineStepType: string | null;
   resolvedStepType: string | null;
+  previousSealHash?: string | null;
   authoritySteps: CanonicalAuthorityStepV2[];
   decisionReferences: Array<{
     id: string;
@@ -302,6 +303,9 @@ export function buildCanonicalDecisionRecord(params: {
     workflowVersionId: req.workflow_version_id || req.workflowVersionId || null,
     baselineStepType: req.baseline_step_type || req.baselineStepType || null,
     resolvedStepType: req.resolved_step_type || req.resolvedStepType || null,
+    ...(req.previous_seal_hash !== undefined || req.previousSealHash !== undefined
+      ? { previousSealHash: req.previous_seal_hash || req.previousSealHash || null }
+      : {}),
     authoritySteps: sortedSteps.map((s) => ({
       id: s.id,
       stageIndex: s.stage_index ?? s.stageIndex ?? 0,
@@ -350,7 +354,7 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
   // 1. Fetch approval request record
   const { data: request, error: fetchErr } = await adminClient
     .from('approval_requests')
-    .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version, parent_reference_id, workflow_id, workflow_version_id, baseline_step_type, resolved_step_type, checksum_sha256, finalized_at, canonical_version, seal_algorithm')
+    .select('id, tenant_id, subject, body_json, conditions, custom_fields, beneficiary_id, owner_id, version, parent_reference_id, workflow_id, workflow_version_id, baseline_step_type, resolved_step_type, checksum_sha256, finalized_at, canonical_version, seal_algorithm, previous_seal_hash, seal_signature_b64, seal_key_id')
     .eq('id', requestId)
     .eq('tenant_id', tenantId)
     .maybeSingle();
@@ -359,27 +363,38 @@ export async function loadCanonicalDecisionInputs(requestId: string, tenantId: s
     throw new Error(`Request ${requestId} not found for tenant ${tenantId}`);
   }
 
-  // 2. Fetch steps including approver comments and reasons
-  const { data: steps } = await adminClient
+  // 2. Fetch steps including approver comments and reasons (fail-closed)
+  const { data: steps, error: stepsErr } = await adminClient
     .from('approval_steps')
     .select('id, stage_index, order_index, approver_id, status, acted_at, stance, outcome, was_binding, reservation_note, comment')
     .eq('request_id', requestId)
-    .eq('tenant_id', tenantId)
     .order('order_index', { ascending: true });
 
-  // 3. Fetch decision references strictly within tenant
-  const { data: references } = await adminClient
+  if (stepsErr) {
+    throw new Error(`Failed to load authoritative approval steps for request ${requestId}: ${stepsErr.message}`);
+  }
+
+  // 3. Fetch decision references strictly within tenant (fail-closed)
+  const { data: references, error: refErr } = await adminClient
     .from('decision_references')
     .select('id, target_id, to_policy_id, relationship')
     .eq('source_id', requestId)
     .eq('tenant_id', tenantId);
 
-  // 4. Fetch participants strictly within tenant
-  const { data: participants } = await adminClient
+  if (refErr) {
+    throw new Error(`Failed to load decision references for request ${requestId}: ${refErr.message}`);
+  }
+
+  // 4. Fetch participants strictly within tenant (fail-closed)
+  const { data: participants, error: partErr } = await adminClient
     .from('request_participants')
     .select('id, email, role, is_external, state, responded_at, comment')
     .eq('request_id', requestId)
     .eq('tenant_id', tenantId);
+
+  if (partErr) {
+    throw new Error(`Failed to load request participants for request ${requestId}: ${partErr.message}`);
+  }
 
   return {
     request,
@@ -398,40 +413,50 @@ export async function generateChecksumAndFinalize(
   tenantId: string
 ): Promise<FinalizeResult | null> {
   try {
+    // 1. Resolve previous seal hash in the tenant chain (Append-Only Cryptographic Ledger)
+    const { data: previousApproved } = await adminClient
+      .from('approval_requests')
+      .select('checksum_sha256')
+      .eq('tenant_id', tenantId)
+      .eq('status', 'approved')
+      .not('checksum_sha256', 'is', null)
+      .neq('id', requestId)
+      .order('finalized_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const previousSealHash =
+      previousApproved?.checksum_sha256 ||
+      'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
+
     const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
+    inputs.request.previous_seal_hash = previousSealHash;
+
     const canonicalRecord = buildCanonicalDecisionRecord({ ...inputs, version: 2 });
     const checksum = computeCanonicalSha256(canonicalRecord);
     const finalizedAt = new Date().toISOString();
 
-    // Invoke atomic sigmago_finalize_seal if available
+    // 2. Generate asymmetric Ed25519 PKI digital signature
+    const { signDecisionSeal } = await import('@/lib/crypto/pki');
+    const { signatureB64, keyId } = signDecisionSeal(checksum);
+
+    // 3. Invoke authoritative atomic sigmago_finalize_seal RPC
     const { error: rpcErr } = await adminClient.rpc('sigmago_finalize_seal', {
       p_request_id: requestId,
       p_tenant_id: tenantId,
       p_checksum: checksum,
       p_canonical_version: 2,
-      p_seal_algorithm: 'SHA-256',
+      p_seal_algorithm: 'SHA-256+Ed25519',
+      p_previous_seal_hash: previousSealHash,
+      p_seal_signature: signatureB64,
+      p_key_id: keyId,
     });
 
     if (rpcErr) {
-      console.warn(`generateChecksumAndFinalize: RPC fallback to direct update: ${rpcErr.message}`);
-      const { error: updateErr } = await adminClient
-        .from('approval_requests')
-        .update({
-          status: 'approved',
-          checksum_sha256: checksum,
-          canonical_version: 2,
-          seal_algorithm: 'SHA-256',
-          sealed_at: finalizedAt,
-          finalized_at: finalizedAt,
-        })
-        .eq('id', requestId)
-        .eq('tenant_id', tenantId);
-
-      if (updateErr) {
-        console.error(`generateChecksumAndFinalize: Failed to update request ${requestId}`, updateErr);
-        alertSealFailure(`Failed to update seal checksum for request ${requestId}: ${updateErr.message}`, { tenantId, requestId });
-        return null;
-      }
+      const errMsg = `Authoritative sigmago_finalize_seal RPC failed for request ${requestId}: ${rpcErr.message}. Refusing fallback; request remains in 'FINALIZING'.`;
+      console.error(errMsg);
+      alertSealFailure(errMsg, { tenantId, requestId });
+      throw new Error(errMsg);
     }
 
     return {
@@ -443,13 +468,14 @@ export async function generateChecksumAndFinalize(
   } catch (err) {
     console.error('generateChecksumAndFinalize error:', err);
     alertSealFailure(`Exception during seal generation for request ${requestId}: ${err instanceof Error ? err.message : String(err)}`, { tenantId, requestId });
-    return null;
+    throw err;
   }
 }
 
 /**
  * External cryptographic verification function.
- * Dispatches verification by stored canonical_version (1 vs 2).
+ * Dispatches verification by stored canonical_version (1 vs 2),
+ * verifies SHA-256 seal integrity, and validates asymmetric PKI digital signature.
  */
 export async function verifyDecisionCertificate(requestId: string, tenantId: string) {
   const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
@@ -460,13 +486,86 @@ export async function verifyDecisionCertificate(requestId: string, tenantId: str
   const calculatedChecksum = computeCanonicalSha256(canonicalRecord);
   const storedChecksum = inputs.request.checksum_sha256;
 
+  // Asymmetric PKI signature verification
+  let isSignatureValid: boolean | null = null;
+  if (inputs.request.seal_signature_b64 && storedChecksum) {
+    const { verifyDecisionSignature } = await import('@/lib/crypto/pki');
+    isSignatureValid = verifyDecisionSignature(
+      storedChecksum,
+      inputs.request.seal_signature_b64,
+      inputs.request.seal_key_id || undefined
+    );
+  }
+
   return {
     isValid: Boolean(storedChecksum && storedChecksum.toLowerCase() === calculatedChecksum.toLowerCase()),
+    isSignatureValid,
     canonicalVersion: version,
     storedChecksum,
     calculatedChecksum,
     finalizedAt: inputs.request.finalized_at,
+    previousSealHash: inputs.request.previous_seal_hash || null,
+    sealSignatureB64: inputs.request.seal_signature_b64 || null,
+    sealKeyId: inputs.request.seal_key_id || null,
     canonicalRecord,
+  };
+}
+
+/**
+ * Cryptographically verifies the unbroken tenant append-only hash chain.
+ * Proves that no historical approved decision has been retroactively deleted, inserted, or modified.
+ */
+export async function verifyTenantLedgerChain(tenantId: string): Promise<{
+  isChainValid: boolean;
+  totalDecisions: number;
+  brokenAtDecisionId?: string;
+  reason?: string;
+}> {
+  const { data: requests, error } = await adminClient
+    .from('approval_requests')
+    .select('id, ref, status, checksum_sha256, previous_seal_hash, finalized_at')
+    .eq('tenant_id', tenantId)
+    .eq('status', 'approved')
+    .not('checksum_sha256', 'is', null)
+    .order('finalized_at', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load tenant decision ledger: ${error.message}`);
+  }
+
+  if (!requests || requests.length === 0) {
+    return { isChainValid: true, totalDecisions: 0 };
+  }
+
+  const GENESIS = 'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
+
+  for (let i = 0; i < requests.length; i++) {
+    const current = requests[i];
+    if (i === 0) {
+      if (current.previous_seal_hash && current.previous_seal_hash !== GENESIS) {
+        return {
+          isChainValid: false,
+          totalDecisions: requests.length,
+          brokenAtDecisionId: current.id,
+          reason: `Genesis decision ${current.ref} has invalid previous_seal_hash: ${current.previous_seal_hash}`,
+        };
+      }
+    } else {
+      const prev = requests[i - 1];
+      if (current.previous_seal_hash && current.previous_seal_hash !== prev.checksum_sha256) {
+        return {
+          isChainValid: false,
+          totalDecisions: requests.length,
+          brokenAtDecisionId: current.id,
+          reason: `Ledger link broken at decision ${current.ref}: expected previous hash ${prev.checksum_sha256}, found ${current.previous_seal_hash}`,
+        };
+      }
+    }
+  }
+
+  return {
+    isChainValid: true,
+    totalDecisions: requests.length,
   };
 }
 
@@ -477,12 +576,15 @@ export async function getCertificateBlocks(
   requestId: string,
   tenantId: string
 ): Promise<CertificateBlocks> {
-  const { data: steps } = await adminClient
+  const { data: steps, error: stepsErr } = await adminClient
     .from('approval_steps')
     .select('order_index, status, acted_at, users_approval_steps_approver_idTousers(name, email)')
     .eq('request_id', requestId)
-    .eq('tenant_id', tenantId)
     .order('order_index', { ascending: true });
+
+  if (stepsErr) {
+    throw new Error(`Failed to load authority steps for request ${requestId}: ${stepsErr.message}`);
+  }
 
   const { data: participants } = await adminClient
     .from('request_participants')

@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/supabase/admin';
+import { verifyCronAuthorization } from '@/lib/security/cronAuth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authResult = verifyCronAuthorization(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.reason || 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Fetch pending steps using simple flat query
+    // 1. Fetch pending steps along with approver, request, and tenant in a single batched join query (O(1))
     const { data: pendingSteps, error: stepsErr } = await adminClient
       .from('approval_steps')
-      .select('id, approver_id, updated_at, request_id')
+      .select(`
+        id, approver_id, updated_at, request_id,
+        approver:users!approver_id ( id, email, name, user_settings ),
+        request:approval_requests!request_id (
+          id, subject, tenant_id,
+          tenants!tenant_id ( id, subdomain, tenant_settings )
+        )
+      `)
       .eq('status', 'pending');
 
     if (stepsErr) throw stepsErr;
@@ -24,36 +32,15 @@ export async function GET(request: Request) {
     let sentCount = 0;
     const now = Date.now();
 
-    // 2. Process each step by querying related records flatly
+    // 2. Process each step in-memory without extra round-trip queries
     for (const step of pendingSteps) {
-      if (!step.approver_id || !step.request_id) continue;
+      const approver = step.approver as any;
+      const req = step.request as any;
+      const tenant = req?.tenants as any;
 
-      // Fetch approver details
-      const { data: approver } = await adminClient
-        .from('users')
-        .select('email, name, user_settings')
-        .eq('id', step.approver_id)
-        .maybeSingle();
-
-      if (!approver || !approver.email) continue;
-
-      // Fetch request details
-      const { data: req } = await adminClient
-        .from('approval_requests')
-        .select('subject, tenant_id')
-        .eq('id', step.request_id)
-        .maybeSingle();
-
-      if (!req || !req.tenant_id) continue;
-
-      // Fetch tenant details
-      const { data: tenant } = await adminClient
-        .from('tenants')
-        .select('subdomain, tenant_settings')
-        .eq('id', req.tenant_id)
-        .maybeSingle();
-
-      if (!tenant || !tenant.subdomain) continue;
+      if (!approver || !approver.email || !req || !tenant || !tenant.subdomain) {
+        continue;
+      }
 
       const tenantSettings = tenant.tenant_settings || {};
       const userSettings = approver.user_settings || {};

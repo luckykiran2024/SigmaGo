@@ -48,6 +48,7 @@ async function applySigmagoActOnStepMigration() {
       SECURITY DEFINER
       AS $$
       DECLARE
+        v_step_lookup RECORD;
         v_step RECORD;
         v_req RECORD;
         v_actor RECORD;
@@ -56,7 +57,15 @@ async function applySigmagoActOnStepMigration() {
         v_all_stage_steps_approved BOOLEAN;
         v_next_stage_index INT;
         v_now TIMESTAMPTZ := clock_timestamp();
+        v_normalized_action TEXT := lower(trim(p_action));
+        v_stance "ApprovalStance" := NULLIF(p_stance, '')::"ApprovalStance";
+        v_outcome "ActionOutcome" := NULLIF(p_outcome, '')::"ActionOutcome";
       BEGIN
+        -- Strict Action Validation (Reject unknown actions, no silent fallback to approve)
+        IF v_normalized_action NOT IN ('approve', 'approved', 'reject', 'rejected', 'discuss', 'request_changes', 'delegate') THEN
+          RAISE EXCEPTION 'Invalid approval action: %', p_action USING ERRCODE = '22023';
+        END IF;
+
         -- 1. Idempotency Check: If step was already processed with this key, return existing result without duplicate side-effects
         IF p_idempotency_key IS NOT NULL THEN
           SELECT id, status, acted_at INTO v_step
@@ -73,17 +82,42 @@ async function applySigmagoActOnStepMigration() {
           END IF;
         END IF;
 
-        -- 2. Lock the target step and verify existence
-        SELECT * INTO v_step
+        -- 2. Lookup target step to find request_id
+        SELECT request_id, status INTO v_step_lookup
         FROM approval_steps
-        WHERE id = p_step_id
-        FOR UPDATE;
+        WHERE id = p_step_id;
 
         IF NOT FOUND THEN
           RAISE EXCEPTION 'Approval step not found' USING ERRCODE = 'P0002';
         END IF;
 
         -- If step is already no longer pending, treat as already processed
+        IF v_step_lookup.status != 'pending' THEN
+          RETURN jsonb_build_object(
+            'success', true,
+            'already_processed', true,
+            'step_id', p_step_id,
+            'status', v_step_lookup.status
+          );
+        END IF;
+
+        -- 3. Lock the approval request row FIRST to serialize all stage transitions, parallel step executions, and finalization without deadlocks
+        SELECT * INTO v_req
+        FROM approval_requests
+        WHERE id = v_step_lookup.request_id AND tenant_id = p_tenant_id
+        FOR UPDATE;
+
+        IF NOT FOUND THEN
+          RAISE EXCEPTION 'Approval request not found or tenant mismatch' USING ERRCODE = 'P0002';
+        END IF;
+
+        -- 4. Lock the target step under request-level serialization
+        SELECT * INTO v_step
+        FROM approval_steps
+        WHERE id = p_step_id
+        FOR UPDATE;
+
+        -- If step is already no longer pending after obtaining request lock, return already processed
         IF v_step.status != 'pending' THEN
           RETURN jsonb_build_object(
             'success', true,
@@ -91,16 +125,6 @@ async function applySigmagoActOnStepMigration() {
             'step_id', v_step.id,
             'status', v_step.status
           );
-        END IF;
-
-        -- 3. Lock the approval request row to serialize stage transitions and finalization
-        SELECT * INTO v_req
-        FROM approval_requests
-        WHERE id = v_step.request_id AND tenant_id = p_tenant_id
-        FOR UPDATE;
-
-        IF NOT FOUND THEN
-          RAISE EXCEPTION 'Approval request not found or tenant mismatch' USING ERRCODE = 'P0002';
         END IF;
 
         -- 4. Authorization & Delegation Check
@@ -127,10 +151,10 @@ async function applySigmagoActOnStepMigration() {
         SELECT name, employee_id INTO v_approver FROM users WHERE id = v_step.approver_id;
 
         -- 5. Execute Action
-        IF p_action = 'discuss' THEN
+        IF v_normalized_action = 'discuss' OR v_normalized_action = 'request_changes' THEN
           UPDATE approval_steps
-          SET stance = p_stance,
-              outcome = p_outcome,
+          SET stance = v_stance,
+              outcome = v_outcome,
               was_binding = p_was_binding,
               reservation_note = p_reservation_note,
               reasoning_length = length(COALESCE(p_comment, '')),
@@ -175,8 +199,8 @@ async function applySigmagoActOnStepMigration() {
             p_step_id,
             'STEP_CHANGES_REQUESTED',
             p_actor_id,
-            p_stance,
-            p_outcome,
+            v_stance,
+            v_outcome,
             p_was_binding,
             jsonb_build_object('comment', p_comment, 'condition', p_condition_text),
             v_now
@@ -190,11 +214,11 @@ async function applySigmagoActOnStepMigration() {
             'request_id', v_step.request_id
           );
 
-        ELSIF p_action = 'rejected' THEN
+        ELSIF v_normalized_action = 'reject' OR v_normalized_action = 'rejected' THEN
           UPDATE approval_steps
           SET status = 'rejected',
-              stance = p_stance,
-              outcome = p_outcome,
+              stance = v_stance,
+              outcome = v_outcome,
               was_binding = p_was_binding,
               reservation_note = p_reservation_note,
               reasoning_length = length(COALESCE(p_comment, '')),
@@ -247,8 +271,8 @@ async function applySigmagoActOnStepMigration() {
             p_step_id,
             'STEP_REJECTED',
             p_actor_id,
-            p_stance,
-            p_outcome,
+            v_stance,
+            v_outcome,
             p_was_binding,
             jsonb_build_object('comment', p_comment),
             v_now
@@ -272,11 +296,11 @@ async function applySigmagoActOnStepMigration() {
             'request_id', v_step.request_id
           );
 
-        ELSE -- p_action = 'approved'
+        ELSIF v_normalized_action = 'approve' OR v_normalized_action = 'approved' THEN
           UPDATE approval_steps
           SET status = 'approved',
-              stance = p_stance,
-              outcome = p_outcome,
+              stance = v_stance,
+              outcome = v_outcome,
               was_binding = p_was_binding,
               reservation_note = p_reservation_note,
               reasoning_length = length(COALESCE(p_comment, '')),
@@ -317,8 +341,8 @@ async function applySigmagoActOnStepMigration() {
             p_step_id,
             'STEP_APPROVED',
             p_actor_id,
-            p_stance,
-            p_outcome,
+            v_stance,
+            v_outcome,
             p_was_binding,
             jsonb_build_object('comment', p_comment, 'condition', p_condition_text),
             v_now
@@ -420,6 +444,8 @@ async function applySigmagoActOnStepMigration() {
             'finalized', false,
             'request_id', v_step.request_id
           );
+        ELSE
+          RAISE EXCEPTION 'Unhandled approval action: %', p_action USING ERRCODE = '22023';
         END IF;
       END;
       $$;

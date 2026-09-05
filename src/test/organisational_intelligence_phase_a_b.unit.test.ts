@@ -8,13 +8,13 @@ describe('Organisational Intelligence Phase A & B Acceptance Tests', () => {
   const originalKey = process.env.SECRET_ENCRYPTION_KEY;
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    (process.env as any).NODE_ENV = originalEnv;
     process.env.SECRET_ENCRYPTION_KEY = originalKey;
   });
 
   // Test 1: Security Pre-flight — Production fail closed
   it('should throw a fatal error in production when SECRET_ENCRYPTION_KEY is missing', () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as any).NODE_ENV = 'production';
     delete process.env.SECRET_ENCRYPTION_KEY;
 
     expect(() => encryptSecret('my_test_secret')).toThrow(/FATAL: SECRET_ENCRYPTION_KEY environment variable is missing/);

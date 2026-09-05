@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { getDigestPayload } from '@/lib/db/digest'
+import { verifyCronAuthorization } from '@/lib/security/cronAuth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new NextResponse('Unauthorized', { status: 401 })
+    const authResult = verifyCronAuthorization(request)
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.reason || 'Unauthorized' }, { status: 401 })
     }
 
     const payload = await getDigestPayload()

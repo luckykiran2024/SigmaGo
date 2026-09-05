@@ -18,7 +18,7 @@ describe('Sentry Scrubber & Seal Failure Alerts Unit Tests (src/lib/observabilit
       },
     };
 
-    const scrubbed = beforeSend(rawEvent);
+    const scrubbed: any = beforeSend(rawEvent);
 
     expect(scrubbed.extra.safe_field).toBe('public_id_789');
     expect(scrubbed.extra.subject).toBe('[REDACTED]');

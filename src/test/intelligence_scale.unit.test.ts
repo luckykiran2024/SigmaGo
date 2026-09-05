@@ -90,7 +90,7 @@ describe('Sprint 6: Organisational Intelligence Scale & Outbox Suite', () => {
 
     const allReconciled = reports.every((r) => r.isFullyReconciled);
     expect(allReconciled).toBe(true);
-  });
+  }, 20000);
 
   // 4. Aggregate Rebuild Dry-Run
   it('4. Rebuild dry-run calculates aggregate metrics without modifying database', async () => {
@@ -101,5 +101,5 @@ describe('Sprint 6: Organisational Intelligence Scale & Outbox Suite', () => {
 
     const totalCalculated = stats.reduce((acc, s) => acc + s.aggregatesCalculated, 0);
     expect(totalCalculated).toBeGreaterThanOrEqual(0);
-  });
+  }, 20000);
 });

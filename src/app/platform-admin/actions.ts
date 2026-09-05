@@ -2,6 +2,8 @@
 
 import { adminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
+import { assertPlatformAdmin } from '@/lib/platform/auth';
+import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
 export interface TenantHealthMetric {
@@ -25,9 +27,7 @@ export async function fetchTenantHealthMetricsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Unauthorized' };
+    await assertPlatformAdmin();
 
     // Fetch all tenants
     const { data: tenants, error: tenantErr } = await adminClient
@@ -107,11 +107,9 @@ export async function onboardTenantAction(payload: {
   adminEmail: string;
   plan?: string;
   region?: string;
-}): Promise<{ success: boolean; tenantId?: string; error?: string }> {
+}): Promise<{ success: boolean; tenantId?: string; inviteLink?: string | null; error?: string }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Unauthorized' };
+    await assertPlatformAdmin();
 
     const normalizedSubdomain = payload.subdomain.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
 
@@ -134,21 +132,42 @@ export async function onboardTenantAction(payload: {
       return { success: false, error: tenantErr?.message || 'Failed to onboard tenant' };
     }
 
-    // 2. Create or ensure initial admin account in auth
+    // 2. Create or ensure initial admin account in auth using one-time cryptographically random password
     const adminEmail = payload.adminEmail.toLowerCase().trim();
     const { data: authList } = await adminClient.auth.admin.listUsers();
     let authUser = authList?.users?.find((u) => u.email === adminEmail);
+    let inviteLink: string | null = null;
 
     if (!authUser) {
+      // Secure one-time initialization credential: 32 cryptographically random bytes
+      const oneTimeSecret = randomBytes(32).toString('base64url');
       const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
         email: adminEmail,
-        password: 'Password@123',
+        password: oneTimeSecret,
         email_confirm: true,
+        user_metadata: {
+          require_password_reset: true,
+          onboarded_at: new Date().toISOString(),
+        },
       });
       if (createErr) {
         return { success: false, error: `Tenant created, but failed to create auth user: ${createErr.message}` };
       }
       authUser = created.user;
+
+      // Attempt to generate a password-reset / invite recovery link for the tenant admin
+      try {
+        const { data: linkData } = await adminClient.auth.admin.generateLink({
+          type: 'invite',
+          email: adminEmail,
+          options: {
+            redirectTo: `https://${normalizedSubdomain}.sigmago.app/auth/reset`,
+          },
+        });
+        inviteLink = linkData?.properties?.action_link || null;
+      } catch (linkErr) {
+        // Fallback silently if link generation is unavailable in offline environment
+      }
     }
 
     // 3. Create user record in users table
@@ -156,6 +175,7 @@ export async function onboardTenantAction(payload: {
       await adminClient.from('users').upsert(
         {
           id: authUser.id,
+          auth_user_id: authUser.id,
           tenant_id: tenant.id,
           email: adminEmail,
           name: payload.adminName.trim() || 'Tenant Admin',
@@ -167,7 +187,7 @@ export async function onboardTenantAction(payload: {
     }
 
     revalidatePath('/platform-admin', 'page');
-    return { success: true, tenantId: tenant.id };
+    return { success: true, tenantId: tenant.id, inviteLink };
   } catch (err: any) {
     console.error('onboardTenantAction error:', err);
     return { success: false, error: err.message };
@@ -215,6 +235,8 @@ export async function updateTicketStatusAction(payload: {
   resolutionNotes?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
+    await assertPlatformAdmin();
+
     const { error } = await adminClient
       .from('support_tickets')
       .update({

@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/supabase/admin';
+import { verifyCronAuthorization } from '@/lib/security/cronAuth';
 
 export async function GET(request: Request) {
   try {
-    // H3 Fix: Authenticate Cron Secret (Vercel Cron header or CRON_SECRET authorization header)
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}` && !isVercelCron) {
-      return NextResponse.json({ error: 'Unauthorized: Invalid cron authorization token' }, { status: 401 });
+    const authResult = verifyCronAuthorization(request);
+    if (!authResult.authorized) {
+      return NextResponse.json({ error: authResult.reason || 'Unauthorized' }, { status: 401 });
     }
 
     const now = new Date();

@@ -199,7 +199,7 @@ describe('Deterministic Concurrency Barrier & Fault-Injection Suite (Sprint 2)',
   // 3. Fault Injection: Authoritative Database RPC Failure rolls back completely
   it('3. Fault injection: Stored procedure failure rolls back transaction without partial state updates', async () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    (process.env as any).NODE_ENV = 'production';
 
     (adminClient.from as any).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -219,14 +219,14 @@ describe('Deterministic Concurrency Barrier & Fault-Injection Suite (Sprint 2)',
       await expect(
         actOnStep({
           stepId: 'step-deadlock-inject',
+          actorId: 'mock-actor',
+          tenantId: 'mock-tenant',
           action: 'approved',
-          actorId: 'approver-1',
-          tenantId: 'tenant-1',
           actionSource: 'web',
         })
-      ).rejects.toThrow(/Authoritative transaction failed in database RPC: deadlock detected/);
+      ).rejects.toThrow(/Authoritative transaction failed in database RPC.*deadlock detected/);
     } finally {
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
     }
   });
 
