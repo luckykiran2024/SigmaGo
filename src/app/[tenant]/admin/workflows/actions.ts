@@ -38,9 +38,13 @@ export async function saveWorkflowAction(
     categoryId: string | null;
     isLocked: boolean;
     steps: WorkflowStep[];
+    baseStepType?: 'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS';
+    governingPolicyId?: string | null;
+    defaultSlaHours?: number | null;
+    classificationRulesJson?: Record<string, any>;
   }
 ) {
-  const { tenantId } = await checkAdmin(tenantSubdomain);
+  const { tenantId, userId } = await checkAdmin(tenantSubdomain);
 
   // Validate that categoryId belongs to this tenant if provided
   if (payload.categoryId) {
@@ -56,13 +60,32 @@ export async function saveWorkflowAction(
     }
   }
 
+  // Validate governingPolicyId belongs to this tenant if provided
+  if (payload.governingPolicyId) {
+    const { data: policy } = await adminClient
+      .from('policies')
+      .select('id')
+      .eq('id', payload.governingPolicyId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (!policy) {
+      throw new Error('Governing policy not found or does not belong to this tenant');
+    }
+  }
+
   let result;
   if (payload.id) {
     result = await updateWorkflow(payload.id, tenantId, {
       categoryId: payload.categoryId,
       name: payload.name,
       isLocked: payload.isLocked,
-      steps: payload.steps
+      steps: payload.steps,
+      baseStepType: payload.baseStepType,
+      governingPolicyId: payload.governingPolicyId,
+      defaultSlaHours: payload.defaultSlaHours,
+      classificationRulesJson: payload.classificationRulesJson,
+      updatedBy: userId,
     });
   } else {
     result = await createWorkflow({
@@ -70,7 +93,12 @@ export async function saveWorkflowAction(
       categoryId: payload.categoryId,
       name: payload.name,
       isLocked: payload.isLocked,
-      steps: payload.steps
+      steps: payload.steps,
+      baseStepType: payload.baseStepType,
+      governingPolicyId: payload.governingPolicyId,
+      defaultSlaHours: payload.defaultSlaHours,
+      classificationRulesJson: payload.classificationRulesJson,
+      createdBy: userId,
     });
   }
 

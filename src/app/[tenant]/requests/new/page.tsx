@@ -48,10 +48,10 @@ export default async function NewRequestPage({ params, searchParams }: { params:
       categories = cats;
     }
 
-    // Fetch active policies for Case C reference pre-ranking
+    // Fetch active policies for Case C reference pre-ranking and workflow policy bounds
     const { data: pols } = await adminClient
       .from('policies')
-      .select('id, title, statement, status')
+      .select('id, title, statement, bound_type, bound_value, bound_field, status')
       .eq('tenant_id', tenantData.id)
       .eq('status', 'ACTIVE');
     
@@ -60,6 +60,9 @@ export default async function NewRequestPage({ params, searchParams }: { params:
         id: p.id,
         title: p.title,
         statement: p.statement,
+        bound_type: p.bound_type,
+        bound_value: p.bound_value,
+        bound_field: p.bound_field,
         step_type: 'PROCESS',
         status: p.status
       }));

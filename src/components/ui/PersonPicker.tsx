@@ -12,6 +12,7 @@ interface PersonPickerProps {
   onSelect?: (userId: string | null) => void;
   placeholder?: string;
   name?: string;
+  disabled?: boolean;
 }
 
 export default function PersonPicker({
@@ -21,7 +22,8 @@ export default function PersonPicker({
   value = null,
   onSelect,
   placeholder = "Search employee by name, email, or ID...",
-  name
+  name,
+  disabled = false
 }: PersonPickerProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PickableUser[]>([]);
@@ -117,16 +119,19 @@ export default function PersonPicker({
         <input
           type="text"
           value={query}
+          disabled={disabled}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
-          className="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium bg-white"
+          onFocus={() => {
+            if (!disabled) setIsOpen(true);
+          }}
+          className="appearance-none block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium bg-white disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
           placeholder={placeholder}
         />
 
-        {query && (
+        {query && !disabled && (
           <button
             type="button"
             onClick={handleClear}

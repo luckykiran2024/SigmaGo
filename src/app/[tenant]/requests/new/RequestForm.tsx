@@ -5,7 +5,7 @@ import RichTextEditor from '@/components/ui/RichTextEditor';
 import { submitNewRequest } from './actions';
 import PersonPicker from '@/components/ui/PersonPicker';
 import Link from 'next/link';
-import { Plus, Trash2, Users, ArrowUp, ArrowDown, Search } from 'lucide-react';
+import { Plus, Trash2, Users, ArrowUp, ArrowDown, Search, GitBranch, Lock } from 'lucide-react';
 import GroupedCategoryPicker, { CategoryOption } from '@/components/ui/GroupedCategoryPicker';
 import MisclassificationBanner from '@/components/ui/MisclassificationBanner';
 import CaseCReferencePicker, { ReferenceItem } from '@/components/ui/CaseCReferencePicker';
@@ -84,11 +84,51 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
   const [isReferenceSkipped, setIsReferenceSkipped] = useState<boolean>(false);
   const [isOverrideKept, setIsOverrideKept] = useState<boolean>(false);
 
+  // Primary Workflow selection state
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('');
+  const selectedWorkflow = workflows.find((w: any) => w.id === selectedWorkflowId) || null;
+
+  const handleSelectWorkflow = (workflowId: string) => {
+    setSelectedWorkflowId(workflowId);
+    if (!workflowId) {
+      setIsPathLocked(false);
+      return;
+    }
+
+    const wf = workflows.find((w: any) => w.id === workflowId);
+    if (!wf) return;
+
+    // 1. Auto-select category if workflow specifies one
+    if (wf.category_id) {
+      const cat = categories.find((c: any) => c.id === wf.category_id);
+      if (cat) {
+        setSelectedCategory(cat);
+        setIsOverrideKept(false);
+      }
+    }
+
+    // 2. Pre-fill approval path
+    const rawSteps = wf.steps && Array.isArray(wf.steps) ? wf.steps : [];
+    if (rawSteps.length > 0) {
+      const mappedSteps = rawSteps.map((s: any) => ({
+        userId: s.userId || s.approver_id || s.approverId || '',
+        role: s.role || s.type || 'GENERAL',
+      }));
+      setApprovalPath(mappedSteps);
+    } else {
+      setApprovalPath([{ userId: '', role: 'GENERAL' }]);
+    }
+
+    // 3. Enforce path locking
+    setIsPathLocked(!!wf.is_locked);
+  };
+
   const handleSelectCategory = (cat: CategoryOption | null) => {
     setSelectedCategory(cat);
     setIsOverrideKept(false);
 
     if (!cat) {
+      setSelectedWorkflowId('');
       setApprovalPath([{ userId: '', role: 'GENERAL' }]);
       setIsPathLocked(false);
       return;
@@ -96,10 +136,12 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
     const linkedWorkflow = workflows.find(wf => wf.category_id === cat.id);
     if (linkedWorkflow) {
-      if (linkedWorkflow.steps && linkedWorkflow.steps.length > 0) {
-        const mappedSteps = linkedWorkflow.steps.map((s: any) => ({
-          userId: s.userId || '',
-          role: s.role || 'GENERAL'
+      setSelectedWorkflowId(linkedWorkflow.id);
+      const rawSteps = linkedWorkflow.steps && Array.isArray(linkedWorkflow.steps) ? linkedWorkflow.steps : [];
+      if (rawSteps.length > 0) {
+        const mappedSteps = rawSteps.map((s: any) => ({
+          userId: s.userId || s.approver_id || s.approverId || '',
+          role: s.role || s.type || 'GENERAL'
         }));
         setApprovalPath(mappedSteps);
       } else {
@@ -107,6 +149,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
       }
       setIsPathLocked(!!linkedWorkflow.is_locked);
     } else {
+      setSelectedWorkflowId('');
       setApprovalPath([{ userId: '', role: 'GENERAL' }]);
       setIsPathLocked(false);
     }
@@ -228,6 +271,9 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
     try {
       const formData = new FormData(e.currentTarget);
+      if (selectedWorkflowId) {
+        formData.set('workflow_id', selectedWorkflowId);
+      }
       // Filter out unfilled rows before submission
       const cleanPath = approvalPath.filter(x => x.userId);
 
@@ -286,6 +332,71 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-sm border border-gray-100 rounded-lg p-6 sm:p-8">
         
+        {/* STEP 0: WORKFLOW SELECTOR */}
+        {workflows.length > 0 && (
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-bold text-ink flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-brand" />
+                Governance Workflow
+              </label>
+              {selectedWorkflow && (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                  selectedWorkflow.is_locked
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300/50'
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-300/50'
+                }`}>
+                  {selectedWorkflow.is_locked ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5" />
+                      Locked Governance Route
+                    </>
+                  ) : (
+                    'Configurable Workflow'
+                  )}
+                </span>
+              )}
+            </div>
+
+            <select
+              value={selectedWorkflowId}
+              onChange={(e) => handleSelectWorkflow(e.target.value)}
+              className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-ink bg-white font-medium text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition"
+            >
+              <option value="">Custom Workflow (User-defined path)</option>
+              {workflows.map((wf: any) => (
+                <option key={wf.id} value={wf.id}>
+                  {wf.name} {wf.is_locked ? '[🔒 Locked Governance]' : '[Editable]'} {wf.base_step_type ? `· ${wf.base_step_type}` : ''}
+                </option>
+              ))}
+            </select>
+
+            {selectedWorkflow && (
+              <div className="mt-3.5 pt-3 border-t border-slate-200/60 flex flex-wrap gap-4 text-xs font-semibold">
+                {selectedWorkflow.description && (
+                  <div className="text-gray-600 w-full font-normal">{selectedWorkflow.description}</div>
+                )}
+                {selectedWorkflow.default_sla_hours && (
+                  <div className="text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                    ⏱ Default SLA: {selectedWorkflow.default_sla_hours} hours
+                  </div>
+                )}
+                {selectedWorkflow.base_step_type && (
+                  <div className="text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
+                    🏷 Base STEP Classification: {selectedWorkflow.base_step_type}
+                  </div>
+                )}
+                {selectedWorkflow.is_locked && (
+                  <div className="text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1.5">
+                    <Lock className="w-3 h-3" />
+                    Strict Route: Stages, approvers, and ordering are immutable
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* STEP 1: CATEGORY SELECTION */}
         <div>
           <GroupedCategoryPicker
@@ -381,6 +492,13 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
             )}
           </div>
 
+          {isPathLocked && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
+              <Lock className="w-4 h-4 text-amber-700 flex-shrink-0" />
+              <span>This approval route is strictly locked by organizational governance policy. Approvers, stages, and order are enforced server-side.</span>
+            </div>
+          )}
+
           <div className="space-y-3">
             {/* Headers for larger viewports */}
             <div className="hidden md:grid grid-cols-12 gap-4 px-4 text-xs font-bold text-ink uppercase tracking-wider">
@@ -405,6 +523,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                       exclude={[loggedInUserId, ...selectedUserIds.filter(id => id !== row.userId)]}
                       activeOnly={true}
                       value={row.userId}
+                      disabled={isPathLocked}
                       onSelect={(val) => updatePathRow(idx, 'userId', val || '')}
                       placeholder="Search name, email, or ID..."
                     />

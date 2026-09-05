@@ -42,6 +42,8 @@ export default function WorkflowsConsole({
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState<string>('');
   const [isLocked, setIsLocked] = useState(false);
+  const [baseStepType, setBaseStepType] = useState<'STRUCTURAL' | 'TRANSACTIONAL' | 'EXCEPTION' | 'PROCESS'>('TRANSACTIONAL');
+  const [defaultSlaHours, setDefaultSlaHours] = useState<number | ''>('');
   const [steps, setSteps] = useState<WorkflowStep[]>([
     { userId: '', role: 'GENERAL' }
   ]);
@@ -54,6 +56,8 @@ export default function WorkflowsConsole({
     setName('');
     setCategoryId('');
     setIsLocked(false);
+    setBaseStepType('TRANSACTIONAL');
+    setDefaultSlaHours('');
     setSteps([{ userId: '', role: 'GENERAL' }]);
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -65,6 +69,12 @@ export default function WorkflowsConsole({
     setName(wf.name);
     setCategoryId(wf.category_id || '');
     setIsLocked(wf.is_locked);
+    setBaseStepType((wf as any).base_step_type || 'TRANSACTIONAL');
+    setDefaultSlaHours(
+      (wf as any).default_sla_hours !== null && (wf as any).default_sla_hours !== undefined
+        ? (wf as any).default_sla_hours
+        : ''
+    );
     setSteps(wf.steps && wf.steps.length > 0 ? [...wf.steps] : [{ userId: '', role: 'GENERAL' }]);
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -144,7 +154,9 @@ export default function WorkflowsConsole({
         name: name.trim(),
         categoryId: categoryId || null,
         isLocked,
-        steps: cleanSteps
+        steps: cleanSteps,
+        baseStepType,
+        defaultSlaHours: typeof defaultSlaHours === 'number' && defaultSlaHours > 0 ? defaultSlaHours : null,
       });
 
       // Update local state list
@@ -238,6 +250,16 @@ export default function WorkflowsConsole({
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
                               <Unlock className="w-3 h-3" /> Editable
+                            </span>
+                          )}
+                          {(wf as any).base_step_type && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-purple-50 text-purple-700 border border-purple-100">
+                              {(wf as any).base_step_type}
+                            </span>
+                          )}
+                          {(wf as any).default_sla_hours && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              {(wf as any).default_sla_hours}h SLA
                             </span>
                           )}
                         </div>
@@ -367,6 +389,39 @@ export default function WorkflowsConsole({
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="baseStepType" className="block text-sm font-bold text-ink">
+                Base STEP Classification
+              </label>
+              <select
+                id="baseStepType"
+                value={baseStepType}
+                onChange={e => setBaseStepType(e.target.value as any)}
+                className="block w-full rounded-xl border border-gray-200 py-2.5 px-4 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
+              >
+                <option value="STRUCTURAL">Structural (Policy & Org Governance)</option>
+                <option value="TRANSACTIONAL">Transactional (Routine Operational Flow)</option>
+                <option value="EXCEPTION">Exception (High Risk & Deviation Path)</option>
+                <option value="PROCESS">Process (System & Batch Automation)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="defaultSlaHours" className="block text-sm font-bold text-ink">
+                Default SLA Target (Hours)
+              </label>
+              <input
+                type="number"
+                id="defaultSlaHours"
+                min="1"
+                step="1"
+                value={defaultSlaHours}
+                onChange={e => setDefaultSlaHours(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                placeholder="e.g. 24 (Default target turnaround)"
+                className="block w-full rounded-xl border border-gray-200 py-2.5 px-4 text-ink text-sm bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition font-semibold"
+              />
             </div>
           </div>
 

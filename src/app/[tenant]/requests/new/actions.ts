@@ -81,42 +81,7 @@ export async function submitNewRequest(
     }
   }
 
-  if (!approvalPath || approvalPath.length === 0) {
-    throw new Error('Approval path must contain at least one step');
-  }
-
-  // H7 Fix: Verify all approver IDs in path are active users of THIS tenant
-  const approverIds = approvalPath.map(s => s.userId || s.approver_id || s.approverId).filter(Boolean);
-  const { data: validApprovers } = await adminClient
-    .from('users')
-    .select('id')
-    .eq('tenant_id', tenantData.id)
-    .eq('status', 'active')
-    .in('id', approverIds);
-
-  const validApproverSet = new Set((validApprovers || []).map(u => u.id));
-  for (const step of approvalPath) {
-    const appValId = step.userId || step.approver_id || step.approverId;
-    if (!appValId || !validApproverSet.has(appValId)) {
-      throw new Error(`Approver ID "${appValId}" is not an active member of this tenant.`);
-    }
-  }
-
-  // H7 Fix: Verify beneficiary belongs to THIS tenant if provided
-  if (beneficiaryId) {
-    const { data: benUser } = await adminClient
-      .from('users')
-      .select('id')
-      .eq('id', beneficiaryId)
-      .eq('tenant_id', tenantData.id)
-      .maybeSingle();
-
-    if (!benUser) {
-      throw new Error('Beneficiary user not found or does not belong to this tenant');
-    }
-  }
-
-  // 2. Resolve workflow identity, active version, SLA, governing policy snapshot, and STEP classification
+  // 2. Resolve workflow identity, active version, SLA, governing policy snapshot, and server-authoritative routing
   const requestedWorkflowId = (formData.get('workflow_id') || formData.get('workflowId')) as string | null;
 
   let workflowId: string | null = null;
@@ -129,11 +94,13 @@ export async function submitNewRequest(
   let workflowSnapshot: Record<string, any> = {};
   let governingPolicyBound: any = null;
   let workflowRulesJson: any = null;
+  let pathChangedDeviation: any = null;
+  let authoritativeSteps: any[] = [];
 
-  // Workflow-first lookup: by explicit workflowId or categoryId or tenant default active workflow
+  // Workflow lookup: by explicit workflowId, categoryId, or tenant default active workflow
   let wfQuery = adminClient
     .from('workflows')
-    .select('id, name, category_id, base_step_type, governing_policy_id, default_sla_hours, current_version_number, classification_rules_json')
+    .select('id, name, category_id, is_locked, steps, base_step_type, governing_policy_id, default_sla_hours, current_version_number, classification_rules_json')
     .eq('tenant_id', tenantData.id);
 
   if (requestedWorkflowId) {
@@ -178,6 +145,45 @@ export async function submitNewRequest(
       }
     }
 
+    const isLocked = Boolean(wf.is_locked || (wfVer && (wfVer as any).is_locked));
+    authoritativeSteps = (wfVer?.steps_json && Array.isArray(wfVer.steps_json) && wfVer.steps_json.length > 0)
+      ? wfVer.steps_json
+      : (Array.isArray(wf.steps) && wf.steps.length > 0 ? wf.steps : []);
+
+    if (isLocked && authoritativeSteps.length > 0) {
+      // Locked workflow: Server strictly enforces workflow steps, overriding client manipulation
+      approvalPath = authoritativeSteps.map((s: any, idx: number) => ({
+        userId: s.userId || s.approver_id || s.approverId,
+        role: s.role || s.type || 'GENERAL',
+        stage_index: s.stage_index ?? s.stageIndex ?? (s.role === 'PARALLEL' ? 0 : idx),
+        order_index: s.order_index ?? s.orderIndex ?? idx,
+      }));
+    } else if (authoritativeSteps.length > 0) {
+      // Unlocked workflow: Server preserves expected path vs observed path
+      workflowSnapshot = {
+        ...workflowSnapshot,
+        expected_path_json: authoritativeSteps,
+        observed_path_json: approvalPath,
+      };
+
+      const expectedApprovers = authoritativeSteps.map((s: any) => s.userId || s.approver_id || s.approverId).filter(Boolean);
+      const observedApprovers = (approvalPath || []).map((s: any) => s.userId || s.approver_id || s.approverId).filter(Boolean);
+
+      const removedSteps = expectedApprovers.filter((id: string) => !observedApprovers.includes(id));
+      const addedSteps = observedApprovers.filter((id: string) => !expectedApprovers.includes(id));
+      const orderChanged = !removedSteps.length && !addedSteps.length && expectedApprovers.join(',') !== observedApprovers.join(',');
+
+      if (removedSteps.length > 0 || addedSteps.length > 0 || orderChanged) {
+        pathChangedDeviation = {
+          removedSteps,
+          addedSteps,
+          orderChanged,
+          expectedCount: expectedApprovers.length,
+          observedCount: observedApprovers.length,
+        };
+      }
+    }
+
     const effectivePolicyId = wfVer?.governing_policy_id_snapshot || wf.governing_policy_id || cat?.governing_policy_id;
     if (effectivePolicyId) {
       const { data: pol } = await adminClient
@@ -195,6 +201,42 @@ export async function submitNewRequest(
           policyTitle: pol.title,
         };
       }
+    }
+  }
+
+  // 3. Verify approval path invariants on effective route
+  if (!approvalPath || approvalPath.length === 0) {
+    throw new Error('Approval path must contain at least one step');
+  }
+
+  // Verify all approver IDs in path are active users of THIS tenant
+  const approverIds = approvalPath.map(s => s.userId || s.approver_id || s.approverId).filter(Boolean);
+  const { data: validApprovers } = await adminClient
+    .from('users')
+    .select('id')
+    .eq('tenant_id', tenantData.id)
+    .eq('status', 'active')
+    .in('id', approverIds);
+
+  const validApproverSet = new Set((validApprovers || []).map(u => u.id));
+  for (const step of approvalPath) {
+    const appValId = step.userId || step.approver_id || step.approverId;
+    if (!appValId || !validApproverSet.has(appValId)) {
+      throw new Error(`Approver ID "${appValId}" is not an active member of this tenant.`);
+    }
+  }
+
+  // Verify beneficiary belongs to THIS tenant if provided
+  if (beneficiaryId) {
+    const { data: benUser } = await adminClient
+      .from('users')
+      .select('id')
+      .eq('id', beneficiaryId)
+      .eq('tenant_id', tenantData.id)
+      .maybeSingle();
+
+    if (!benUser) {
+      throw new Error('Beneficiary user not found or does not belong to this tenant');
     }
   }
 
@@ -314,6 +356,25 @@ export async function submitNewRequest(
       baselineStepType: baselineStepType,
       resolvedStepType: resolvedStepType,
       eventPayload: { workflowId, workflowVersionId }
+    });
+  }
+
+  // Emit PATH_CHANGED when requester modified an unlocked workflow's route
+  if (pathChangedDeviation) {
+    await emitDecisionEvent({
+      tenantId: tenantData.id,
+      requestId: request.id,
+      workflowId: workflowId,
+      workflowVersionId: workflowVersionId,
+      eventType: 'PATH_CHANGED',
+      actorId: profile.id,
+      baselineStepType: baselineStepType,
+      resolvedStepType: resolvedStepType,
+      eventPayload: {
+        deviation: pathChangedDeviation,
+        expectedPath: authoritativeSteps,
+        observedPath: approvalPath,
+      },
     });
   }
 

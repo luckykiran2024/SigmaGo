@@ -96,7 +96,7 @@ export default async function UserIntelligencePage({
   // Query requests for intelligence analytics
   const { data: allRequests } = await adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, categories(name, domain, governing_policy_id)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false });
 
@@ -199,6 +199,7 @@ export default async function UserIntelligencePage({
   const refsBySource: Record<string, number> = {};
   const exceptionRefs: Record<string, number> = {};
   const policyRefRequestIds = new Set<string>();
+  const policyIdsByRequest = new Map<string, Set<string>>();
 
   (tenantReferences || []).forEach((ref: any) => {
     if (ref.target_id) {
@@ -208,6 +209,10 @@ export default async function UserIntelligencePage({
       refsBySource[ref.source_id] = (refsBySource[ref.source_id] || 0) + 1;
       if (ref.to_policy_id) {
         policyRefRequestIds.add(ref.source_id);
+        if (!policyIdsByRequest.has(ref.source_id)) {
+          policyIdsByRequest.set(ref.source_id, new Set());
+        }
+        policyIdsByRequest.get(ref.source_id)!.add(ref.to_policy_id);
       }
     }
     if (ref.relationship === 'EXCEPTION_TO') {
@@ -215,6 +220,16 @@ export default async function UserIntelligencePage({
       if (ref.source_id) exceptionRefs[ref.source_id] = (exceptionRefs[ref.source_id] || 0) + 1;
     }
   });
+
+  // Decision-time policy resolution: prioritize immutable snapshot at decision time
+  const getRequestGoverningPolicyId = (r: any): string | null => {
+    return (
+      r.workflow_snapshot?.governing_policy_id_snapshot ||
+      r.workflow_snapshot?.governing_policy_id ||
+      r.categories?.governing_policy_id ||
+      null
+    );
+  };
 
   // Calculate real coverage metrics (NO artificial inflation)
   const totalCurrentDecisions = currentRequests.length;
@@ -228,7 +243,7 @@ export default async function UserIntelligencePage({
     : 0;
   // Strict: must check actual governing policy linkage (never plain category_id presence)
   const policyLinkageCoverage = totalCurrentDecisions > 0
-    ? currentRequests.filter((r: any) => !!(r.categories?.governing_policy_id || policyRefRequestIds.has(r.id))).length / totalCurrentDecisions
+    ? currentRequests.filter((r: any) => !!(getRequestGoverningPolicyId(r) || policyRefRequestIds.has(r.id))).length / totalCurrentDecisions
     : 0;
 
   const coveragePercentage = Math.round(stepResolutionCoverage * 100);
@@ -352,7 +367,7 @@ export default async function UserIntelligencePage({
         const transitiveCount = transitiveDescendants.size;
         const directDescendants = refsByTarget[r.id] || 0;
         const basedOnCount = refsBySource[r.id] || 0;
-        const exceptionCount = exceptionRefs[r.id] || (st === 'EXCEPTION' ? 1 : 0);
+        const exceptionCount = exceptionRefs[r.id] || 0;
         const footprintScore = transitiveCount + basedOnCount;
         const classification = transitiveCount >= 5
           ? 'STABLE_FOUNDATION'
@@ -403,10 +418,10 @@ export default async function UserIntelligencePage({
 
   const dynamicExceptionSignals = (tenantPolicies || []).map((pol: any) => {
     const curPolRequests = currentRequests.filter((r: any) =>
-      r.categories?.governing_policy_id === pol.id || (r.categories?.domain && r.categories.domain.toLowerCase() === pol.title.toLowerCase())
+      getRequestGoverningPolicyId(r) === pol.id || policyIdsByRequest.get(r.id)?.has(pol.id)
     );
     const compPolRequests = comparatorRequests.filter((r: any) =>
-      r.categories?.governing_policy_id === pol.id || (r.categories?.domain && r.categories.domain.toLowerCase() === pol.title.toLowerCase())
+      getRequestGoverningPolicyId(r) === pol.id || policyIdsByRequest.get(r.id)?.has(pol.id)
     );
 
     const curExceptions = curPolRequests.filter((r: any) => (r.resolved_step_type || r.baseline_step_type) === 'EXCEPTION').length;
