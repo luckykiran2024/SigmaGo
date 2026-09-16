@@ -1,12 +1,13 @@
 import { fetchTenantHealthMetricsAction } from './actions';
 import Link from 'next/link';
-import { Activity, ShieldAlert, CheckCircle2, AlertTriangle, Users, Key, LifeBuoy, Plus, ArrowUpRight } from 'lucide-react';
+import { Activity, ShieldAlert, CheckCircle2, AlertTriangle, Users, Key, LifeBuoy, Plus, ArrowUpRight, LineChart, Database, Radio, Server } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PlatformObservabilityPage() {
   const res = await fetchTenantHealthMetricsAction();
   const metrics = res.metrics || [];
+  const infra = res.infra;
 
   const totalTenants = metrics.length;
   const totalUsers = metrics.reduce((acc, m) => acc + m.userCount, 0);
@@ -27,13 +28,28 @@ export default async function PlatformObservabilityPage() {
           </p>
         </div>
 
-        <Link
-          href="/platform-admin/onboard"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#38BDF8] hover:bg-[#0284C7] text-[#0F172A] font-bold text-xs shadow-md transition"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>Onboard New Tenant</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          {infra?.grafanaUrl && (
+            <a
+              href={infra.grafanaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F46800]/90 hover:bg-[#F46800] text-white font-bold text-xs shadow-md transition"
+            >
+              <LineChart className="w-4 h-4" />
+              <span>Grafana Observability</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </a>
+          )}
+
+          <Link
+            href="/platform-admin/onboard"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#38BDF8] hover:bg-[#0284C7] text-[#0F172A] font-bold text-xs shadow-md transition"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>Onboard New Tenant</span>
+          </Link>
+        </div>
       </div>
 
       {/* Overview Stat Cards */}
@@ -73,6 +89,64 @@ export default async function PlatformObservabilityPage() {
           <p className="text-2xl font-black text-white">{totalOpenTickets}</p>
           <p className="text-[11px] text-[#94A3B8]">Awaiting operator resolution</p>
         </div>
+      </div>
+
+      {/* Infrastructure & Observability Status Strip */}
+      <div className="p-4 rounded-2xl bg-[#0F172A] border border-[#334155] flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2 text-xs">
+            <Database className="w-4 h-4 text-[#38BDF8]" />
+            <span className="text-[#94A3B8]">Redis Engine:</span>
+            {infra?.redisConnected ? (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Connected {infra.redisLatencyMs ? `(${infra.redisLatencyMs} ms)` : ''}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-700 text-slate-300">
+                Standby (Optional)
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
+            <Radio className="w-4 h-4 text-[#A855F7]" />
+            <span className="text-[#94A3B8]">OpenTelemetry:</span>
+            {infra?.otelConfigured ? (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                Active (OTLP Proto)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-700 text-slate-300">
+                Standard Runtime Logs
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
+            <Server className="w-4 h-4 text-[#10B981]" />
+            <span className="text-[#94A3B8]">Probes:</span>
+            <Link href="/api/health/live" target="_blank" className="text-emerald-400 hover:underline font-mono text-[11px]">
+              /api/health/live
+            </Link>
+            <span className="text-slate-600">|</span>
+            <Link href="/api/health/ready" target="_blank" className="text-emerald-400 hover:underline font-mono text-[11px]">
+              /api/health/ready
+            </Link>
+          </div>
+        </div>
+
+        {infra?.grafanaUrl && (
+          <a
+            href={infra.grafanaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-semibold text-[#F46800] hover:text-[#FFA04D] flex items-center gap-1 transition"
+          >
+            <span>Live Grafana Dashboards</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </a>
+        )}
       </div>
 
       {/* Tenants Health Matrix Table */}

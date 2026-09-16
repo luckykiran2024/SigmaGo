@@ -22,9 +22,17 @@ export interface TenantHealthMetric {
   healthStatus: 'HEALTHY' | 'DEGRADED' | 'ATTENTION_REQUIRED';
 }
 
+export interface InfraHealth {
+  redisConnected: boolean;
+  redisLatencyMs?: number;
+  otelConfigured: boolean;
+  grafanaUrl?: string;
+}
+
 export async function fetchTenantHealthMetricsAction(): Promise<{
   success: boolean;
   metrics?: TenantHealthMetric[];
+  infra?: InfraHealth;
   error?: string;
 }> {
   try {
@@ -94,7 +102,26 @@ export async function fetchTenantHealthMetricsAction(): Promise<{
       });
     }
 
-    return { success: true, metrics };
+    const infra: InfraHealth = {
+      redisConnected: false,
+      otelConfigured: process.env.OTEL_SDK_DISABLED !== 'true' && Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT),
+      grafanaUrl: process.env.NEXT_PUBLIC_GRAFANA_URL || process.env.GRAFANA_URL,
+    };
+
+    try {
+      if (process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL) {
+        const { getRedisClient } = await import('@/lib/redis/client');
+        const redis = getRedisClient();
+        const startRedis = performance.now();
+        await redis.ping();
+        infra.redisConnected = true;
+        infra.redisLatencyMs = Math.round(performance.now() - startRedis);
+      }
+    } catch {
+      infra.redisConnected = false;
+    }
+
+    return { success: true, metrics, infra };
   } catch (err: any) {
     console.error('fetchTenantHealthMetricsAction error:', err);
     return { success: false, error: err.message };

@@ -8,7 +8,7 @@ let redisInstance: Redis | null = null;
  */
 export function getRedisConfig(): { url?: string; options: RedisOptions } {
   const isProduction = process.env.NODE_ENV === 'production';
-  const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
+  const redisUrl = process.env.REDIS_URL || process.env.KV_URL || process.env.UPSTASH_REDIS_URL;
 
   if (redisUrl) {
     return {
