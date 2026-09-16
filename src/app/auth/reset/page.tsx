@@ -42,22 +42,24 @@ export default function ResetPasswordPage() {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white border border-gray-100 shadow-xl rounded-lg p-8 max-w-md w-full text-center space-y-6 font-sans">
+      <div className="min-h-screen bg-[#F7FAFC] flex items-center justify-center p-4 font-sans">
+        <div className="bg-white border border-[#DDE5EC] shadow-sm rounded-xl p-8 max-w-md w-full text-center space-y-6">
           <div className="flex justify-center">
-            <div className="p-4 rounded-md bg-green-50 flex items-center justify-center">
-              <svg className="w-16 h-16 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+              <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
-          <h2 className="text-2xl font-sans font-black text-ink">Password Updated</h2>
-          <p className="text-sm text-gray-500 font-medium leading-relaxed">
-            Your password has been successfully updated. You can now access your dashboard.
-          </p>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold text-[#132238]">Password Updated</h2>
+            <p className="text-xs text-[#526377] font-medium leading-relaxed">
+              Your password has been successfully updated. You can now access your organization workspace.
+            </p>
+          </div>
           <div className="pt-2">
-            <Link href="/login" className="inline-flex items-center justify-center bg-brand text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:bg-brand-light transition">
-              Go to Login
+            <Link href="/login" className="inline-flex items-center justify-center bg-[#012F6B] text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-[#033E79] transition shadow-xs">
+              Go to Sign In
             </Link>
           </div>
         </div>
@@ -66,42 +68,61 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-surface relative overflow-hidden font-sans">
-      <div className="absolute top-0 left-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#F7FAFC] relative overflow-hidden font-sans">
+      {/* Top Left Back to Home Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-[#526377] hover:text-[#012F6B] bg-white border border-[#DDE5EC] rounded-lg shadow-xs transition hover:bg-[#F3F6F8]"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 text-[#059DB0]" />
+          <span>Sign In</span>
+        </Link>
+      </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <div className="flex justify-center items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shadow-md">
-            <span className="text-white font-sans font-extrabold text-base">SG</span>
+        <Link href="/" className="flex flex-col items-center group transition">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 relative flex items-center justify-center bg-white rounded-xl shadow-xs border border-[#DDE5EC] p-1.5 group-hover:border-[#059DB0]/40 transition">
+              <img
+                src="/brand/sigmago-logo.png"
+                alt="SigmaGo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold tracking-tight text-[#012F6B] leading-none">
+                Sigma<span className="text-[#059DB0]">Go</span>
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8190A0] mt-0.5">
+                Decision Intelligence
+              </span>
+            </div>
           </div>
-          <span className="font-sans text-2xl font-extrabold text-ink">
-            Sigma<span className="text-brand font-extrabold">Go</span>
-          </span>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-sans font-extrabold tracking-tight text-ink">
+        </Link>
+        <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-[#132238]">
           Set new password
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-500 font-medium">
-          Create a secure new password for your account
+        <p className="mt-1.5 text-center text-xs font-medium text-[#526377]">
+          Create a secure credential for your enterprise account
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <div className="mt-7 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
+        <div className="bg-white py-8 px-6 sm:px-8 shadow-sm border border-[#DDE5EC] rounded-xl">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             {errorMsg && (
-              <div className="p-3.5 bg-red-50 border border-red-100 text-red-700 text-xs font-semibold rounded-xl">
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-lg">
                 {errorMsg}
               </div>
             )}
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-ink">
+              <label htmlFor="password" className="block text-xs font-semibold text-[#132238] uppercase tracking-wider mb-1.5">
                 New Password
               </label>
-              <div className="mt-1.5 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+              <div className="relative rounded-lg">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8190A0]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -111,25 +132,25 @@ export default function ResetPasswordPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                  className="appearance-none block w-full pl-10 pr-12 py-2.5 bg-white border border-[#DDE5EC] rounded-lg text-sm text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
                   placeholder="At least 6 characters"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8190A0] hover:text-[#526377]"
                 >
-                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-ink">
+              <label htmlFor="confirmPassword" className="block text-xs font-semibold text-[#132238] uppercase tracking-wider mb-1.5">
                 Confirm New Password
               </label>
-              <div className="mt-1.5 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+              <div className="relative rounded-lg">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8190A0]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -139,7 +160,7 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                  className="appearance-none block w-full pl-10 pr-12 py-2.5 bg-white border border-[#DDE5EC] rounded-lg text-sm text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
                   placeholder="Repeat new password"
                 />
               </div>
@@ -148,9 +169,9 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none disabled:opacity-50 transition transform hover:-translate-y-0.5"
+              className="w-full flex justify-center py-2.5 px-4 rounded-lg text-xs font-bold text-white bg-[#012F6B] hover:bg-[#033E79] focus:outline-none focus:ring-2 focus:ring-[#059DB0] disabled:opacity-50 transition shadow-xs"
             >
-              {status === 'loading' ? 'Updating...' : 'Update Password'}
+              {status === 'loading' ? 'Updating Password...' : 'Update Password'}
             </button>
           </form>
         </div>

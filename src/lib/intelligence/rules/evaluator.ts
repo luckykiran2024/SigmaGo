@@ -11,6 +11,7 @@ import {
   RuleEvaluationResult,
   RuleEvaluationParams,
 } from './types';
+import { evaluatePolicyBound } from '@/lib/policies/bounds';
 
 export type {
   ClassificationRule,
@@ -44,32 +45,16 @@ export function evaluateClassificationRules(params: RuleEvaluationParams): RuleE
   // Combine custom field values and form numeric values for evaluation
   const allFieldValues: Record<string, any> = { ...customFields, ...formDataNumericValues };
 
-  // 2. Evaluate Governing Policy Boundary (e.g. bound_field, bound_type, bound_value)
-  if (policyBound && policyBound.boundField && policyBound.boundValue !== null && policyBound.boundValue !== undefined) {
-    const val = allFieldValues[policyBound.boundField];
-    const numVal = typeof val === 'number' ? val : parseFloat(String(val));
-
-    if (!isNaN(numVal)) {
-      const type = (policyBound.boundType || 'MAX').toUpperCase();
-      const bound = Number(policyBound.boundValue);
-
-      if (type === 'MAX' && numVal > bound) {
-        return {
-          isBreached: true,
-          resolvedStepType: 'EXCEPTION',
-          classificationSource: 'EXCEPTION_RULE',
-          classificationReason: `Breached maximum limit of ${bound} on ${policyBound.boundField} (Entered: ${numVal}) for policy "${policyBound.policyTitle || 'Governing Policy'}"`,
-        };
-      }
-
-      if (type === 'MIN' && numVal < bound) {
-        return {
-          isBreached: true,
-          resolvedStepType: 'EXCEPTION',
-          classificationSource: 'EXCEPTION_RULE',
-          classificationReason: `Breached minimum requirement of ${bound} on ${policyBound.boundField} (Entered: ${numVal}) for policy "${policyBound.policyTitle || 'Governing Policy'}"`,
-        };
-      }
+  // 2. Evaluate Governing Policy Boundary (e.g. bound_field, bound_type, bound_value) using canonical evaluator
+  if (policyBound) {
+    const boundResult = evaluatePolicyBound(policyBound, allFieldValues);
+    if (boundResult.isBreached) {
+      return {
+        isBreached: true,
+        resolvedStepType: 'EXCEPTION',
+        classificationSource: 'EXCEPTION_RULE',
+        classificationReason: boundResult.reason || 'Breached governing policy threshold boundary',
+      };
     }
   }
 

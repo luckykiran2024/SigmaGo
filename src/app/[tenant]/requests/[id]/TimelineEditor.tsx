@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Users, AlertTriangle, Plus, Trash2, ArrowUp, ArrowDown, ShieldCheck, Check, Edit2 } from 'lucide-react';
+import { Users, AlertTriangle, Plus, Trash2, ArrowUp, ArrowDown, Check, Edit2 } from 'lucide-react';
 import { amendPathAction } from './amendActions';
 import PersonPicker from '@/components/ui/PersonPicker';
 
@@ -165,51 +165,51 @@ export default function TimelineEditor({
   const actedSteps = steps.filter(s => s.status === 'approved' || s.status === 'rejected' || s.status === 'skipped');
 
   return (
-    <div className="space-y-8 font-sans text-ink">
+    <div className="space-y-8 font-sans text-[#132238]">
       {/* Routing Slip (Timeline Card) */}
-      <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] p-6">
-        <div className="flex items-center justify-between mb-6 border-b border-border pb-3">
-          <h3 className="text-lg font-sans font-bold text-ink">Routing Slip</h3>
+      <div className="bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs p-6">
+        <div className="flex items-center justify-between mb-5 border-b border-[#EAF0F4] pb-3">
+          <h3 className="text-[16px] font-semibold text-[#132238]">Routing Slip</h3>
           {canAmend && !isEditing && (
             <button
               onClick={startEditing}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-border rounded-md text-xs font-bold text-ink hover:bg-bg transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DDE5EC] rounded-[6px] text-[12.5px] font-medium text-[#526377] hover:text-[#012F6B] hover:bg-[#F7FAFC] transition"
             >
               <Edit2 className="w-3.5 h-3.5" />
-              Amend Path
+              <span>Amend Path</span>
             </button>
           )}
         </div>
 
         {isEditing ? (
           /* AMEND PATH EDITING UI */
-          <form onSubmit={handleSave} className="space-y-5">
-            <div className="p-3.5 rounded-xl bg-info/10 border border-info/20 text-2xs font-semibold text-info leading-relaxed">
-              <strong>Path Amendment Guide:</strong> Acted steps are frozen and locked at the top of the path. You can add, delete, and reorder pending steps below them. Saving resets all modified pending steps to a queued state and recalculates indices.
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="p-3.5 rounded-[6px] bg-[#F1FBFC] border border-[#DDF5F7] text-[12px] text-[#078899] leading-relaxed">
+              <strong>Path Amendment Guide:</strong> Acted steps are frozen and locked at the top of the path. You can add, delete, and reorder pending steps below them. Saving resets modified pending steps to queued status and recalculates sequence order.
             </div>
 
             {errorMsg && (
-              <div className="p-3.5 rounded-xl bg-err/10 border border-err/20 text-xs font-bold text-err flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-err" />
+              <div className="p-3 rounded-[6px] bg-[#FEF3F2] border border-[#FECDCA] text-[12px] font-medium text-[#B42318] flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-[#B42318]" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {/* Acted (Frozen) Steps */}
               {actedSteps.map((step, idx) => {
                 const u = tenantUsers.find(tu => tu.id === step.approver_id);
                 return (
-                  <div key={`acted-${idx}`} className="p-3.5 border border-border rounded-xl bg-bg/50 flex items-center justify-between gap-3 text-xs opacity-75">
+                  <div key={`acted-${idx}`} className="p-3 border border-[#DDE5EC] rounded-[6px] bg-[#F7FAFC] flex items-center justify-between gap-3 text-[12px] opacity-80">
                     <div className="min-w-0">
-                      <div className="font-bold text-muted flex items-center gap-1.5">
-                        <Lock className="w-3.5 h-3.5 text-muted/65" />
+                      <div className="font-semibold text-[#526377] flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-[#8190A0]" />
                         {u ? u.name : 'Unknown Approver'}
-                        <span className="text-xs font-extrabold bg-bg text-muted px-1 py-0.5 rounded border border-border uppercase tracking-wider font-mono">
+                        <span className="text-[10px] font-medium bg-[#EDF2F6] text-[#526377] px-1.5 py-0.5 rounded border border-[#DDE5EC] uppercase tracking-wider">
                           Frozen
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-muted mt-1 uppercase tracking-wider font-mono">{step.type} Approver • {step.status}</div>
+                      <div className="text-[11px] text-[#8190A0] mt-0.5 uppercase tracking-wider font-mono">{step.type} Approver • {step.status}</div>
                     </div>
                   </div>
                 );
@@ -217,7 +217,7 @@ export default function TimelineEditor({
 
               {/* Editable Steps Header */}
               {editPendingSteps.length > 0 && (
-                <div className="hidden md:grid grid-cols-12 gap-3 px-2 text-xs font-bold text-muted uppercase tracking-wider mt-4 font-mono">
+                <div className="hidden md:grid grid-cols-12 gap-3 px-2 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider mt-3">
                   <div className="col-span-6">Approver</div>
                   <div className="col-span-4">Role</div>
                   <div className="col-span-2 text-center">Actions</div>
@@ -226,10 +226,10 @@ export default function TimelineEditor({
 
               {/* Editable Pending Steps */}
               {editPendingSteps.map((row, idx) => (
-                <div key={`pending-${idx}`} className="p-3.5 border border-border rounded-xl bg-white grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-brand/40 transition">
+                <div key={`pending-${idx}`} className="p-3 border border-[#DDE5EC] rounded-[6px] bg-white grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-[#059DB0] transition">
                   {/* User Selection */}
                   <div className="col-span-1 md:col-span-6">
-                    <label className="block md:hidden text-xs font-bold text-muted uppercase tracking-wider mb-1 font-mono">
+                    <label className="block md:hidden text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider mb-1">
                       Approver
                     </label>
                     <PersonPicker
@@ -243,14 +243,14 @@ export default function TimelineEditor({
 
                   {/* Role Selector */}
                   <div className="col-span-1 md:col-span-4">
-                    <label className="block md:hidden text-xs font-bold text-muted uppercase tracking-wider mb-1 font-mono">
+                    <label className="block md:hidden text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider mb-1">
                       Role
                     </label>
                     <select
                       value={row.type}
                       onChange={e => updateStep(idx, 'type', e.target.value)}
                       required
-                      className="block w-full rounded-xl border border-border py-2 px-3 text-ink text-xs bg-white focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition font-semibold"
+                      className="block w-full rounded-[6px] border border-[#DDE5EC] py-2 px-2.5 text-[#132238] text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0] transition font-medium"
                     >
                       <option value="GENERAL">Direct Approver</option>
                       <option value="PARALLEL">Parallel Approver</option>
@@ -259,12 +259,12 @@ export default function TimelineEditor({
                   </div>
 
                   {/* Move Up, Down, Delete Actions */}
-                  <div className="col-span-1 md:col-span-2 flex items-center justify-center gap-1.5 pt-1.5 md:pt-0">
+                  <div className="col-span-1 md:col-span-2 flex items-center justify-center gap-1">
                     <button
                       type="button"
                       onClick={() => moveStepUp(idx)}
                       disabled={idx === 0}
-                      className="text-muted hover:text-brand disabled:opacity-30 disabled:hover:text-muted p-1 rounded-lg transition hover:bg-bg"
+                      className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 p-1 rounded transition hover:bg-[#F7FAFC]"
                       title="Move Up"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -273,7 +273,7 @@ export default function TimelineEditor({
                       type="button"
                       onClick={() => moveStepDown(idx)}
                       disabled={idx === editPendingSteps.length - 1}
-                      className="text-muted hover:text-brand disabled:opacity-30 disabled:hover:text-muted p-1 rounded-lg transition hover:bg-bg"
+                      className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 p-1 rounded transition hover:bg-[#F7FAFC]"
                       title="Move Down"
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -282,7 +282,7 @@ export default function TimelineEditor({
                       type="button"
                       onClick={() => removeStepRow(idx)}
                       disabled={actedSteps.length + editPendingSteps.length <= 1}
-                      className="text-muted hover:text-err disabled:opacity-30 disabled:hover:text-muted p-1 rounded-lg transition hover:bg-bg"
+                      className="text-[#8190A0] hover:text-[#B42318] disabled:opacity-30 p-1 rounded transition hover:bg-[#FEF3F2]"
                       title="Remove Step"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -293,11 +293,11 @@ export default function TimelineEditor({
             </div>
 
             {/* Path Actions Form footer */}
-            <div className="flex items-center justify-between border-t border-border pt-4 mt-2">
+            <div className="flex items-center justify-between border-t border-[#EAF0F4] pt-3 mt-2">
               <button
                 type="button"
                 onClick={addStepRow}
-                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-brand/40 rounded-md text-[10px] font-bold text-brand hover:bg-brand/5 hover:border-brand transition font-mono"
+                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#059DB0] rounded-[6px] text-[12px] font-medium text-[#078899] hover:bg-[#F1FBFC] transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Step
@@ -306,14 +306,14 @@ export default function TimelineEditor({
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-border text-ink rounded-md text-xs font-bold hover:bg-bg transition shadow-2xs"
+                  className="px-3.5 py-1.5 border border-[#DDE5EC] text-[#526377] rounded-[6px] text-[12.5px] font-medium hover:bg-[#F7FAFC] transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-4 py-2 bg-brand hover:bg-brand/90 text-ink rounded-md text-xs font-bold transition shadow-sm disabled:opacity-50"
+                  className="px-4 py-1.5 bg-[#012F6B] hover:bg-[#033E79] text-white rounded-[6px] text-[12.5px] font-medium transition shadow-xs disabled:opacity-50"
                 >
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -322,20 +322,20 @@ export default function TimelineEditor({
           </form>
         ) : (
           /* DISPLAY MODE TIMELINE */
-          <div className="space-y-6">
+          <div className="space-y-4">
             {sortedStageIndices.map((stageIdx) => {
               const stageStepsList = stageGroups[stageIdx] || [];
               stageStepsList.sort((a: any, b: any) => a.order_index - b.order_index);
 
               return (
-                <div key={stageIdx} className="border border-border rounded-lg p-4 bg-bg/30">
-                  <div className="flex items-center gap-2 mb-4 bg-brand/10 px-2.5 py-1 rounded-lg border border-brand/20 w-fit">
-                    <span className="text-[10px] font-extrabold tracking-wider uppercase text-brand font-mono">
+                <div key={stageIdx} className="border border-[#DDE5EC] rounded-[8px] p-4 bg-[#F7FAFC]/50">
+                  <div className="flex items-center gap-2 mb-3 bg-[#F1FBFC] px-2.5 py-1 rounded-[4px] border border-[#DDF5F7] w-fit">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-[#012F6B]">
                       Stage {stageIdx + 1}
                     </span>
                   </div>
                   <div className="flow-root">
-                    <ul className="-mb-8">
+                    <ul className="-mb-6">
                       {stageStepsList.map((step: any, stepIdx: number) => {
                         const isLast = stepIdx === stageStepsList.length - 1;
                         const isApproved = step.status === 'approved';
@@ -347,30 +347,24 @@ export default function TimelineEditor({
 
                         return (
                           <li key={step.id}>
-                            <div className="relative pb-8">
+                            <div className="relative pb-6">
                               {!isLast && (
-                                <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-hair" aria-hidden="true"></span>
+                                <span className="absolute top-4 left-4 -ml-px h-full w-[2px] bg-[#DDE5EC]" aria-hidden="true"></span>
                               )}
                               <div className="relative flex space-x-3 items-start">
                                 {/* Icon sphere */}
                                 <div>
-                                  <span className={`h-8 w-8 rounded-md flex items-center justify-center ring-4 ring-white transition
-                                    ${isApproved ? 'bg-ok text-white' : 
-                                      isRejected ? 'bg-err text-white' : 
-                                      isPending ? (isApproverInactive ? 'bg-err text-white' : 'bg-warn text-white') : 'bg-bg text-muted border border-border'}`}
+                                  <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-white transition
+                                    ${isApproved ? 'bg-[#0F7548] text-white' : 
+                                      isRejected ? 'bg-[#B42318] text-white' : 
+                                      isPending ? (isApproverInactive ? 'bg-[#B42318] text-white' : 'bg-[#059DB0] text-white') : 'bg-[#F3F6F8] text-[#8190A0] border border-[#DDE5EC]'}`}
                                   >
                                     {isApproved ? (
-                                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
+                                      <Check className="h-4 w-4 stroke-[2.5]" />
                                     ) : isRejected ? (
-                                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                      </svg>
+                                      <span className="text-sm font-bold">✕</span>
                                     ) : (
-                                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                      </svg>
+                                      <span className="w-2 h-2 rounded-full bg-white" />
                                     )}
                                   </span>
                                 </div>
@@ -378,45 +372,45 @@ export default function TimelineEditor({
                                 {/* Step details */}
                                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1">
                                   <div className="space-y-1 w-full">
-                                    <p className="text-sm font-bold text-ink">
+                                    <p className="text-[13.5px] font-semibold text-[#132238]">
                                       {step.acted_by_id && step.acted_by_id !== step.approver_id ? (
                                         <span>
                                           {step.status === 'approved' ? 'Approved' : step.status === 'rejected' ? 'Rejected' : 'Actioned'} by{' '}
-                                          <span className="text-brand">{step.acted_by?.name || 'Delegate'}</span>{' '}
+                                          <span className="text-[#012F6B] font-semibold">{step.acted_by?.name || 'Delegate'}</span>{' '}
                                           (delegate for {userMap.get(step.approver_id) || 'Unknown Approver'})
                                         </span>
                                       ) : (
                                         userMap.get(step.approver_id) || 'Unknown Approver'
                                       )}
                                       {isApproverInactive && (
-                                        <span className="ml-2 text-2xs text-err bg-err/10 px-1.5 py-0.5 rounded border border-err/20 font-bold uppercase font-mono">
+                                        <span className="ml-2 text-[10px] text-[#B42318] bg-[#FEF3F2] px-1.5 py-0.5 rounded border border-[#FECDCA] font-semibold uppercase">
                                           Inactive
                                         </span>
                                       )}
                                     </p>
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="inline-flex text-[10px] leading-4 font-bold rounded-md bg-bg text-muted uppercase tracking-wider px-1.5 font-mono">
+                                    <div className="flex items-center gap-2">
+                                      <span className="inline-flex text-[10.5px] font-medium rounded-[4px] bg-[#F3F6F8] text-[#526377] uppercase tracking-wider px-1.5 py-0.5 border border-[#DDE5EC]">
                                         {step.type}
                                       </span>
                                       {isPending && (
-                                        <span className={`inline-flex text-[10px] leading-4 font-bold rounded-md uppercase tracking-wider px-1.5 font-mono ${
-                                          isApproverInactive ? 'bg-err/10 text-err' : 'bg-warn/10 text-warn'
+                                        <span className={`inline-flex text-[10.5px] font-medium rounded-[4px] uppercase tracking-wider px-1.5 py-0.5 border ${
+                                          isApproverInactive ? 'bg-[#FEF3F2] text-[#B42318] border-[#FECDCA]' : 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]'
                                         }`}>
                                           {isApproverInactive ? 'Blocked' : 'Pending'}
                                         </span>
                                       )}
                                     </div>
                                     {step.comment && (
-                                      <div className="mt-2 text-xs italic text-muted bg-bg border border-border p-2.5 rounded-lg">
-                                        "{step.comment}"
+                                      <div className="mt-2 text-[12px] italic text-[#526377] bg-white border border-[#DDE5EC] p-2.5 rounded-[6px]">
+                                        &quot;{step.comment}&quot;
                                       </div>
                                     )}
 
                                     {/* Blocked step reassignment interface */}
                                     {isPending && isApproverInactive && (isOwner || isAdmin) && (
-                                      <form action={reassignAction} className="mt-4 p-3 bg-bg border border-border rounded-lg space-y-2">
+                                      <form action={reassignAction} className="mt-3 p-3 bg-white border border-[#DDE5EC] rounded-[6px] space-y-2">
                                         <input type="hidden" name="stepId" value={step.id} />
-                                        <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-mono">
+                                        <label className="block text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">
                                           Reassign Approver
                                         </label>
                                         <div className="flex gap-2">
@@ -430,7 +424,7 @@ export default function TimelineEditor({
                                           </div>
                                           <button 
                                             type="submit" 
-                                            className="inline-flex items-center justify-center px-4 py-2 bg-brand hover:bg-brand/90 text-ink text-xs font-bold rounded-md transition"
+                                            className="inline-flex items-center justify-center px-3.5 py-1.5 bg-[#012F6B] hover:bg-[#033E79] text-white text-[12px] font-medium rounded-[6px] transition shadow-xs"
                                           >
                                             Reassign
                                           </button>
@@ -438,7 +432,7 @@ export default function TimelineEditor({
                                       </form>
                                     )}
                                   </div>
-                                  <div className="whitespace-nowrap text-right text-xs text-muted font-semibold font-mono">
+                                  <div className="whitespace-nowrap text-right text-[11px] text-[#8190A0] font-mono">
                                     {step.acted_at ? formatDate(step.acted_at) : isPending ? 'Active' : 'Waiting'}
                                   </div>
                                 </div>
@@ -455,12 +449,12 @@ export default function TimelineEditor({
 
             {/* Reference Steps Section */}
             {referenceSteps.length > 0 && (
-              <div className="border-t border-border pt-6 mt-4">
-                <h4 className="text-xs font-bold text-muted uppercase tracking-wider mb-4 flex items-center gap-1.5 font-mono">
-                  <Users className="w-4 h-4 text-muted" />
+              <div className="border-t border-[#EAF0F4] pt-4 mt-2">
+                <h4 className="text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-[#8190A0]" />
                   FYI / References
                 </h4>
-                <ul className="space-y-4">
+                <ul className="space-y-2.5">
                   {referenceSteps.map((step: any) => {
                     const isApproved = step.status === 'approved';
                     const isRejected = step.status === 'rejected';
@@ -469,22 +463,22 @@ export default function TimelineEditor({
                     const isApproverInactive = stepApproverUser?.status === 'inactive' || stepApproverUser?.status === 'INACTIVE';
 
                     return (
-                      <li key={step.id} className="flex items-center justify-between text-sm">
+                      <li key={step.id} className="flex items-center justify-between text-[13px]">
                         <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-md ${
-                            isApproved ? 'bg-ok' :
-                            isRejected ? 'bg-err' :
-                            isPending ? (isApproverInactive ? 'bg-err' : 'bg-warn') :
-                            'bg-muted'
+                          <span className={`w-2 h-2 rounded-full ${
+                            isApproved ? 'bg-[#0F7548]' :
+                            isRejected ? 'bg-[#B42318]' :
+                            isPending ? (isApproverInactive ? 'bg-[#B42318]' : 'bg-[#059DB0]') :
+                            'bg-[#DDE5EC]'
                           }`} />
-                          <span className="font-semibold text-ink">{userMap.get(step.approver_id) || 'Unknown User'}</span>
+                          <span className="font-medium text-[#132238]">{userMap.get(step.approver_id) || 'Unknown User'}</span>
                           {isApproverInactive && (
-                            <span className="text-[10px] text-err bg-err/10 px-1 rounded uppercase font-bold font-mono">
+                            <span className="text-[10px] text-[#B42318] bg-[#FEF3F2] px-1 rounded uppercase font-semibold">
                               Inactive
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-muted font-semibold font-mono">
+                        <span className="text-[11.5px] text-[#8190A0] font-mono">
                           {step.acted_at ? formatDate(step.acted_at) : isPending ? 'Active' : 'Waiting'}
                         </span>
                       </li>
@@ -500,7 +494,6 @@ export default function TimelineEditor({
   );
 }
 
-// Lock helper icon component
 function Lock({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">

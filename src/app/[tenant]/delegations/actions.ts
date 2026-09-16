@@ -37,6 +37,10 @@ export async function createDelegationAction(
     throw new Error('User profile not found');
   }
 
+  if (profile.tenant_id !== tenant.id) {
+    throw new Error('Forbidden: User does not belong to this tenant');
+  }
+
   const isAdmin = profile.role === 'admin' || profile.role === 'super_admin' || profile.role === 'ADMIN' || profile.role === 'SUPER_ADMIN';
   if (data.isSelfService) {
     if (data.delegatorId !== profile.id) {
@@ -112,6 +116,10 @@ export async function revokeDelegationAction(
   const profile = await getProfileForAuthUser(user.id, user.email || '');
   if (!profile) {
     throw new Error('User profile not found');
+  }
+
+  if (profile.tenant_id !== tenant.id) {
+    throw new Error('Forbidden: User does not belong to this tenant');
   }
 
   const { data: delegation } = await adminClient

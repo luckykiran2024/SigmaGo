@@ -127,39 +127,39 @@ export default function OrgAdminConsole({
     return (
       <div className="select-none font-sans">
         <div 
-          className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 rounded-xl transition cursor-pointer group"
+          className="flex items-center gap-3 py-2.5 px-4 hover:bg-[#F7FAFC] rounded-lg transition cursor-pointer group"
           onClick={() => hasChildren && setIsExpanded(!isExpanded)}
           style={{ paddingLeft: `${depth * 24 + 16}px` }}
         >
-          <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+          <div className="w-5 h-5 flex items-center justify-center text-[#8190A0]">
             {hasChildren ? (
-              isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
+              isExpanded ? <ChevronDown className="w-4 h-4 text-[#059DB0]" /> : <ChevronRight className="w-4 h-4 text-[#8190A0]" />
             ) : (
-              <div className="w-1.5 h-1.5 rounded-md bg-gray-300" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#DDE5EC]" />
             )}
           </div>
           <div className="flex-1 flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-0.5">
-              <span className="font-bold text-ink text-sm group-hover:text-brand transition">
+              <span className="font-bold text-[#132238] text-xs group-hover:text-[#012F6B] transition">
                 {node.name}
               </span>
-              <span className="text-xs text-gray-400 ml-2 font-medium">
+              <span className="text-[11px] text-[#8190A0] ml-2 font-mono">
                 ({node.email})
               </span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="inline-flex text-[10px] font-bold rounded-md bg-gray-100 text-gray-500 uppercase tracking-wider px-1.5">
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="inline-flex text-[10px] font-semibold rounded bg-[#F3F6F8] text-[#526377] uppercase tracking-wider px-1.5 py-0.5 border border-[#DDE5EC]">
                   {node.designation}
                 </span>
-                <span className="inline-flex text-[10px] font-bold rounded-md bg-brand/5 text-brand uppercase tracking-wider px-1.5">
+                <span className="inline-flex text-[10px] font-bold rounded bg-[#F1FBFC] text-[#012F6B] uppercase tracking-wider px-1.5 py-0.5 border border-[#DDE5EC]">
                   {node.careerLevel}
                 </span>
               </div>
             </div>
             <div>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider ${
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                 node.status === 'active' || node.status === 'ACTIVE' 
-                  ? 'bg-green-50 text-green-700 border border-green-100' 
-                  : 'bg-red-50 text-red-700 border border-red-100'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                  : 'bg-rose-50 text-rose-800 border border-rose-200'
               }`}>
                 {node.status}
               </span>
@@ -170,7 +170,7 @@ export default function OrgAdminConsole({
           <div className="relative">
             {/* Connector line */}
             <div 
-              className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-100"
+              className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#DDE5EC]"
               style={{ left: `${depth * 24 + 25}px` }}
             />
             {node.children.map(child => (
@@ -450,68 +450,68 @@ export default function OrgAdminConsole({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex border-b border-gray-100 gap-4">
+    <div className="space-y-6 font-sans">
+      <div className="flex border-b border-[#DDE5EC] gap-6">
         <button
           onClick={() => setActiveTab('chart')}
-          className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'chart' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
+          className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'chart' ? 'border-[#059DB0] text-[#012F6B]' : 'border-transparent text-[#526377] hover:text-[#012F6B]'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-3.5 h-3.5 text-[#059DB0]" />
           Org Chart
         </button>
         <button
           onClick={() => setActiveTab('import')}
-          className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'import' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
+          className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'import' ? 'border-[#059DB0] text-[#012F6B]' : 'border-transparent text-[#526377] hover:text-[#012F6B]'
           }`}
         >
-          <Upload className="w-4 h-4" />
+          <Upload className="w-3.5 h-3.5 text-[#059DB0]" />
           Import Org (CSV)
         </button>
         <button
           onClick={() => setActiveTab('api')}
-          className={`pb-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
-            activeTab === 'api' ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-ink'
+          className={`pb-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+            activeTab === 'api' ? 'border-[#059DB0] text-[#012F6B]' : 'border-transparent text-[#526377] hover:text-[#012F6B]'
           }`}
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-3.5 h-3.5 text-[#059DB0]" />
           HRMS API Settings
         </button>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-3 border ${
+        <div className={`p-3.5 rounded-lg text-xs font-semibold flex items-center gap-2.5 border ${
           message.type === 'success' 
-            ? 'bg-green-50 border-green-100 text-green-700' 
-            : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-rose-50 border-rose-200 text-rose-800'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <AlertTriangle className="w-5 h-5 text-red-600" />}
+          {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
           {message.text}
         </div>
       )}
 
       {/* Org Chart Tab */}
       {activeTab === 'chart' && (
-        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-[#DDE5EC] pb-4">
             <div>
-              <h2 className="text-lg font-sans font-extrabold text-ink">SigmaGo Hierarchy</h2>
-              <p className="text-xs text-gray-400 font-medium mt-1">Dynamically assembled reporting tree based on manager assignments.</p>
+              <h2 className="text-base font-bold text-[#012F6B]">Organization Hierarchy</h2>
+              <p className="text-xs text-[#526377] font-medium mt-0.5">Dynamically assembled reporting tree based on manager assignments.</p>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-brand/5 text-brand border border-brand/10">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]">
               {initialUsers.length} total staff
             </span>
           </div>
 
-          <div className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
+          <div className="divide-y divide-[#DDE5EC] max-h-[600px] overflow-y-auto">
             {rootNodes.map(node => (
               <TreeNodeComponent key={node.id} node={node} depth={0} />
             ))}
             {rootNodes.length === 0 && (
-              <div className="py-12 text-center text-gray-400 text-sm">
-                No users found. Import users under the "Import Org" tab.
+              <div className="py-12 text-center text-[#8190A0] text-xs">
+                No users found. Import users under the &quot;Import Org&quot; tab.
               </div>
             )}
           </div>
@@ -521,34 +521,34 @@ export default function OrgAdminConsole({
       {/* Import Org Tab */}
       {activeTab === 'import' && (
         <div className="space-y-6">
-          <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+          <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#DDE5EC] pb-4">
               <div>
-                <h2 className="text-lg font-sans font-extrabold text-ink">Upload Hierarchy CSV</h2>
-                <p className="text-xs text-gray-400 font-medium mt-1">Upload your organization CSV to rebuild and sync reporting lines.</p>
+                <h2 className="text-base font-bold text-[#012F6B]">Upload Hierarchy CSV</h2>
+                <p className="text-xs text-[#526377] font-medium mt-0.5">Upload your organization CSV to rebuild and sync reporting lines.</p>
               </div>
               <button
                 onClick={downloadTemplate}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:text-brand-light transition"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#059DB0] hover:text-[#078899] transition"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5" />
                 Download Template CSV
               </button>
             </div>
 
-            <div className="flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl py-12 px-6 bg-gray-50/50 hover:bg-gray-50 transition cursor-pointer relative">
+            <div className="flex items-center justify-center border-2 border-dashed border-[#DDE5EC] rounded-xl py-10 px-6 bg-[#F7FAFC] hover:border-[#059DB0]/50 transition cursor-pointer relative">
               <input
                 type="file"
                 accept=".csv"
                 onChange={handleCsvSelect}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
-              <div className="text-center space-y-2">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                <p className="text-sm font-bold text-ink">
+              <div className="text-center space-y-1.5">
+                <Upload className="w-7 h-7 text-[#8190A0] mx-auto" />
+                <p className="text-xs font-bold text-[#132238]">
                   {fileName ? fileName : 'Select or drop org CSV file'}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-[11px] text-[#8190A0]">
                   File must use the headers specified in the template.
                 </p>
               </div>
@@ -556,24 +556,24 @@ export default function OrgAdminConsole({
           </div>
 
           {previewRows.length > 0 && (
-            <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#DDE5EC] bg-[#F7FAFC] flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-ink">Sync Preview</h3>
-                  <p className="text-xs text-gray-400 font-medium">Verify changes before applying updates to the live database.</p>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#132238]">Sync Preview</h3>
+                  <p className="text-xs text-[#526377] font-medium">Verify changes before applying updates to the live database.</p>
                 </div>
                 <div className="flex gap-2 flex-wrap text-xs font-bold">
-                  <span className="px-2.5 py-1 rounded-md bg-green-50 text-green-700 border border-green-100">
+                  <span className="px-2 py-0.5 rounded text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200">
                     New: {summary.newCount}
                   </span>
-                  <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                  <span className="px-2 py-0.5 rounded text-[11px] bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]">
                     Update: {summary.updateCount}
                   </span>
-                  <span className="px-2.5 py-1 rounded-md bg-red-50 text-red-700 border border-red-100">
+                  <span className="px-2 py-0.5 rounded text-[11px] bg-rose-50 text-rose-800 border border-rose-200">
                     Deactivate: {summary.deactivateCount}
                   </span>
                   {summary.errorCount > 0 && (
-                    <span className="px-2.5 py-1 rounded-md bg-yellow-50 text-yellow-700 border border-yellow-100">
+                    <span className="px-2 py-0.5 rounded text-[11px] bg-amber-50 text-amber-800 border border-amber-200">
                       Errors: {summary.errorCount}
                     </span>
                   )}
@@ -581,45 +581,45 @@ export default function OrgAdminConsole({
               </div>
 
               <div className="overflow-x-auto max-h-[400px]">
-                <table className="min-w-full divide-y divide-gray-100 text-sm text-left">
-                  <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+                <table className="min-w-full divide-y divide-[#DDE5EC] text-xs text-left">
+                  <thead className="bg-[#F7FAFC] text-[#526377] font-bold uppercase tracking-wider text-[10px]">
                     <tr>
-                      <th className="px-6 py-3.5">Row</th>
-                      <th className="px-6 py-3.5">Emp ID</th>
-                      <th className="px-6 py-3.5">Name</th>
-                      <th className="px-6 py-3.5">Email</th>
-                      <th className="px-6 py-3.5">Designation</th>
-                      <th className="px-6 py-3.5">Manager ID</th>
-                      <th className="px-6 py-3.5">Status</th>
-                      <th className="px-6 py-3.5">Change</th>
+                      <th className="px-4 py-3">Row</th>
+                      <th className="px-4 py-3">Emp ID</th>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Email</th>
+                      <th className="px-4 py-3">Designation</th>
+                      <th className="px-4 py-3">Manager ID</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Change</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 font-medium">
+                  <tbody className="divide-y divide-[#DDE5EC] font-medium">
                     {previewRows.map((r, i) => (
-                      <tr key={i} className={r.actionType === 'error' ? 'bg-red-50/20' : ''}>
-                        <td className="px-6 py-3.5 text-gray-400 font-semibold">{r.rowNum}</td>
-                        <td className="px-6 py-3.5 text-ink font-semibold">{r.employee_id}</td>
-                        <td className="px-6 py-3.5 text-ink">{r.name}</td>
-                        <td className="px-6 py-3.5 text-gray-500">{r.email}</td>
-                        <td className="px-6 py-3.5 text-gray-400">{r.designation}</td>
-                        <td className="px-6 py-3.5 text-gray-400">{r.manager_employee_id || '-'}</td>
-                        <td className="px-6 py-3.5">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
-                            r.status === 'active' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
+                      <tr key={i} className={`hover:bg-[#F7FAFC] transition ${r.actionType === 'error' ? 'bg-rose-50/30' : ''}`}>
+                        <td className="px-4 py-3 text-[#8190A0] font-mono">{r.rowNum}</td>
+                        <td className="px-4 py-3 text-[#132238] font-bold font-mono">{r.employee_id}</td>
+                        <td className="px-4 py-3 text-[#132238] font-semibold">{r.name}</td>
+                        <td className="px-4 py-3 text-[#526377] font-mono text-[11px]">{r.email}</td>
+                        <td className="px-4 py-3 text-[#526377]">{r.designation}</td>
+                        <td className="px-4 py-3 text-[#8190A0] font-mono">{r.manager_employee_id || '-'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            r.status === 'active' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
                           }`}>
                             {r.status}
                           </span>
                         </td>
-                        <td className="px-6 py-3.5">
+                        <td className="px-4 py-3">
                           {r.actionType === 'error' ? (
-                            <span className="text-red-600 flex items-center gap-1">
+                            <span className="text-rose-600 flex items-center gap-1 font-semibold">
                               <AlertTriangle className="w-3.5 h-3.5" />
                               {r.error}
                             </span>
                           ) : (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
-                              r.actionType === 'new' ? 'bg-green-100 text-green-800' :
-                              r.actionType === 'deactivate' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              r.actionType === 'new' ? 'bg-emerald-100 text-emerald-900' :
+                              r.actionType === 'deactivate' ? 'bg-rose-100 text-rose-900' : 'bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]'
                             }`}>
                               {r.actionType}
                             </span>
@@ -631,17 +631,17 @@ export default function OrgAdminConsole({
                 </table>
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+              <div className="px-5 py-3.5 border-t border-[#DDE5EC] flex items-center justify-end gap-2.5 bg-[#F7FAFC]">
                 <button
                   onClick={() => { setPreviewRows([]); setFileName(''); }}
-                  className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 bg-white hover:bg-gray-50 transition"
+                  className="px-3.5 py-1.5 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] transition"
                 >
                   Clear
                 </button>
                 <button
                   onClick={handleCommit}
                   disabled={isCommitting || summary.errorCount > 0}
-                  className="inline-flex items-center justify-center rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-accent/10 hover:bg-brand-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#012F6B] hover:bg-[#033E79] px-4 py-1.5 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition"
                 >
                   {isCommitting ? 'Ingesting...' : 'Confirm Import'}
                 </button>
@@ -654,90 +654,90 @@ export default function OrgAdminConsole({
       {/* HRMS API Settings Tab */}
       {activeTab === 'api' && (
         <div className="space-y-6">
-          <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-6 space-y-4">
-            <h2 className="text-lg font-sans font-extrabold text-ink border-b border-gray-100 pb-4">
+          <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs p-5 sm:p-6 space-y-4">
+            <h2 className="text-base font-bold text-[#012F6B] border-b border-[#DDE5EC] pb-3">
               HRMS Integration Settings
             </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-ink">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#132238] mb-1">
                   Webhook Endpoint URL
                 </label>
-                <div className="mt-2 flex">
+                <div className="flex">
                   <input
                     type="text"
                     readOnly
                     value={`${window.location.origin}/api/webhooks/hrms/${tenantSubdomain}`}
-                    className="block w-full rounded-xl border border-gray-200 py-3 px-4 text-gray-500 bg-gray-50 shadow-sm focus:outline-none sm:text-sm font-mono"
+                    className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-xs text-[#526377] bg-[#F7FAFC] shadow-xs focus:outline-none font-mono"
                   />
                 </div>
-                <p className="text-2xs text-gray-400 mt-1 font-medium">Configure this URL inside your HRMS payload push webhook.</p>
+                <p className="text-[11px] text-[#8190A0] mt-1 font-medium">Configure this URL inside your HRMS payload push webhook.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-ink">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#132238] mb-1">
                   HRMS Sync Secret
                 </label>
-                <div className="mt-2 flex gap-3">
+                <div className="flex gap-2.5">
                   <input
                     type="text"
                     readOnly
                     value={secret ? secret : 'No secret configured'}
-                    className="block flex-1 rounded-xl border border-gray-200 py-3 px-4 text-gray-500 bg-gray-50 shadow-sm focus:outline-none sm:text-sm font-mono"
+                    className="block flex-1 rounded-lg border border-[#DDE5EC] py-2 px-3 text-xs text-[#526377] bg-[#F7FAFC] shadow-xs focus:outline-none font-mono"
                   />
                   <button
                     onClick={handleRegenerateSecret}
                     disabled={isRegenerating}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 bg-white hover:bg-gray-50 transition shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] hover:text-[#012F6B] transition shadow-xs"
                   >
-                    <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRegenerating ? 'animate-spin' : ''}`} />
                     {secret ? 'Regenerate' : 'Create Secret'}
                   </button>
                 </div>
-                <p className="text-2xs text-gray-400 mt-1 font-medium">Pass this secret in the <strong>x-sync-secret</strong> header of your webhook request.</p>
+                <p className="text-[11px] text-[#8190A0] mt-1 font-medium">Pass this secret in the <strong>x-sync-secret</strong> header of your webhook request.</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-base font-bold text-ink">Recent Sync Logs</h3>
-              <p className="text-xs text-gray-400 font-medium">History of automated and manual sync occurrences.</p>
+          <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#DDE5EC] bg-[#F7FAFC]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#132238]">Recent Sync Logs</h3>
+              <p className="text-xs text-[#526377] font-medium">History of automated and manual sync occurrences.</p>
             </div>
             
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-100 text-sm text-left">
-                <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+              <table className="min-w-full divide-y divide-[#DDE5EC] text-xs text-left">
+                <thead className="bg-[#F7FAFC] text-[#526377] font-bold uppercase tracking-wider text-[10px]">
                   <tr>
-                    <th className="px-6 py-3.5">Time</th>
-                    <th className="px-6 py-3.5">Source</th>
-                    <th className="px-6 py-3.5">Created</th>
-                    <th className="px-6 py-3.5">Updated</th>
-                    <th className="px-6 py-3.5">Deactivated</th>
-                    <th className="px-6 py-3.5">Errors</th>
+                    <th className="px-4 py-3">Time</th>
+                    <th className="px-4 py-3">Source</th>
+                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3">Updated</th>
+                    <th className="px-4 py-3">Deactivated</th>
+                    <th className="px-4 py-3">Errors</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 font-medium text-ink">
+                <tbody className="divide-y divide-[#DDE5EC] font-medium text-[#132238]">
                   {syncLogs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="px-6 py-3.5 whitespace-nowrap text-gray-400 font-semibold">{formatDate(log.applied_at)}</td>
-                      <td className="px-6 py-3.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold uppercase ${
-                          log.source === 'csv' ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'bg-blue-50 text-blue-700 border border-blue-100'
+                    <tr key={log.id} className="hover:bg-[#F7FAFC] transition">
+                      <td className="px-4 py-3 whitespace-nowrap text-[#8190A0] font-mono text-[11px]">{formatDate(log.applied_at)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          log.source === 'csv' ? 'bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]' : 'bg-blue-50 text-[#07508B] border border-blue-200'
                         }`}>
                           {log.source}
                         </span>
                       </td>
-                      <td className="px-6 py-3.5 font-bold text-green-600">{log.changes?.created_count ?? 0}</td>
-                      <td className="px-6 py-3.5 font-bold text-blue-600">{log.changes?.updated_count ?? 0}</td>
-                      <td className="px-6 py-3.5 font-bold text-red-600">{log.changes?.deactivated_count ?? 0}</td>
-                      <td className="px-6 py-3.5 font-bold text-yellow-600">{log.changes?.errors_count ?? 0}</td>
+                      <td className="px-4 py-3 font-bold text-emerald-700 font-mono">{log.changes?.created_count ?? 0}</td>
+                      <td className="px-4 py-3 font-bold text-[#012F6B] font-mono">{log.changes?.updated_count ?? 0}</td>
+                      <td className="px-4 py-3 font-bold text-rose-700 font-mono">{log.changes?.deactivated_count ?? 0}</td>
+                      <td className="px-4 py-3 font-bold text-amber-700 font-mono">{log.changes?.errors_count ?? 0}</td>
                     </tr>
                   ))}
                   {syncLogs.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
+                      <td colSpan={6} className="px-4 py-8 text-center text-[#8190A0] text-xs font-medium">
                         No sync executions logged yet.
                       </td>
                     </tr>

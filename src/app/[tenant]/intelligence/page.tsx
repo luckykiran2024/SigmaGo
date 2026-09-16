@@ -222,13 +222,23 @@ export default async function UserIntelligencePage({
   });
 
   // Decision-time policy resolution: prioritize immutable snapshot at decision time
+  // Category-level resolution is strictly labelled as a legacy fallback for pre-migration records
+  const getRequestGoverningPolicy = (r: any): { policyId: string | null; isLegacyFallback: boolean } => {
+    if (r.workflow_snapshot?.governing_policy_id_snapshot) {
+      return { policyId: r.workflow_snapshot.governing_policy_id_snapshot, isLegacyFallback: false };
+    }
+    if (r.workflow_snapshot?.governing_policy_id) {
+      return { policyId: r.workflow_snapshot.governing_policy_id, isLegacyFallback: false };
+    }
+    if (r.categories?.governing_policy_id) {
+      // Legacy fallback: today's category policy may not be the one that governed the decision historically
+      return { policyId: r.categories.governing_policy_id, isLegacyFallback: true };
+    }
+    return { policyId: null, isLegacyFallback: false };
+  };
+
   const getRequestGoverningPolicyId = (r: any): string | null => {
-    return (
-      r.workflow_snapshot?.governing_policy_id_snapshot ||
-      r.workflow_snapshot?.governing_policy_id ||
-      r.categories?.governing_policy_id ||
-      null
-    );
+    return getRequestGoverningPolicy(r).policyId;
   };
 
   // Calculate real coverage metrics (NO artificial inflation)

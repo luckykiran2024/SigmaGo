@@ -28,15 +28,15 @@ export default function TopNav({ tenant, isAdmin }: { tenant: string; isAdmin: b
           <Link
             key={item.name}
             href={item.href}
-            className={`text-sm font-bold transition relative py-1 ${
+            className={`text-[13.5px] font-medium transition-colors relative py-1 ${
               isActive
-                ? 'text-brand'
-                : 'text-gray-500 hover:text-ink'
+                ? 'text-[#012F6B] font-semibold'
+                : 'text-[#526377] hover:text-[#012F6B]'
             }`}
           >
             {item.name}
             {isActive && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand rounded-md" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#059DB0] rounded-sm" />
             )}
           </Link>
         );

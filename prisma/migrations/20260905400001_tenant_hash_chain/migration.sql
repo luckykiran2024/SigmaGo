@@ -10,6 +10,9 @@ ALTER TABLE "approval_requests" ADD COLUMN IF NOT EXISTS "seal_key_id" TEXT;
 CREATE INDEX IF NOT EXISTS "idx_approval_requests_tenant_finalized" ON "approval_requests" ("tenant_id", "finalized_at" DESC);
 
 -- 3. Update sigmago_finalize_seal to atomically record previous_seal_hash, seal_signature_b64, seal_key_id
+DROP FUNCTION IF EXISTS sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT);
+DROP FUNCTION IF EXISTS sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION sigmago_finalize_seal(
   p_request_id UUID,
   p_tenant_id UUID,

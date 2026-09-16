@@ -22,14 +22,16 @@ export default async function PlatformAdminLayout({
       <header className="bg-[#1E293B] border-b border-[#334155] h-[60px] sticky top-0 z-50">
         <div className="max-w-[1240px] mx-auto px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/platform-admin" className="flex items-center gap-2.5 group">
-              <div className="w-[32px] h-[32px] rounded-lg bg-[#38BDF8] text-[#0F172A] font-black text-[13px] flex items-center justify-center tracking-tight shadow-md">
-                SG
-              </div>
+            <Link href="/platform-admin" className="flex items-center gap-3 group">
+              <img
+                src="/brand/sigmago-logo.png"
+                alt="SigmaGo"
+                className="w-7 h-7 object-contain"
+              />
               <div className="flex flex-col">
-                <span className="text-[13px] font-bold text-white tracking-tight flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white tracking-tight flex items-center gap-1.5 font-sans">
                   SigmaGo Platform Console
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-[#38BDF8]/20 text-[#38BDF8] border border-[#38BDF8]/30 uppercase">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#059DB0]/20 text-[#05B2C0] border border-[#059DB0]/30 uppercase">
                     Super Admin
                   </span>
                 </span>

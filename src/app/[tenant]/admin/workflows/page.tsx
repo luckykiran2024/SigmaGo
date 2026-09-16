@@ -49,6 +49,14 @@ export default async function AdminWorkflowsPage({ params }: { params: Promise<{
     .eq('status', 'active')
     .order('name', { ascending: true });
 
+  // Load active policies
+  const { data: policies } = await adminClient
+    .from('policies')
+    .select('id, title, bound_type, bound_value, bound_field')
+    .eq('tenant_id', tenant.id)
+    .eq('status', 'active')
+    .order('title', { ascending: true });
+
   // Load workflows
   const workflows = await getWorkflows(tenant.id);
 
@@ -70,6 +78,7 @@ export default async function AdminWorkflowsPage({ params }: { params: Promise<{
         categories={categories || []}
         activeUsers={activeUsers || []}
         initialWorkflows={workflows as any || []}
+        policies={policies || []}
       />
     </div>
   );

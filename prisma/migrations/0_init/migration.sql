@@ -1543,7 +1543,7 @@ CREATE POLICY "tenant_isolation_decision_footprint_metrics_select" ON decision_f
   FOR SELECT TO authenticated
   USING (
     tenant_id = current_user_tenant_id()
-    AND (is_current_user_tenant_admin() OR has_active_intelligence_grant())
+    AND (is_current_user_tenant_admin() OR has_full_intelligence_grant())
   );
 
 DROP POLICY IF EXISTS "tenant_isolation_intelligence_signals_select" ON intelligence_signals;

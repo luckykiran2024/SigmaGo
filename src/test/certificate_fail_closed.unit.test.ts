@@ -146,6 +146,8 @@ describe('Workstream 2: Canonical Decision Evidence Fail-Closed Invariants', () 
       return {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        single: vi.fn().mockResolvedValue({ data: null, error: null }),
         then: (onfulfilled: any) => Promise.resolve({ data: [], error: null }).then(onfulfilled),
       };
     });

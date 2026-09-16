@@ -1,7 +1,6 @@
 'use server';
 
 import { adminClient } from '@/lib/supabase/admin';
-import { actOnStep } from '@/lib/db/steps';
 import { revalidatePath } from 'next/cache';
 
 export async function confirmEmailAction(
@@ -10,41 +9,7 @@ export async function confirmEmailAction(
   intent: 'approve' | 'reject' | 'discuss',
   comment: string
 ) {
-  // 1. Fetch token and verify
-  const { data: tokenData, error: tokenError } = await adminClient
-    .from('action_tokens')
-    .select('*')
-    .eq('token', token)
-    .single();
-
-  if (tokenError || !tokenData) {
-    throw new Error('Token not found');
-  }
-
-  if (tokenData.used_at) {
-    throw new Error('This action link has already been used');
-  }
-
-  if (new Date(tokenData.expires_at) < new Date()) {
-    throw new Error('This action link has expired');
-  }
-
-  // Fetch step status to ensure it's still pending
-  const { data: step, error: stepError } = await adminClient
-    .from('approval_steps')
-    .select('status, request_id')
-    .eq('id', tokenData.step_id)
-    .single();
-
-  if (stepError || !step) {
-    throw new Error('Approval step not found');
-  }
-
-  if (step.status !== 'pending') {
-    throw new Error('This step is no longer pending action');
-  }
-
-  // 2. Fetch tenant ID
+  // 1. Resolve tenant ID
   const { data: tenant } = await adminClient
     .from('tenants')
     .select('id')
@@ -55,83 +20,50 @@ export async function confirmEmailAction(
     throw new Error('Tenant not found');
   }
 
-  // 3. Mark token as used
-  const { error: tokenUpdateError } = await adminClient
-    .from('action_tokens')
-    .update({ used_at: new Date().toISOString() })
-    .eq('token', token)
-    .eq('tenant_id', tenant.id);
+  // 2. Atomically consume token and execute step action in a single DB transaction
+  const { data: result, error: rpcError } = await adminClient.rpc('sigmago_consume_action_token_and_act', {
+    p_token: token,
+    p_tenant_id: tenant.id,
+    p_intent: intent,
+    p_comment: comment || null,
+  });
 
-  if (tokenUpdateError) {
-    throw new Error('Failed to consume token');
+  if (rpcError) {
+    console.error('Error executing atomic token action RPC:', rpcError);
+    throw new Error(rpcError.message || 'Failed to process email action');
   }
 
-  // 4. Perform the action
+  const requestId = result?.request_id;
+
+  // 3. Post-action notifications (if discussion requested)
   if (intent === 'discuss') {
-    if (!comment || comment.trim().length === 0) {
-      throw new Error('Comment is required for discussion requests');
-    }
-    
-    // Set request status to 'in_discussion'
-    const { error: reqError } = await adminClient
-      .from('approval_requests')
-      .update({ status: 'in_discussion' })
-      .eq('id', tokenData.request_id)
-      .eq('tenant_id', tenant.id);
+    try {
+      const { data: actorUser } = await adminClient
+        .from('users')
+        .select('name, email')
+        .eq('id', result.approver_id)
+        .eq('tenant_id', tenant.id)
+        .maybeSingle();
 
-    if (reqError) throw reqError;
+      const { data: request } = await adminClient
+        .from('approval_requests')
+        .select('owner_id, owner:users!owner_id(email)')
+        .eq('id', requestId)
+        .eq('tenant_id', tenant.id)
+        .maybeSingle();
 
-    // Get actor info
-    const { data: actorUser } = await adminClient
-      .from('users')
-      .select('name, email')
-      .eq('id', tokenData.approver_id)
-      .eq('tenant_id', tenant.id)
-      .single();
-
-    // Fetch owner email
-    const { data: request } = await adminClient
-      .from('approval_requests')
-      .select('owner_id, owner:users!owner_id(email)')
-      .eq('id', tokenData.request_id)
-      .eq('tenant_id', tenant.id)
-      .single();
-
-    const ownerEmail = (request?.owner as any)?.email;
-    
-    // Email the owner
-    const { sendDiscussionNotificationEmail } = await import('@/lib/email/outbound');
-    if (ownerEmail) {
-      await sendDiscussionNotificationEmail(tenantSubdomain, tokenData.request_id, comment, actorUser?.name || 'An approver', ownerEmail);
-    }
-
-    // Write audit log entry
-    await adminClient.from('audit_log').insert({
-      tenant_id: tenant.id,
-      request_id: tokenData.request_id,
-      actor_id: tokenData.approver_id,
-      action_type: 'step_discussion',
-      metadata: {
-        step_id: tokenData.step_id,
-        action_source: 'email',
-        comment,
-        summary: `${actorUser?.name || 'Unknown'} requested discussion via email.`
+      const ownerEmail = (request?.owner as any)?.email;
+      const { sendDiscussionNotificationEmail } = await import('@/lib/email/outbound');
+      if (ownerEmail) {
+        await sendDiscussionNotificationEmail(tenantSubdomain, requestId, comment, actorUser?.name || 'An approver', ownerEmail);
       }
-    });
-
-  } else {
-    // Approve or Reject
-    const actionVal = intent === 'approve' ? 'approved' : 'rejected';
-    await actOnStep({
-      stepId: tokenData.step_id,
-      action: actionVal,
-      actorId: tokenData.approver_id,
-      tenantId: tenant.id,
-      comment: comment || undefined,
-      actionSource: 'email',
-      delegationId: undefined
-    });
+    } catch (notifyErr) {
+      console.error('Non-blocking discussion notification error:', notifyErr);
+    }
   }
 
-  revalidatePath(`/${tenantSubdomain}/requests/${tokenData.request_id}`);
+  if (requestId) {
+    revalidatePath(`/${tenantSubdomain}/requests/${requestId}`);
+  }
 }
+

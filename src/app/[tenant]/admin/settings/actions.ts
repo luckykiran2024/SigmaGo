@@ -1,6 +1,32 @@
 'use server';
 
+import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
+import { getProfileForAuthUser } from '@/lib/db/users';
+
+async function assertCallerIsTenantAdmin(tenantId: string) {
+  const supabase = await createClient();
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const profile = await getProfileForAuthUser(user.id, user.email || '');
+  if (!profile) {
+    throw new Error('Unauthorized: User profile not found');
+  }
+
+  if (profile.tenant_id !== tenantId) {
+    throw new Error('Forbidden: User does not belong to this tenant');
+  }
+
+  const role = (profile.role || '').toLowerCase();
+  if (role !== 'admin' && role !== 'super_admin' && role !== 'owner') {
+    throw new Error('Forbidden: Admin privileges required');
+  }
+
+  return { user, profile };
+}
 
 export async function uploadTenantLogoAction(
   tenantId: string,
@@ -9,6 +35,8 @@ export async function uploadTenantLogoAction(
   fileName: string
 ): Promise<{ success: boolean; logoUrl?: string; error?: string }> {
   try {
+    await assertCallerIsTenantAdmin(tenantId);
+
     // 1. Decode base64 data
     const base64Content = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
     const buffer = Buffer.from(base64Content, 'base64');
@@ -54,6 +82,8 @@ export async function uploadTenantLogoAction(
 }
 
 export async function removeTenantLogoAction(tenantId: string): Promise<void> {
+  await assertCallerIsTenantAdmin(tenantId);
+
   const { error } = await adminClient
     .from('tenants')
     .update({ logo_url: null })
@@ -70,6 +100,8 @@ export async function updateTenantSettingsAction(
   name: string,
   settings: any
 ): Promise<void> {
+  await assertCallerIsTenantAdmin(tenantId);
+
   const { error } = await adminClient
     .from('tenants')
     .update({

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Plus, X, AlertTriangle, Link2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Search, Plus, X, AlertTriangle, Link2 } from 'lucide-react';
 import { addReferenceAction, removeReferenceAction, searchDecisionsAction } from '@/app/[tenant]/requests/[id]/reference-actions';
 
 interface ReferenceItem {
@@ -69,7 +69,6 @@ export function DecisionReferencesCard({
     setIsSearching(true);
     try {
       const results = await searchDecisionsAction(tenantSubdomain, q);
-      // Filter out self-reference
       setSearchResults(results.filter((r: any) => r.id !== requestId));
     } catch (err) {
       console.error(err);
@@ -121,50 +120,49 @@ export function DecisionReferencesCard({
     }
   };
 
-
   const renderBadge = (rel: string) => {
     switch (rel) {
       case 'based_on':
-        return <span className="px-2.5 py-0.5 rounded-[5px] bg-brand/10 text-brand font-semibold text-[13px]">Based on</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#EDF2F6] text-[#012F6B] font-medium text-[11.5px] border border-[#DDE5EC]">Based on</span>;
       case 'replaces':
-        return <span className="px-2.5 py-0.5 rounded-[5px] bg-muted/10 text-muted font-semibold text-[13px]">Replaces</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#F3F6F8] text-[#526377] font-medium text-[11.5px] border border-[#DDE5EC]">Replaces</span>;
       case 'exception_to':
-        return <span className="px-2.5 py-0.5 rounded-[5px] bg-warn/10 text-warn font-semibold text-[13px]">Exception to</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#FFFAEB] text-[#B54708] font-medium text-[11.5px] border border-[#FEDF89]">Exception to</span>;
       case 'renewal_of':
-        return <span className="px-2.5 py-0.5 rounded-[5px] bg-brand/10 text-brand font-semibold text-[13px]">Renewal of</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#F1FBFC] text-[#078899] font-medium text-[11.5px] border border-[#DDF5F7]">Renewal of</span>;
       default:
-        return <span className="px-2.5 py-0.5 rounded-[5px] bg-bg text-muted font-semibold text-[13px]">{rel}</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#F3F6F8] text-[#526377] font-medium text-[11.5px] border border-[#DDE5EC]">{rel}</span>;
     }
   };
 
   const renderStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <span className="px-2 py-0.5 rounded-[5px] bg-ok/10 text-ok font-semibold text-[12px]">Approved</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#ECFDF3] text-[#027A48] border border-[#A6F4C5] font-medium text-[11px]">Approved</span>;
       case 'rejected':
-        return <span className="px-2 py-0.5 rounded-[5px] bg-err/10 text-err font-semibold text-[12px]">Rejected</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#FEF3F2] text-[#B42318] border border-[#FECDCA] font-medium text-[11px]">Rejected</span>;
       case 'in_review':
-        return <span className="px-2 py-0.5 rounded-[5px] bg-brand/10 text-brand font-semibold text-[12px]">In Review</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#EDF2F6] text-[#012F6B] border border-[#DDE5EC] font-medium text-[11px]">In Review</span>;
       default:
-        return <span className="px-2 py-0.5 rounded-[5px] bg-bg text-muted font-semibold text-[12px] uppercase">{status}</span>;
+        return <span className="px-2 py-0.5 rounded-[4px] bg-[#F3F6F8] text-[#526377] border border-[#DDE5EC] font-medium text-[11px] uppercase">{status}</span>;
     }
   };
 
   return (
-    <div className="bg-surface border border-border rounded-[8px] p-6 space-y-6">
+    <div className="bg-white border border-[#DDE5EC] rounded-[10px] p-6 space-y-6 shadow-xs font-sans">
       {/* OUTGOING REFERENCES SECTION */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center justify-between border-b border-[#EAF0F4] pb-3">
           <div className="flex items-center gap-2">
-            <Link2 className="w-4 h-4 text-brand" />
-            <h3 className="text-[18px] font-bold text-ink">Decision References</h3>
+            <Link2 className="w-4 h-4 text-[#012F6B]" />
+            <h3 className="text-[16px] font-semibold text-[#132238]">Decision References</h3>
           </div>
           {!isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[14px] font-semibold text-brand hover:bg-section-alt rounded-[6px] border border-border transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#012F6B] hover:bg-[#F7FAFC] rounded-[6px] border border-[#DDE5EC] transition"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Add reference</span>
             </button>
           )}
@@ -172,19 +170,19 @@ export function DecisionReferencesCard({
 
         {/* List of Outgoing References */}
         {outgoingRefs.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {outgoingRefs.map((ref) => (
-              <div key={ref.id} className="p-3.5 bg-section-alt border border-border rounded-[6px] space-y-1.5">
-                <div className="flex items-center justify-between gap-3 text-[14px]">
+              <div key={ref.id} className="p-3.5 bg-[#F7FAFC] border border-[#EAF0F4] rounded-[8px] space-y-1.5">
+                <div className="flex items-center justify-between gap-3 text-[13.5px]">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     {renderBadge(ref.relationship)}
                     <Link
                       href={`/${tenantSubdomain}/requests/${ref.target_id}`}
-                      className="font-mono font-bold text-brand hover:underline"
+                      className="font-mono font-medium text-[#012F6B] hover:underline"
                     >
                       {ref.target_request?.ref || 'REF-????'}
                     </Link>
-                    <span className="font-semibold text-ink line-clamp-1">
+                    <span className="font-medium text-[#132238] line-clamp-1">
                       {ref.target_request?.subject || 'Referenced Decision'}
                     </span>
                   </div>
@@ -196,7 +194,7 @@ export function DecisionReferencesCard({
                           setDeleteRefId(ref.id);
                           setDeleteError(null);
                         }}
-                        className="text-muted hover:text-err p-1 rounded-md transition"
+                        className="text-[#8190A0] hover:text-[#B42318] p-1 rounded transition"
                         title="Remove reference"
                       >
                         <X className="w-4 h-4" />
@@ -206,20 +204,20 @@ export function DecisionReferencesCard({
                 </div>
 
                 {deleteRefId === ref.id && (
-                  <div className="p-3 bg-err/5 border border-err/20 rounded-[6px] flex items-center justify-between text-[13px]">
-                    <span className="text-err font-semibold">Remove this decision reference link?</span>
+                  <div className="p-3 bg-[#FEF3F2] border border-[#FECDCA] rounded-[6px] flex items-center justify-between text-[12.5px]">
+                    <span className="text-[#B42318] font-medium">Remove this decision reference link?</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setDeleteRefId(null)}
-                        className="px-2.5 py-1 text-muted hover:text-ink font-medium"
+                        className="px-2.5 py-1 text-[#526377] hover:text-[#132238] font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={confirmRemove}
-                        className="px-2.5 py-1 bg-err text-white rounded-[4px] font-semibold"
+                        className="px-2.5 py-1 bg-[#B42318] text-white rounded-[4px] font-medium"
                       >
                         Remove
                       </button>
@@ -227,8 +225,8 @@ export function DecisionReferencesCard({
                   </div>
                 )}
                 {ref.note && (
-                  <p className="text-[13px] text-muted pl-1 italic">
-                    Note: "{ref.note}"
+                  <p className="text-[12.5px] text-[#526377] pl-1 italic">
+                    Note: &quot;{ref.note}&quot;
                   </p>
                 )}
               </div>
@@ -236,30 +234,30 @@ export function DecisionReferencesCard({
           </div>
         ) : (
           !isAdding && (
-            <p className="text-[14px] text-muted italic">
-              No references yet. Link this decision to the ones it's based on, replaces, or deviates from.
+            <p className="text-[13px] text-[#8190A0] italic">
+              No references yet. Link this decision to the ones it&apos;s based on, replaces, or deviates from.
             </p>
           )
         )}
 
         {/* INLINE ADD PANEL */}
         {isAdding && (
-          <div className="p-4 border border-brand/30 bg-brand/5 rounded-[8px] space-y-4 animate-fade-up">
+          <div className="p-4 border border-[#059DB0]/30 bg-[#F1FBFC]/50 rounded-[8px] space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-[15px] font-bold text-ink">Link Existing Decision</h4>
+              <h4 className="text-[14.5px] font-semibold text-[#132238]">Link Existing Decision</h4>
               <button
                 onClick={() => {
                   setIsAdding(false);
                   setSelectedTarget(null);
                 }}
-                className="text-muted hover:text-ink p-1"
+                className="text-[#8190A0] hover:text-[#132238] p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {errorMsg && (
-              <div className="p-3 bg-err/10 border border-err/20 text-err text-[13px] rounded-[6px]">
+              <div className="p-3 bg-[#FEF3F2] border border-[#FECDCA] text-[#B42318] text-[12.5px] rounded-[6px]">
                 {errorMsg}
               </div>
             )}
@@ -267,30 +265,30 @@ export function DecisionReferencesCard({
             {!selectedTarget ? (
               <div className="space-y-3">
                 <div className="relative">
-                  <Search className="w-4 h-4 text-muted absolute left-3 top-3" />
+                  <Search className="w-4 h-4 text-[#8190A0] absolute left-3 top-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     placeholder="Search by subject or reference number (e.g. REQ-2026)..."
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-border rounded-[6px] text-[14px] text-ink focus:outline-none focus:border-brand"
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-[#DDE5EC] rounded-[6px] text-[13.5px] text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0]"
                   />
                 </div>
 
-                {isSearching && <div className="text-[13px] text-muted italic">Searching decisions...</div>}
+                {isSearching && <div className="text-[12.5px] text-[#8190A0] italic">Searching decisions...</div>}
 
                 {searchResults.length > 0 && (
-                  <div className="border border-border bg-white rounded-[6px] divide-y divide-border max-h-48 overflow-y-auto">
+                  <div className="border border-[#DDE5EC] bg-white rounded-[6px] divide-y divide-[#EAF0F4] max-h-48 overflow-y-auto">
                     {searchResults.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => setSelectedTarget(item)}
-                        className="w-full text-left p-3 hover:bg-section-alt transition flex items-center justify-between text-[14px]"
+                        className="w-full text-left p-3 hover:bg-[#F7FAFC] transition flex items-center justify-between text-[13px]"
                       >
                         <div className="space-y-0.5">
-                          <span className="font-mono font-bold text-brand mr-2">{item.ref}</span>
-                          <span className="font-semibold text-ink">{item.subject}</span>
-                          <div className="text-[12px] text-muted">{item.category_name}</div>
+                          <span className="font-mono font-medium text-[#012F6B] mr-2">{item.ref}</span>
+                          <span className="font-medium text-[#132238]">{item.subject}</span>
+                          <div className="text-[11.5px] text-[#8190A0]">{item.category_name}</div>
                         </div>
                         {renderStatusBadge(item.status)}
                       </button>
@@ -300,85 +298,85 @@ export function DecisionReferencesCard({
               </div>
             ) : (
               <form onSubmit={handleAddSubmit} className="space-y-4">
-                <div className="p-3 bg-white border border-border rounded-[6px] flex items-center justify-between text-[14px]">
+                <div className="p-3 bg-white border border-[#DDE5EC] rounded-[6px] flex items-center justify-between text-[13.5px]">
                   <div>
-                    <span className="font-mono font-bold text-brand mr-2">{selectedTarget.ref}</span>
-                    <span className="font-semibold text-ink">{selectedTarget.subject}</span>
+                    <span className="font-mono font-medium text-[#012F6B] mr-2">{selectedTarget.ref}</span>
+                    <span className="font-medium text-[#132238]">{selectedTarget.subject}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedTarget(null)}
-                    className="text-xs text-brand hover:underline"
+                    className="text-xs text-[#059DB0] hover:underline font-medium"
                   >
                     Change
                   </button>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[13px] font-bold uppercase tracking-wider text-muted font-mono">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[#8190A0]">
                     Relationship Type
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[14px]">
-                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'based_on' ? 'border-brand bg-brand/10' : 'border-border bg-white'}`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[13px]">
+                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'based_on' ? 'border-[#059DB0] bg-white ring-1 ring-[#059DB0]' : 'border-[#DDE5EC] bg-white'}`}>
                       <input
                         type="radio"
                         name="rel"
                         checked={relationship === 'based_on'}
                         onChange={() => setRelationship('based_on')}
-                        className="mt-0.5 text-brand focus:ring-brand"
+                        className="mt-0.5 text-[#059DB0] focus:ring-[#059DB0]"
                       />
                       <div>
-                        <div className="font-bold text-ink">Based on</div>
-                        <div className="text-[12px] text-muted">Derives authority from that decision</div>
+                        <div className="font-semibold text-[#132238]">Based on</div>
+                        <div className="text-[12px] text-[#526377]">Derives authority from that decision</div>
                       </div>
                     </label>
 
-                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'replaces' ? 'border-brand bg-brand/10' : 'border-border bg-white'}`}>
+                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'replaces' ? 'border-[#059DB0] bg-white ring-1 ring-[#059DB0]' : 'border-[#DDE5EC] bg-white'}`}>
                       <input
                         type="radio"
                         name="rel"
                         checked={relationship === 'replaces'}
                         onChange={() => setRelationship('replaces')}
-                        className="mt-0.5 text-brand focus:ring-brand"
+                        className="mt-0.5 text-[#059DB0] focus:ring-[#059DB0]"
                       />
                       <div>
-                        <div className="font-bold text-ink">Replaces</div>
-                        <div className="text-[12px] text-muted">Supersedes that previous decision</div>
+                        <div className="font-semibold text-[#132238]">Replaces</div>
+                        <div className="text-[12px] text-[#526377]">Supersedes that previous decision</div>
                       </div>
                     </label>
 
-                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'exception_to' ? 'border-brand bg-brand/10' : 'border-border bg-white'}`}>
+                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'exception_to' ? 'border-[#059DB0] bg-white ring-1 ring-[#059DB0]' : 'border-[#DDE5EC] bg-white'}`}>
                       <input
                         type="radio"
                         name="rel"
                         checked={relationship === 'exception_to'}
                         onChange={() => setRelationship('exception_to')}
-                        className="mt-0.5 text-brand focus:ring-brand"
+                        className="mt-0.5 text-[#059DB0] focus:ring-[#059DB0]"
                       />
                       <div>
-                        <div className="font-bold text-ink">Exception to</div>
-                        <div className="text-[12px] text-muted">Deviates from that policy decision</div>
+                        <div className="font-semibold text-[#132238]">Exception to</div>
+                        <div className="text-[12px] text-[#526377]">Deviates from that policy decision</div>
                       </div>
                     </label>
 
-                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'renewal_of' ? 'border-brand bg-brand/10' : 'border-border bg-white'}`}>
+                    <label className={`p-3 border rounded-[6px] cursor-pointer transition flex items-start gap-2.5 ${relationship === 'renewal_of' ? 'border-[#059DB0] bg-white ring-1 ring-[#059DB0]' : 'border-[#DDE5EC] bg-white'}`}>
                       <input
                         type="radio"
                         name="rel"
                         checked={relationship === 'renewal_of'}
                         onChange={() => setRelationship('renewal_of')}
-                        className="mt-0.5 text-brand focus:ring-brand"
+                        className="mt-0.5 text-[#059DB0] focus:ring-[#059DB0]"
                       />
                       <div>
-                        <div className="font-bold text-ink">Renewal of</div>
-                        <div className="text-[12px] text-muted">Renews that expired decision</div>
+                        <div className="font-semibold text-[#132238]">Renewal of</div>
+                        <div className="text-[12px] text-[#526377]">Renews that expired decision</div>
                       </div>
                     </label>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[13px] font-bold uppercase tracking-wider text-muted font-mono">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[#8190A0]">
                     Optional Note / Reason
                   </label>
                   <textarea
@@ -386,7 +384,7 @@ export function DecisionReferencesCard({
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Explain why this decision is linked..."
-                    className="w-full p-2.5 bg-white border border-border rounded-[6px] text-[14px] text-ink focus:outline-none focus:border-brand"
+                    className="w-full p-2.5 bg-white border border-[#DDE5EC] rounded-[6px] text-[13px] text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0]"
                   />
                 </div>
 
@@ -394,14 +392,14 @@ export function DecisionReferencesCard({
                   <button
                     type="button"
                     onClick={() => setIsAdding(false)}
-                    className="px-4 py-2 text-[14px] font-medium text-ink hover:bg-section-alt rounded-[6px]"
+                    className="px-3.5 py-1.5 text-[13px] font-medium text-[#526377] hover:bg-[#F7FAFC] rounded-[6px]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-4 py-2 bg-brand hover:bg-brand-deep text-white text-[14px] font-semibold rounded-[6px] transition disabled:opacity-50"
+                    className="px-4 py-1.5 bg-[#012F6B] hover:bg-[#033E79] text-white text-[13px] font-medium rounded-[6px] transition disabled:opacity-50 shadow-xs"
                   >
                     {isSubmitting ? 'Linking...' : 'Confirm Reference'}
                   </button>
@@ -414,33 +412,33 @@ export function DecisionReferencesCard({
 
       {/* INCOMING REFERENCES (DECISIONS REFERENCING THIS ONE) */}
       {incomingRefs.length > 0 && (
-        <div className="space-y-4 border-t border-border pt-5">
+        <div className="space-y-4 border-t border-[#EAF0F4] pt-5">
           <div className="flex items-center justify-between">
-            <h3 className="text-[16px] font-bold text-ink">Decisions referencing this one</h3>
+            <h3 className="text-[15px] font-semibold text-[#132238]">Decisions referencing this one</h3>
             {exceptionCount >= 3 && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[5px] bg-warn/10 text-warn border border-warn/20 text-[13px] font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#FFFAEB] text-[#B54708] border border-[#FEDF89] text-[12px] font-medium">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 <span>Cited as exception basis {exceptionCount} times</span>
               </span>
             )}
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {incomingRefs.map((ref) => (
-              <div key={ref.id} className="p-3 bg-white border border-border rounded-[6px] flex items-center justify-between text-[14px]">
+              <div key={ref.id} className="p-3 bg-[#F7FAFC] border border-[#EAF0F4] rounded-[8px] flex items-center justify-between text-[13.5px]">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   {renderBadge(ref.relationship)}
                   <Link
                     href={`/${tenantSubdomain}/requests/${ref.source_id}`}
-                    className="font-mono font-bold text-brand hover:underline"
+                    className="font-mono font-medium text-[#012F6B] hover:underline"
                   >
                     {ref.source_request?.ref || 'REF-????'}
                   </Link>
-                  <span className="font-semibold text-ink">{ref.source_request?.subject}</span>
+                  <span className="font-medium text-[#132238]">{ref.source_request?.subject}</span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 font-mono text-[13px] text-muted">
+                <div className="flex items-center gap-2 shrink-0 text-[12px] text-[#8190A0]">
                   {ref.source_request?.status && renderStatusBadge(ref.source_request.status)}
-                  <span>{new Date(ref.created_at).toLocaleDateString()}</span>
+                  <span className="font-mono">{new Date(ref.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             ))}

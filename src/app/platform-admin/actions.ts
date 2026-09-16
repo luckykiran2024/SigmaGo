@@ -3,6 +3,7 @@
 import { adminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { assertPlatformAdmin } from '@/lib/platform/auth';
+import { getProfileForAuthUser } from '@/lib/db/users';
 import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
@@ -210,15 +211,12 @@ export async function submitSupportTicketAction(payload: {
     const email = (user.email || '').toLowerCase().trim();
 
     // Resolve the user's tenant profile from the authenticated user
-    const { data: profile } = await adminClient
-      .from('users')
-      .select('id, tenant_id')
-      .eq('auth_uid', user.id)
-      .maybeSingle();
-
-    // Fallback: try matching by email if auth_uid lookup fails
-    const userId = profile?.id || null;
-    const tenantId = profile?.tenant_id || null;
+    const profile = await getProfileForAuthUser(user.id, email);
+    if (!profile || !profile.tenant_id) {
+      return { success: false, error: 'User profile or workspace association not found. Support tickets require an active workspace user profile.' };
+    }
+    const userId = profile.id;
+    const tenantId = profile.tenant_id;
 
     const { data: ticket, error } = await adminClient
       .from('support_tickets')

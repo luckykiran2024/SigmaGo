@@ -422,21 +422,38 @@ export async function generateChecksumAndFinalize(
 
   for (let attempt = 0; attempt < MAX_SEAL_RETRIES; attempt++) {
     try {
-      // 1. Resolve previous seal hash in the tenant chain (Append-Only Cryptographic Ledger)
-      const { data: previousApproved } = await adminClient
-        .from('approval_requests')
-        .select('checksum_sha256')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'approved')
-        .not('checksum_sha256', 'is', null)
-        .neq('id', requestId)
-        .order('finalized_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // 1. Resolve current tenant ledger head directly from dedicated monotonic ledger head
+      let previousSealHash: string | null = null;
+      try {
+        const { data: ledgerHead } = await adminClient
+          .from('tenant_ledger_heads')
+          .select('head_hash')
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
 
-      const previousSealHash =
-        previousApproved?.checksum_sha256 ||
-        'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
+        if (ledgerHead?.head_hash) {
+          previousSealHash = ledgerHead.head_hash;
+        }
+      } catch {
+        // Fall back to historical requests if ledger head table not initialized
+      }
+
+      if (!previousSealHash) {
+        const { data: previousApproved } = await adminClient
+          .from('approval_requests')
+          .select('checksum_sha256')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'approved')
+          .not('checksum_sha256', 'is', null)
+          .neq('id', requestId)
+          .order('sealed_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        previousSealHash =
+          previousApproved?.checksum_sha256 ||
+          'GENESIS_0000000000000000000000000000000000000000000000000000000000000000';
+      }
 
       const inputs = await loadCanonicalDecisionInputs(requestId, tenantId);
       inputs.request.previous_seal_hash = previousSealHash;

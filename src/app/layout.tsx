@@ -11,12 +11,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SigmaGo — Decision Governance Platform",
-  description: "Enterprise approval and decision-record platform.",
+  title: "SigmaGo — Organizational Decision Intelligence",
+  description: "Turn decisions into organizational intelligence.",
 };
 
 export const viewport = {
-  themeColor: "#182230",
+  themeColor: "#012F6B",
 };
 
 export default function RootLayout({
@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-[#F7F8FA] text-[#182230] font-sans">
-      <body className={`${inter.variable} font-sans antialiased h-full text-[#182230] bg-[#F7F8FA]`}>
+    <html lang="en" className="h-full bg-[#F7FAFC] text-[#132238] font-sans antialiased">
+      <body className={`${inter.variable} font-sans antialiased h-full text-[#132238] bg-[#F7FAFC]`}>
         <ThemeProvider>
           {children}
         </ThemeProvider>
@@ -34,4 +34,3 @@ export default function RootLayout({
     </html>
   );
 }
-

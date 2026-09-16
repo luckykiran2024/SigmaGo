@@ -3,27 +3,53 @@
 @tailwind utilities;
 
 :root {
-  /* Surface & Neutrals */
-  --bg: #F7F8FA;
-  --alt: #F7F8FA;
-  --alt2: #F9FAFB;
+  /* Official SigmaGo Enterprise Palette */
+  --sigma-navy-950: #07182F;
+  --sigma-navy-900: #012F6B; /* Core Brand Navy */
+  --sigma-navy-800: #033E79;
+  --sigma-navy-700: #07508B;
+
+  --sigma-teal-700: #078899;
+  --sigma-teal-600: #059DB0; /* Core Brand Teal */
+  --sigma-teal-500: #05B2C0;
+  --sigma-teal-100: #DDF5F7;
+  --sigma-teal-50:  #F1FBFC;
+
+  --sigma-blue-300: #70A4BD;
+  --sigma-blue-100: #B8D6E1;
+
+  /* Neutrals & Surfaces */
+  --page-background: #F7FAFC;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F3F6F8;
+  --surface-tertiary: #EDF2F6;
+
+  --text-primary: #132238;
+  --text-secondary: #526377;
+  --text-muted: #8190A0;
+
+  --border-default: #DDE5EC;
+  --border-subtle: #EAF0F4;
+
+  /* Legacy Bridge Tokens */
+  --bg: #F7FAFC;
+  --alt: #F7FAFC;
+  --alt2: #F3F6F8;
   --card: #FFFFFF;
-  --border: #E4E7EC;
+  --border: #DDE5EC;
   --border2: #D0D5DD;
 
-  /* Typography Colors */
-  --ink: #182230;
-  --ink2: #475467;
+  --ink: #132238;
+  --ink2: #526377;
   --muted: #667085;
-  --muted2: #98A2B3;
+  --muted2: #8190A0;
 
-  /* Brand Navy Anchor */
-  --brand: #274C77;
-  --brand-h: #1E3C60;
-  --brand-lt: #E8EDF4;
-  --brand-lt2: #D3DEEB;
+  --brand: #012F6B;
+  --brand-h: #033E79;
+  --brand-lt: #F1FBFC;
+  --brand-lt2: #DDF5F7;
 
-  /* Seal — Cryptographic Sealing & Proofs */
+  /* Seal & Cryptographic Proofs */
   --seal: #C9A227;
   --seal-lt: #FDF6E3;
   --seal-bd: #E8DDB0;
@@ -42,18 +68,21 @@
   --err-lt: #FEF3F2;
   --err-bd: #FECDCA;
 
-  /* Geometry & Restrained Elevation */
+  /* Restrained Enterprise Geometry */
   --r-badge: 4px;
   --r-btn: 6px;
-  --r-card: 8px;
-  --r-modal: 10px;
-  --sh-modal: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --r-card: 10px;
+  --r-modal: 12px;
+  --sh-modal: 0 16px 32px -4px rgba(19, 34, 56, 0.12);
   --e: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Official Signature Gradient (Spare usage only) */
+  --sigma-gradient: linear-gradient(135deg, #012F6B 0%, #033E79 35%, #059DB0 72%, #05B2C0 100%);
 }
 
 body {
-  color: var(--ink);
-  background: var(--bg);
+  color: var(--text-primary);
+  background: var(--page-background);
   font-family: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
@@ -64,7 +93,39 @@ table, td, th, .tabular-nums, .font-mono {
   font-variant-numeric: tabular-nums;
 }
 
-/* Standard Restrained Enterprise Badges (4px radius) */
+/* Restrained Enterprise Focus States */
+:focus-visible {
+  outline: 2px solid var(--sigma-teal-600);
+  outline-offset: 1px;
+}
+
+/* STEP Framework System Badges */
+.badge-step-structural {
+  background-color: #F1FBFC;
+  color: #012F6B;
+  border: 1px solid #DDF5F7;
+  border-radius: 4px;
+}
+.badge-step-transactional {
+  background-color: #F1FBFC;
+  color: #078899;
+  border: 1px solid #DDF5F7;
+  border-radius: 4px;
+}
+.badge-step-exceptional {
+  background-color: #FFFAEB;
+  color: #B54708;
+  border: 1px solid #FEDF89;
+  border-radius: 4px;
+}
+.badge-step-process {
+  background-color: #F3F6F8;
+  color: #475467;
+  border: 1px solid #DDE5EC;
+  border-radius: 4px;
+}
+
+/* Standard Status Badges */
 .badge-normal {
   background-color: #ECFDF3;
   color: #027A48;
@@ -106,7 +167,7 @@ table, td, th, .tabular-nums, .font-mono {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -123,11 +184,11 @@ table, td, th, .tabular-nums, .font-mono {
 @keyframes stamp {
   0% {
     opacity: 0;
-    transform: scale(1.9) rotate(-14deg);
+    transform: scale(1.6) rotate(-8deg);
   }
-  55% {
+  60% {
     opacity: 1;
-    transform: scale(0.94) rotate(2deg);
+    transform: scale(0.96) rotate(1deg);
   }
   100% {
     opacity: 1;
@@ -135,38 +196,16 @@ table, td, th, .tabular-nums, .font-mono {
   }
 }
 
-@keyframes ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 0 16px rgba(201, 162, 39, 0);
-  }
-}
-
-@keyframes softPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(180, 35, 24, 0.16);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(180, 35, 24, 0);
-  }
-}
-
 .animate-fade-up {
-  animation: fadeUp 500ms var(--e) forwards;
+  animation: fadeUp 250ms var(--e) forwards;
 }
 
 .animate-grow-w {
-  animation: growW 900ms var(--e) forwards;
-}
-
-.animate-soft-pulse {
-  animation: softPulse 2.4s infinite;
+  animation: growW 600ms var(--e) forwards;
 }
 
 .animate-stamp {
-  animation: stamp 700ms var(--e) forwards;
+  animation: stamp 450ms var(--e) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,93 +216,15 @@ table, td, th, .tabular-nums, .font-mono {
   }
 }
 
-/* ==========================================================================
-   GLOBAL THEME ENGINE OVERRIDES (Dark Slate, Midnight Blue, Emerald Forest)
-   ========================================================================== */
-
-html.dark, html.midnight, html.forest {
-  background-color: var(--bg) !important;
-  color: var(--ink) !important;
+/* Enterprise DataTable Styles */
+.enterprise-table-th {
+  @apply text-[11px] font-semibold text-text-muted uppercase tracking-[0.06em] bg-surface-secondary py-2.5 px-3 border-b border-border-default text-left;
 }
 
-html.dark body, html.midnight body, html.forest body {
-  background-color: var(--alt) !important;
-  color: var(--ink) !important;
+.enterprise-table-td {
+  @apply text-[13.5px] text-text-primary py-3 px-3 border-b border-border-default transition-colors;
 }
 
-/* Header & Navbar */
-html.dark header, html.midnight header, html.forest header {
-  background-color: var(--bg) !important;
-  border-color: var(--border) !important;
+.enterprise-table-row:hover td {
+  @apply bg-[#F9FBFC];
 }
-
-/* Main Layout & Content Wrapper */
-html.dark main, html.midnight main, html.forest main {
-  background-color: var(--alt) !important;
-  color: var(--ink) !important;
-}
-
-/* Backgrounds: White containers, cards, light gray panels */
-html.dark .bg-white, html.midnight .bg-white, html.forest .bg-white,
-html.dark .bg-\[\#F9FAFB\], html.midnight .bg-\[\#F9FAFB\], html.forest .bg-\[\#F9FAFB\],
-html.dark .bg-gray-50, html.midnight .bg-gray-50, html.forest .bg-gray-50,
-html.dark .bg-\[\#F4F6F8\], html.midnight .bg-\[\#F4F6F8\], html.forest .bg-\[\#F4F6F8\] {
-  background-color: var(--bg) !important;
-  color: var(--ink) !important;
-  border-color: var(--border) !important;
-}
-
-html.dark .bg-gray-100, html.midnight .bg-gray-100, html.forest .bg-gray-100 {
-  background-color: var(--alt) !important;
-}
-
-/* Sidebar & Navigation Panels */
-html.dark aside, html.midnight aside, html.forest aside,
-html.dark .bg-\[\#0B0F19\], html.midnight .bg-\[\#0B0F19\], html.forest .bg-\[\#0B0F19\],
-html.dark .bg-\[\#0F172A\], html.midnight .bg-\[\#0F172A\], html.forest .bg-\[\#0F172A\],
-html.dark .bg-\[\#101828\], html.midnight .bg-\[\#101828\], html.forest .bg-\[\#101828\] {
-  background-color: var(--bg) !important;
-  border-color: var(--border) !important;
-}
-
-/* Text Colors */
-html.dark .text-\[\#101828\], html.midnight .text-\[\#101828\], html.forest .text-\[\#101828\],
-html.dark .text-gray-900, html.midnight .text-gray-900, html.forest .text-gray-900,
-html.dark .text-gray-800, html.midnight .text-gray-800, html.forest .text-gray-800,
-html.dark .text-gray-700, html.midnight .text-gray-700, html.forest .text-gray-700,
-html.dark .text-ink, html.midnight .text-ink, html.forest .text-ink {
-  color: var(--ink) !important;
-}
-
-html.dark .text-\[\#667085\], html.midnight .text-\[\#667085\], html.forest .text-\[\#667085\],
-html.dark .text-gray-500, html.midnight .text-gray-500, html.forest .text-gray-500,
-html.dark .text-gray-600, html.midnight .text-gray-600, html.forest .text-gray-600,
-html.dark .text-gray-400, html.midnight .text-gray-400, html.forest .text-gray-400 {
-  color: var(--muted) !important;
-}
-
-/* Borders */
-html.dark .border-gray-100, html.midnight .border-gray-100, html.forest .border-gray-100,
-html.dark .border-gray-200, html.midnight .border-gray-200, html.forest .border-gray-200,
-html.dark .border-gray-50, html.midnight .border-gray-50, html.forest .border-gray-50,
-html.dark .border-\[\#E4E7EC\], html.midnight .border-\[\#E4E7EC\], html.forest .border-\[\#E4E7EC\],
-html.dark .border-\[\#F2F4F7\], html.midnight .border-\[\#F2F4F7\], html.forest .border-\[\#F2F4F7\] {
-  border-color: var(--border) !important;
-}
-
-/* Inputs, Textareas, Selects */
-html.dark input:not([type="checkbox"]):not([type="radio"]), html.midnight input:not([type="checkbox"]):not([type="radio"]), html.forest input:not([type="checkbox"]):not([type="radio"]),
-html.dark select, html.midnight select, html.forest select,
-html.dark textarea, html.midnight textarea, html.forest textarea {
-  background-color: var(--alt2) !important;
-  color: var(--ink) !important;
-  border-color: var(--border2) !important;
-}
-
-/* Readonly / Disabled inputs in themed mode */
-html.dark input:read-only, html.midnight input:read-only, html.forest input:read-only {
-  background-color: var(--bg) !important;
-  color: var(--muted) !important;
-  border-color: var(--border) !important;
-}
-

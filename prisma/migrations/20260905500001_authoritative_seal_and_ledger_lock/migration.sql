@@ -1,6 +1,9 @@
 -- Migration: 20260905500001_authoritative_seal_and_ledger_lock
 -- Institutional Hardening: Authoritative Seal RPC, Tenant Ledger Lock, and Concurrency Serialization (Fork Prevention)
 
+DROP FUNCTION IF EXISTS sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT);
+DROP FUNCTION IF EXISTS sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION sigmago_finalize_seal(
   p_request_id UUID,
   p_tenant_id UUID,
@@ -162,7 +165,7 @@ END;
 $$;
 
 -- Ensure execute permissions
-REVOKE ALL ON FUNCTION sigmago_finalize_seal FROM PUBLIC;
-REVOKE ALL ON FUNCTION sigmago_finalize_seal FROM anon;
-REVOKE ALL ON FUNCTION sigmago_finalize_seal FROM authenticated;
-GRANT EXECUTE ON FUNCTION sigmago_finalize_seal TO service_role;
+REVOKE ALL ON FUNCTION sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT) FROM anon;
+REVOKE ALL ON FUNCTION sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT) FROM authenticated;
+GRANT EXECUTE ON FUNCTION sigmago_finalize_seal(UUID, UUID, TEXT, INT, TEXT, TEXT, TEXT, TEXT) TO service_role;

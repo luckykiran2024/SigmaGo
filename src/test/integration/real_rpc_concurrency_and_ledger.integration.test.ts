@@ -11,6 +11,21 @@ vi.mock('@/lib/supabase/admin', () => {
   return {
     adminClient: {
       from: (table: string) => {
+        if (table === 'tenant_ledger_heads') {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: currentLedgerHead !== 'GENESIS_0000000000000000000000000000000000000000000000000000000000000000'
+                    ? { head_hash: currentLedgerHead }
+                    : null,
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+
         if (table === 'approval_requests') {
           return {
             select: () => ({

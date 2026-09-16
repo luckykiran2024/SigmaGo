@@ -16,12 +16,14 @@ interface GroupedCategoryPickerProps {
   categories: CategoryOption[];
   selectedCategoryId: string;
   onSelectCategory: (category: CategoryOption | null) => void;
+  disabled?: boolean;
 }
 
 export default function GroupedCategoryPicker({
   categories,
   selectedCategoryId,
   onSelectCategory,
+  disabled = false,
 }: GroupedCategoryPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -84,8 +86,13 @@ export default function GroupedCategoryPicker({
 
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between rounded-xl border border-gray-200 py-3 px-4 text-ink shadow-sm bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition text-left"
+        disabled={disabled}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between rounded-xl border py-3 px-4 text-ink shadow-sm transition text-left ${
+          disabled
+            ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-80'
+            : 'bg-white border-gray-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+        }`}
       >
         {selectedCat ? (
           <div>

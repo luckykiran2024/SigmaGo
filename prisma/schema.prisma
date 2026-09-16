@@ -144,6 +144,7 @@ model approval_requests {
   view_grants                                                                  view_grants[]
   webhook_deliveries                                                           webhook_deliveries[]
   request_participants                                                         request_participants[]
+  tenant_ledger_heads                                                          tenant_ledger_heads[]
 
   @@index([owner_id])
   @@index([search_vector], map: "approval_requests_search_idx", type: Gin)
@@ -373,6 +374,7 @@ model tenants {
   decisionFootprintMetrics decision_footprint_metrics[]
   intelligenceSignals      intelligence_signals[]
   transactionalOutbox      transactional_outbox[]
+  tenant_ledger_heads      tenant_ledger_heads[]
 }
 
 model users {
@@ -1026,6 +1028,18 @@ model transactional_outbox {
   @@index([status, created_at], map: "idx_outbox_pending")
   @@index([tenant_id, created_at], map: "idx_outbox_tenant")
   @@map("transactional_outbox")
+}
+
+model tenant_ledger_heads {
+  tenant_id       String             @id @db.Uuid
+  head_hash       String
+  ledger_sequence BigInt             @default(0)
+  last_request_id String?            @db.Uuid
+  updated_at      DateTime           @default(now()) @db.Timestamptz(6)
+  tenant          tenants            @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  last_request    approval_requests? @relation(fields: [last_request_id], references: [id], onDelete: SetNull)
+
+  @@map("tenant_ledger_heads")
 }
 
 

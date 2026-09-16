@@ -14,15 +14,15 @@ export default async function AiPage({ params }: { params: Promise<{ tenant: str
   if (!profile) redirect('/login');
 
   return (
-    <div className="max-w-4xl mx-auto py-4 space-y-6 font-sans">
-      <div>
-        <h1 className="text-2xl font-sans font-extrabold tracking-tight text-ink flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand text-sm font-bold font-mono">
+    <div className="max-w-4xl mx-auto py-2 space-y-6 font-sans">
+      <div className="border-b border-[#DDE5EC] pb-5">
+        <h1 className="text-2xl font-bold tracking-tight text-[#132238] flex items-center gap-2.5">
+          <span className="w-7 h-7 rounded-lg bg-[#F1FBFC] border border-[#DDF5F7] flex items-center justify-center text-[#059DB0] text-xs font-bold font-mono">
             AI
           </span>
           Approval Intelligence Assistant
         </h1>
-        <p className="text-sm text-muted font-medium mt-1">
+        <p className="text-xs text-[#526377] font-medium mt-1">
           Ask natural-language questions about your organization's approval data using secure, deterministic query templates.
         </p>
       </div>

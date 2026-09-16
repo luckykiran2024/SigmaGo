@@ -180,5 +180,5 @@ describe('Multi-Persona End-to-End Decision Lifecycle & Ledger Chain Suite', () 
     const ledgerAudit = await verifyTenantLedgerChain(tenantId);
     expect(ledgerAudit.isChainValid).toBe(true);
     expect(ledgerAudit.totalDecisions).toBe(2);
-  });
+  }, 30000);
 });

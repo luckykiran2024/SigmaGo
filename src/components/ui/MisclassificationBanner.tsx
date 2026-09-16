@@ -2,10 +2,11 @@
 
 import { AlertTriangle, ArrowRight } from 'lucide-react';
 import { CategoryOption } from './GroupedCategoryPicker';
+import { BoundType } from '@/lib/policies/bounds';
 
 export interface PolicyBoundInfo {
   policyTitle: string;
-  boundType: 'PERCENTAGE_MAX' | 'VALUE_MAX' | 'VALUE_MIN' | 'DATE_WINDOW' | 'COUNT_MAX' | 'NONE';
+  boundType: BoundType | 'DATE_WINDOW';
   boundValue: number;
   boundField?: string | null;
 }

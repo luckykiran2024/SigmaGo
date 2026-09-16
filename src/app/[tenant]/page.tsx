@@ -3,11 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { getProfileForAuthUser } from '@/lib/db/users';
-import Navbar from '@/components/ui/Navbar';
 import MetricStrip from '@/components/ui/MetricStrip';
 import DwellRequestCard from '@/components/ui/DwellRequestCard';
 import RecentlySealedPanel from '@/components/ui/RecentlySealedPanel';
 import { getInlineExceptionCount } from '@/lib/db/intelligence';
+import { Inbox, ArrowRight } from 'lucide-react';
 
 export default async function TenantDashboard({ params }: { params: Promise<{ tenant: string }> }) {
   const resolvedParams = await params;
@@ -127,101 +127,133 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   }
 
   return (
-    <div className="max-w-[1240px] mx-auto px-4 py-8 space-y-8 font-sans">
-        {/* Application-Scale Page Heading (23px/700) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-[23px] font-bold text-[#101828] tracking-tight">
-              Dashboard
-            </h1>
-            <p className="text-[14px] text-[#667085] mt-0.5">
-              Welcome back, <strong className="text-[#101828]">{userName}</strong>. Active decisions requiring your authority.
-            </p>
+    <div className="max-w-[1360px] mx-auto px-6 py-8 space-y-8 font-sans">
+      {/* Executive Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DDE5EC] pb-5">
+        <div>
+          <h1 className="text-[28px] font-semibold text-[#132238] tracking-tight">
+            Decision Intelligence
+          </h1>
+          <p className="text-[14px] text-[#526377] mt-1">
+            Welcome back, <strong className="text-[#132238] font-semibold">{userName}</strong>. Active decisions requiring your organizational authority.
+          </p>
+        </div>
+      </div>
+
+      {/* 4-Card Executive Metric Strip */}
+      <MetricStrip
+        tenantSubdomain={resolvedParams.tenant}
+        needsApprovalCount={pendingCards.length}
+        oldestWaitingDays={oldestWaitingDays}
+        inFlightCount={mySubmissions?.length || 0}
+        atFinalStageCount={1}
+        sealedThisMonthCount={sealedItems.length}
+        sealedIncreaseVsLastMonth={2}
+        policiesDriftingCount={1}
+        driftingPolicyNames={['Increment Cap', 'Capex Limit']}
+      />
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Left 2 Columns: Requests Needing Your Authority */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[16px] font-semibold text-[#132238] tracking-tight">
+              Needs Your Approval ({pendingCards.length})
+            </h2>
+            {pendingCards.length > 0 && (
+              <Link
+                href={`/${resolvedParams.tenant}/approvals`}
+                className="text-[13px] font-medium text-[#059DB0] hover:text-[#012F6B] flex items-center gap-1 transition-colors"
+              >
+                View all in approvals
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
+
+          {pendingCards.length === 0 ? (
+            <div className="p-10 bg-white border border-[#DDE5EC] rounded-[10px] text-center space-y-2 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-[#F1FBFC] text-[#059DB0] flex items-center justify-center mx-auto">
+                <Inbox className="w-5 h-5" />
+              </div>
+              <h3 className="text-[14.5px] font-semibold text-[#132238]">All decision queues are clear</h3>
+              <p className="text-[13px] text-[#526377] max-w-md mx-auto">
+                No decisions are currently awaiting your authority. Once requests enter your approval stage, they will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pendingCards.map((card) => (
+                <DwellRequestCard
+                  key={card.requestId}
+                  tenantSubdomain={resolvedParams.tenant}
+                  requestId={card.requestId}
+                  refCode={card.refCode}
+                  subject={card.subject}
+                  requesterName={card.requesterName}
+                  department={card.department}
+                  stepType={card.stepType}
+                  enteredAt={card.enteredAt}
+                  currentStageIndex={card.currentStageIndex}
+                  totalStages={card.totalStages}
+                  exceptionSummary={card.exceptionSummary}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* 4-Card Metric Strip */}
-        <MetricStrip
-          tenantSubdomain={resolvedParams.tenant}
-          needsApprovalCount={pendingCards.length}
-          oldestWaitingDays={oldestWaitingDays}
-          inFlightCount={mySubmissions?.length || 0}
-          atFinalStageCount={1}
-          sealedThisMonthCount={sealedItems.length}
-          sealedIncreaseVsLastMonth={2}
-          policiesDriftingCount={1}
-          driftingPolicyNames={['Increment Cap', 'Capex Limit']}
-        />
+        {/* Right 1 Column: Recently Sealed Panel & Submissions in Flight */}
+        <div className="space-y-6">
+          {/* Recently Sealed Panel */}
+          <RecentlySealedPanel
+            tenantSubdomain={resolvedParams.tenant}
+            sealedDecisions={sealedItems}
+          />
 
-        {/* Main Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Left 2 Columns: Requests Needing Your Authority */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[15px] font-bold text-[#101828] tracking-tight">
-                Needs Your Approval ({pendingCards.length})
-              </h2>
+          {/* In Flight Submissions */}
+          <div className="p-5 bg-white border border-[#DDE5EC] rounded-[10px] space-y-3.5 shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[#EAF0F4]">
+              <h3 className="text-[14.5px] font-semibold text-[#132238]">
+                Your Submissions in Flight
+              </h3>
+              <span className="text-[12px] font-semibold text-[#526377] px-2 py-0.5 rounded-[4px] bg-[#F3F6F8]">
+                {mySubmissions?.length || 0}
+              </span>
             </div>
 
-            {pendingCards.length === 0 ? (
-              <div className="p-8 bg-white border border-[#E4E7EC] rounded-[8px] text-center text-[14px] text-[#667085]">
-                Nothing waiting on you. All decision queues are clear!
-              </div>
+            {(!mySubmissions || mySubmissions.length === 0) ? (
+              <p className="text-[13px] text-[#8190A0] py-2">You have no open requests in flight.</p>
             ) : (
-              <div className="space-y-4">
-                {pendingCards.map((card) => (
-                  <DwellRequestCard
-                    key={card.requestId}
-                    tenantSubdomain={resolvedParams.tenant}
-                    requestId={card.requestId}
-                    refCode={card.refCode}
-                    subject={card.subject}
-                    requesterName={card.requesterName}
-                    department={card.department}
-                    stepType={card.stepType}
-                    enteredAt={card.enteredAt}
-                    currentStageIndex={card.currentStageIndex}
-                    totalStages={card.totalStages}
-                    exceptionSummary={card.exceptionSummary}
-                  />
+              <div className="space-y-2.5">
+                {mySubmissions.map((sub) => (
+                  <Link
+                    key={sub.id}
+                    href={`/${resolvedParams.tenant}/requests/${sub.id}`}
+                    className="block p-3 bg-[#F7FAFC] hover:bg-[#F1FBFC] rounded-[6px] border border-[#EAF0F4] hover:border-[#DDF5F7] space-y-1 transition-all group"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#132238] group-hover:text-[#012F6B] truncate">
+                        {sub.subject}
+                      </span>
+                      <span className="font-mono text-[11px] text-[#8190A0] shrink-0 ml-2">
+                        {sub.ref || 'REQ-001'}
+                      </span>
+                    </div>
+                    <div className="text-[11.5px] text-[#526377] flex items-center justify-between">
+                      <span>Status: <strong className="text-[#012F6B] font-medium uppercase">{sub.status}</strong></span>
+                      <span className="text-[#8190A0]">
+                        {new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Right 1 Column: Recently Sealed Panel & Submissions in Flight */}
-          <div className="space-y-6">
-            {/* Recently Sealed Panel (The only Gold surface) */}
-            <RecentlySealedPanel
-              tenantSubdomain={resolvedParams.tenant}
-              sealedDecisions={sealedItems}
-            />
-
-            {/* In Flight Submissions */}
-            <div className="p-5 bg-white border border-[#E4E7EC] rounded-[8px] space-y-3">
-              <h3 className="text-[14.5px] font-semibold text-[#101828]">
-                Your Submissions in Flight
-              </h3>
-              {(!mySubmissions || mySubmissions.length === 0) ? (
-                <p className="text-xs text-[#667085]">You have no open requests in flight.</p>
-              ) : (
-                <div className="space-y-2">
-                  {mySubmissions.map((sub) => (
-                    <div key={sub.id} className="p-3 bg-[#F9FAFB] rounded-[6px] border border-[#E4E7EC] space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[#101828] truncate">{sub.subject}</span>
-                        <span className="font-mono text-[11px] text-[#667085]">{sub.ref || 'REQ-001'}</span>
-                      </div>
-                      <div className="text-[11.5px] text-[#667085]">
-                        ⏱ With <strong className="text-[#101828]">Arjun Bose</strong> for 2 days
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
+      </div>
     </div>
   );
 }

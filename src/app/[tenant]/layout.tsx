@@ -43,9 +43,18 @@ export default async function TenantLayout({
 
   const { data: tenant } = await adminClient
     .from('tenants')
-    .select('id, name, logo_url')
+    .select('id, name, logo_url, subdomain')
     .eq('id', profile.tenant_id)
     .single();
+
+  if (!tenant) {
+    redirect('/login');
+  }
+
+  // Enforce Tenant Route Isolation: URL tenant parameter MUST match user's profile tenant
+  if (resolvedParams.tenant !== tenant.subdomain && resolvedParams.tenant !== tenant.id) {
+    redirect(`/${tenant.subdomain}`);
+  }
 
   const tenantName = tenant ? tenant.name : 'Workspace';
 

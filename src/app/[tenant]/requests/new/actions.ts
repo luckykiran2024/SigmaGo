@@ -115,7 +115,10 @@ export async function submitNewRequest(
 
   if (wf) {
     workflowId = wf.id;
-    if (!categoryId && wf.category_id) {
+    // Server Authoritative: When a workflow template is selected, its linked category governs
+    if (requestedWorkflowId && wf.category_id) {
+      categoryId = wf.category_id;
+    } else if (!categoryId && wf.category_id) {
       categoryId = wf.category_id;
     }
     baselineStepType = wf.base_step_type || 'TRANSACTIONAL';

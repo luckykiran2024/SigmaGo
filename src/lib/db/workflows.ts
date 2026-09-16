@@ -56,48 +56,27 @@ export async function createWorkflow(payload: {
   createdBy?: string | null;
 }) {
   const baseStepType = payload.baseStepType || 'TRANSACTIONAL';
-  const { data: workflow, error } = await adminClient
-    .from('workflows')
-    .insert({
-      tenant_id: payload.tenantId,
-      category_id: payload.categoryId,
-      name: payload.name,
-      is_locked: payload.isLocked,
-      steps: payload.steps,
-      base_step_type: baseStepType,
-      governing_policy_id: payload.governingPolicyId || null,
-      default_sla_hours: payload.defaultSlaHours || null,
-      classification_rules_json: payload.classificationRulesJson || {},
-      current_version_number: 1,
-    })
-    .select()
-    .single();
+  
+  const { data: res, error } = await adminClient.rpc('sigmago_save_workflow_atomic', {
+    p_workflow_id: null,
+    p_tenant_id: payload.tenantId,
+    p_category_id: payload.categoryId || null,
+    p_name: payload.name,
+    p_is_locked: payload.isLocked,
+    p_steps: payload.steps,
+    p_base_step_type: baseStepType,
+    p_governing_policy_id: payload.governingPolicyId || null,
+    p_default_sla_hours: payload.defaultSlaHours || null,
+    p_classification_rules_json: payload.classificationRulesJson || {},
+    p_user_id: payload.createdBy || null,
+  });
 
-  if (error) throw error;
-
-  // Create immutable initial version (Version 1)
-  const { error: verError } = await adminClient
-    .from('workflow_versions')
-    .insert({
-      tenant_id: payload.tenantId,
-      workflow_id: workflow.id,
-      version_number: 1,
-      name_snapshot: payload.name,
-      category_id_snapshot: payload.categoryId,
-      base_step_type: baseStepType,
-      governing_policy_id_snapshot: payload.governingPolicyId || null,
-      steps_json: payload.steps,
-      classification_rules_json: payload.classificationRulesJson || {},
-      default_sla_hours: payload.defaultSlaHours || null,
-      created_by: payload.createdBy || null,
-      effective_from: new Date().toISOString(),
-    });
-
-  if (verError) {
-    console.error('Failed to create initial workflow_version:', verError);
+  if (error) {
+    console.error('Failed to create workflow atomically via RPC:', error);
+    throw new Error(`Failed to create workflow: ${error.message}`);
   }
 
-  return workflow;
+  return res?.workflow || res;
 }
 
 export async function updateWorkflow(
@@ -115,98 +94,26 @@ export async function updateWorkflow(
     updatedBy?: string | null;
   }
 ) {
-  // 1. Fetch current workflow to determine current version number
-  const { data: current, error: fetchErr } = await adminClient
-    .from('workflows')
-    .select('*')
-    .eq('id', workflowId)
-    .eq('tenant_id', tenantId)
-    .single();
-
-  if (fetchErr || !current) throw new Error('Workflow not found');
-
-  const currentVersion = current.current_version_number || 1;
-  const nextVersionNumber = currentVersion + 1;
-  const now = new Date().toISOString();
-  const baseStepType = payload.baseStepType || current.base_step_type || 'TRANSACTIONAL';
-
-  // 2. Expire the current active version snapshot
-  await adminClient
-    .from('workflow_versions')
-    .update({ effective_to: now })
-    .eq('workflow_id', workflowId)
-    .eq('tenant_id', tenantId)
-    .is('effective_to', null);
-
-  // 3. Insert new immutable version snapshot (Version N+1)
-  const { error: verErr } = await adminClient
-    .from('workflow_versions')
-    .insert({
-      tenant_id: tenantId,
-      workflow_id: workflowId,
-      version_number: nextVersionNumber,
-      name_snapshot: payload.name,
-      category_id_snapshot: payload.categoryId,
-      base_step_type: baseStepType,
-      governing_policy_id_snapshot: payload.governingPolicyId || current.governing_policy_id || null,
-      steps_json: payload.steps,
-      classification_rules_json: payload.classificationRulesJson || current.classification_rules_json || {},
-      default_sla_hours: payload.defaultSlaHours !== undefined ? payload.defaultSlaHours : current.default_sla_hours,
-      created_by: payload.updatedBy || null,
-      effective_from: now,
-    });
-
-  if (verErr) {
-    console.error('Failed to create new workflow_version:', verErr);
-    // Rollback: Re-activate previous version snapshot
-    await adminClient
-      .from('workflow_versions')
-      .update({ effective_to: null })
-      .eq('workflow_id', workflowId)
-      .eq('tenant_id', tenantId)
-      .eq('effective_to', now);
-    throw new Error(`Transaction aborted: Could not create workflow version snapshot: ${verErr.message}`);
-  }
-
-  // 4. Update the parent workflow record
-  const { data, error } = await adminClient
-    .from('workflows')
-    .update({
-      category_id: payload.categoryId,
-      name: payload.name,
-      is_locked: payload.isLocked,
-      steps: payload.steps,
-      base_step_type: baseStepType,
-      governing_policy_id: payload.governingPolicyId !== undefined ? payload.governingPolicyId : current.governing_policy_id,
-      default_sla_hours: payload.defaultSlaHours !== undefined ? payload.defaultSlaHours : current.default_sla_hours,
-      classification_rules_json: payload.classificationRulesJson || current.classification_rules_json || {},
-      current_version_number: nextVersionNumber,
-      updated_at: now,
-    })
-    .eq('id', workflowId)
-    .eq('tenant_id', tenantId)
-    .select()
-    .single();
+  const { data: res, error } = await adminClient.rpc('sigmago_save_workflow_atomic', {
+    p_workflow_id: workflowId,
+    p_tenant_id: tenantId,
+    p_category_id: payload.categoryId || null,
+    p_name: payload.name,
+    p_is_locked: payload.isLocked,
+    p_steps: payload.steps,
+    p_base_step_type: payload.baseStepType || null,
+    p_governing_policy_id: payload.governingPolicyId || null,
+    p_default_sla_hours: payload.defaultSlaHours !== undefined ? payload.defaultSlaHours : null,
+    p_classification_rules_json: payload.classificationRulesJson || null,
+    p_user_id: payload.updatedBy || null,
+  });
 
   if (error) {
-    console.error('Failed to update parent workflow:', error);
-    // Rollback: delete newly inserted version and re-activate previous
-    await adminClient
-      .from('workflow_versions')
-      .delete()
-      .eq('workflow_id', workflowId)
-      .eq('tenant_id', tenantId)
-      .eq('version_number', nextVersionNumber);
-    await adminClient
-      .from('workflow_versions')
-      .update({ effective_to: null })
-      .eq('workflow_id', workflowId)
-      .eq('tenant_id', tenantId)
-      .eq('effective_to', now);
-    throw new Error(`Transaction aborted: Could not update workflow parent record: ${error.message}`);
+    console.error('Failed to update workflow atomically via RPC:', error);
+    throw new Error(`Failed to update workflow: ${error.message}`);
   }
 
-  return data;
+  return res?.workflow || res;
 }
 
 export async function getActiveWorkflowVersion(workflowId: string, tenantId: string) {

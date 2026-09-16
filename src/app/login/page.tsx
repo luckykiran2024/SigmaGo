@@ -39,85 +39,110 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-surface relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#F7FAFC] relative overflow-hidden font-sans">
       {/* Top Left Back to Home Button */}
       <div className="absolute top-6 left-6 z-20">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-3.5 py-2 text-[14px] font-semibold text-muted hover:text-ink bg-white border border-border rounded-[6px] shadow-xs transition hover:bg-section-alt"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-[#526377] hover:text-[#012F6B] bg-white border border-[#DDE5EC] rounded-lg shadow-xs transition hover:bg-[#F3F6F8]"
         >
-          <ArrowLeft className="w-4 h-4 text-brand" />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#059DB0]" />
           <span>Home</span>
         </Link>
       </div>
 
-      {/* Decorative background gradients */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand/5 rounded-md blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      {/* Subtle Decision Network Ambient Background Motif */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <svg className="absolute w-full h-full opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="decision-network" width="80" height="80" patternUnits="userSpaceOnUse">
+              <circle cx="20" cy="20" r="2.5" fill="#012F6B" />
+              <circle cx="60" cy="60" r="2" fill="#059DB0" />
+              <line x1="20" y1="20" x2="60" y2="60" stroke="#012F6B" strokeWidth="0.75" strokeDasharray="3 3" />
+              <line x1="20" y1="20" x2="80" y2="20" stroke="#059DB0" strokeWidth="0.5" />
+              <line x1="60" y1="60" x2="60" y2="0" stroke="#059DB0" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#decision-network)" />
+        </svg>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#059DB0]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#012F6B]/5 rounded-full blur-3xl pointer-events-none" />
+      </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <Link href="/" className="flex justify-center items-center gap-2 group hover:opacity-90 transition">
-          {/* SigmaGo Brand Mark */}
-          <div className="w-10 h-10 rounded-xl bg-ink flex items-center justify-center shadow-md shadow-ink/10">
-            <span className="text-white font-sans font-extrabold text-base tracking-tight">SG</span>
+        <Link href="/" className="flex flex-col items-center group transition">
+          {/* Official SigmaGo Brand Mark */}
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 relative flex items-center justify-center bg-white rounded-xl shadow-xs border border-[#DDE5EC] p-1.5 group-hover:border-[#059DB0]/40 transition">
+              <img
+                src="/brand/sigmago-logo.png"
+                alt="SigmaGo"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold tracking-tight text-[#012F6B] leading-none">
+                Sigma<span className="text-[#059DB0]">Go</span>
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8190A0] mt-0.5">
+                Decision Intelligence
+              </span>
+            </div>
           </div>
-          <span className="font-sans text-2xl font-bold tracking-tight text-ink select-none">
-            Sigma<span className="text-brand">Go</span>
-          </span>
         </Link>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-ink">
-          {isResetMode ? 'Reset password' : 'Welcome back'}
+        <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-[#132238]">
+          {isResetMode ? 'Reset password' : 'Sign in to SigmaGo'}
         </h2>
-        <p className="mt-2 text-center text-sm font-medium text-muted">
+        <p className="mt-1.5 text-center text-xs font-medium text-[#526377]">
           {isResetMode
             ? 'Enter your email to receive a password reset link'
-            : 'Enter your credentials to access your tenant workspace'}
+            : 'Turn decisions into organizational intelligence'}
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
-        <div className="bg-surface py-8 px-4 border border-border shadow-card sm:rounded-card sm:px-10">
+      <div className="mt-7 sm:mx-auto sm:w-full sm:max-w-md z-10 px-4 sm:px-0">
+        <div className="bg-white py-8 px-6 sm:px-8 border border-[#DDE5EC] shadow-sm rounded-xl">
           
           {/* Global URL Message Banner */}
           {message && (
-            <div className={`mb-6 p-4 rounded-xl text-sm font-semibold flex items-start gap-3 border ${
+            <div className={`mb-6 p-3.5 rounded-lg text-xs font-semibold flex items-start gap-2.5 border ${
               message.includes('success') || message.includes('confirmed')
-                ? 'bg-green-50 text-green-800 border-green-200'
-                : 'bg-red-50 text-red-800 border-red-200'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}>
               {message.includes('success') || message.includes('confirmed') ? (
-                <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               )}
-              <p className="text-sm font-medium">{decodeURIComponent(message)}</p>
+              <p className="text-xs font-medium leading-relaxed">{decodeURIComponent(message)}</p>
             </div>
           )}
 
           {/* Reset Status/Error Messages */}
           {statusMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 text-sm font-semibold text-green-700">
+            <div className="mb-6 p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
               {statusMsg}
             </div>
           )}
           {errorMsg && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-sm font-semibold text-red-700">
+            <div className="mb-6 p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-800">
               {errorMsg}
             </div>
           )}
 
           {isResetMode ? (
-            <form className="space-y-6" onSubmit={handleResetPassword}>
+            <form className="space-y-5" onSubmit={handleResetPassword}>
               <div>
-                <label htmlFor="reset-email" className="block text-sm font-semibold text-ink">
-                  Email address
+                <label htmlFor="reset-email" className="block text-xs font-semibold text-[#132238] uppercase tracking-wider mb-1.5">
+                  Work Email
                 </label>
-                <div className="mt-1.5 relative rounded-xl shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8190A0]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
@@ -127,19 +152,19 @@ function LoginForm() {
                     required
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    className="appearance-none block w-full pl-10 pr-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                    className="appearance-none block w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE5EC] rounded-lg text-sm text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
                     placeholder="name@company.com"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5 pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full flex justify-center py-2.5 px-4 rounded-lg text-xs font-bold text-white bg-[#012F6B] hover:bg-[#033E79] focus:outline-none focus:ring-2 focus:ring-[#059DB0] disabled:opacity-50 transition shadow-xs"
                 >
-                  {isSubmitting ? 'Sending...' : 'Send reset link'}
+                  {isSubmitting ? 'Sending Instructions...' : 'Send Reset Link'}
                 </button>
                 
                 <button
@@ -149,21 +174,21 @@ function LoginForm() {
                     setStatusMsg(null);
                     setErrorMsg(null);
                   }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition duration-150"
+                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-4 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] focus:outline-none transition"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back to login
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Back to sign in
                 </button>
               </div>
             </form>
           ) : (
-            <form className="space-y-6" action={signIn}>
+            <form className="space-y-5" action={signIn}>
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-ink">
-                  Email address
+                <label htmlFor="email" className="block text-xs font-semibold text-[#132238] uppercase tracking-wider mb-1.5">
+                  Work Email
                 </label>
-                <div className="mt-1.5 relative rounded-xl shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8190A0]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
@@ -172,15 +197,15 @@ function LoginForm() {
                     type="email"
                     autoComplete="email"
                     required
-                    className="appearance-none block w-full pl-10 pr-3.5 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
-                    placeholder="name@company.com"
+                    className="appearance-none block w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#DDE5EC] rounded-lg text-sm text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                    placeholder="executive@company.com"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="block text-sm font-semibold text-ink">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="password" className="block text-xs font-semibold text-[#132238] uppercase tracking-wider">
                     Password
                   </label>
                   <button
@@ -190,13 +215,13 @@ function LoginForm() {
                       setStatusMsg(null);
                       setErrorMsg(null);
                     }}
-                    className="text-xs font-semibold text-brand hover:text-brand/90 transition"
+                    className="text-xs font-semibold text-[#059DB0] hover:text-[#078899] transition"
                   >
                     Forgot password?
                   </button>
                 </div>
-                <div className="mt-1.5 relative rounded-xl shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8190A0]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -205,36 +230,40 @@ function LoginForm() {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     required
-                    className="appearance-none block w-full pl-10 pr-12 py-2.5 border border-gray-200 rounded-xl shadow-sm text-ink placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition sm:text-sm font-medium"
+                    className="appearance-none block w-full pl-10 pr-12 py-2.5 bg-white border border-[#DDE5EC] rounded-lg text-sm text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8190A0] hover:text-[#526377] transition"
                   >
-                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5 pt-2">
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-brand hover:bg-brand/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-150 transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full flex justify-center py-2.5 px-4 rounded-lg text-xs font-bold text-white bg-[#012F6B] hover:bg-[#033E79] focus:outline-none focus:ring-2 focus:ring-[#059DB0] transition shadow-xs"
                 >
-                  Sign in
+                  Sign In
                 </button>
                 <button
                   formAction={signUp}
-                  className="w-full flex justify-center py-2.5 px-4 border border-gray-200 rounded-xl shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition duration-150"
+                  className="w-full flex justify-center py-2 px-4 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] focus:outline-none transition"
                 >
-                  Create new account
+                  Create New Workspace Account
                 </button>
               </div>
             </form>
           )}
         </div>
+        
+        <p className="mt-6 text-center text-[11px] text-[#8190A0]">
+          Secured with end-to-end cryptographic provenance & audit sealing.
+        </p>
       </div>
     </div>
   );

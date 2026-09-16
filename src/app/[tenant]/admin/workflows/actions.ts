@@ -1,34 +1,9 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
-import { getProfileForAuthUser } from '@/lib/db/users';
+import { requireTenantAdmin } from '@/lib/auth/guards';
 import { createWorkflow, updateWorkflow, deleteWorkflow, WorkflowStep } from '@/lib/db/workflows';
 import { revalidatePath } from 'next/cache';
-
-async function checkAdmin(tenantSubdomain: string) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    throw new Error('Unauthenticated');
-  }
-
-  const { data: tenant } = await adminClient
-    .from('tenants')
-    .select('id')
-    .eq('subdomain', tenantSubdomain)
-    .single();
-
-  if (!tenant) throw new Error('Tenant not found');
-
-  const profile = await getProfileForAuthUser(user.id, user.email || '');
-
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin' && profile.role !== 'ADMIN' && profile.role !== 'SUPER_ADMIN')) {
-    throw new Error('Unauthorized - Admin privileges required');
-  }
-
-  return { tenantId: tenant.id, userId: profile.id };
-}
 
 export async function saveWorkflowAction(
   tenantSubdomain: string,
@@ -44,7 +19,8 @@ export async function saveWorkflowAction(
     classificationRulesJson?: Record<string, any>;
   }
 ) {
-  const { tenantId, userId } = await checkAdmin(tenantSubdomain);
+  const { tenantId, profile } = await requireTenantAdmin(tenantSubdomain);
+  const userId = profile.id;
 
   // Validate that categoryId belongs to this tenant if provided
   if (payload.categoryId) {
@@ -108,7 +84,7 @@ export async function saveWorkflowAction(
 }
 
 export async function deleteWorkflowAction(tenantSubdomain: string, workflowId: string) {
-  const { tenantId } = await checkAdmin(tenantSubdomain);
+  const { tenantId } = await requireTenantAdmin(tenantSubdomain);
   await deleteWorkflow(workflowId, tenantId);
   revalidatePath(`/${tenantSubdomain}/admin/workflows`);
   revalidatePath(`/${tenantSubdomain}/requests/new`);

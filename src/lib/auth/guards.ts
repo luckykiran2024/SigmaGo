@@ -47,7 +47,7 @@ export async function requireTenantAdmin(tenantSubdomain: string): Promise<Guard
 
   // Role Check
   const role = (profile.role || '').toLowerCase();
-  if (role !== 'admin' && role !== 'super_admin') {
+  if (role !== 'admin' && role !== 'super_admin' && role !== 'owner') {
     throw new Error('Forbidden: Tenant Administrator access required');
   }
 

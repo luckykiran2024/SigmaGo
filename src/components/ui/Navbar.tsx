@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Plus, LayoutDashboard, Settings, Globe, LogOut, ExternalLink } from 'lucide-react';
 import { signOutAction } from '@/app/login/actions';
@@ -54,16 +55,20 @@ export default function Navbar({
   const userInitial = userName ? userName.charAt(0).toUpperCase() : 'M';
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#E4E7EC] h-[52px]">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#DDE5EC] h-[52px]">
       <div className="max-w-[1440px] mx-auto px-6 h-full flex items-center justify-between font-sans">
-        {/* Left: Brand & Navigation Tabs */}
+        {/* Left: Official Brand & Navigation Tabs */}
         <div className="flex items-center gap-6 h-full">
-          <Link href={`/${tenantSubdomain}`} className="flex items-center gap-2.5 group">
-            <div className="w-[26px] h-[26px] rounded-[6px] bg-[#182230] text-white font-bold text-[12px] flex items-center justify-center tracking-tight transition-opacity hover:opacity-90">
-              SG
+          <Link href={`/${tenantSubdomain}`} className="flex items-center gap-3 group">
+            <div className="relative w-[28px] h-[28px] shrink-0 transition-opacity hover:opacity-95">
+              <img
+                src="/brand/sigmago-logo.png"
+                alt="SigmaGo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="h-3.5 w-[1px] bg-[#E4E7EC]" />
-            <span className="text-[11px] font-medium text-[#475467]">
+            <span className="h-4 w-[1px] bg-[#DDE5EC]" />
+            <span className="text-[12px] font-semibold text-[#132238] tracking-tight truncate max-w-[160px]">
               {tenantName}
             </span>
           </Link>
@@ -79,22 +84,24 @@ export default function Navbar({
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`relative h-full flex items-center px-3 text-[13px] transition-colors ${
-                    isActive ? 'text-[#182230] font-semibold' : 'text-[#475467] font-normal hover:text-[#182230]'
+                  className={`relative h-full flex items-center px-3 text-[13px] transition-all ${
+                    isActive
+                      ? 'text-[#012F6B] font-semibold bg-[#F1FBFC]/80'
+                      : 'text-[#526377] font-normal hover:text-[#012F6B] hover:bg-[#F7FAFC]'
                   }`}
                 >
                   <span>{item.label}</span>
                   {item.count && item.count > 0 ? (
                     <span
                       aria-live="polite"
-                      className="ml-1.5 px-1.5 py-0.5 rounded-[4px] text-[11px] font-semibold bg-[#FEF3F2] text-[#B42318] border border-[#FECDCA] leading-none tabular-nums"
+                      className="ml-1.5 px-1.5 py-0.5 rounded-[4px] text-[11px] font-semibold bg-[#FFFAEB] text-[#B54708] border border-[#FEDF89] leading-none tabular-nums"
                     >
                       {item.count}
                     </span>
                   ) : null}
 
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#274C77] rounded-t-sm" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#059DB0] rounded-t-sm" />
                   )}
                 </Link>
               );
@@ -102,11 +109,11 @@ export default function Navbar({
           </nav>
         </div>
 
-        {/* Right: Single Primary Action & Interactive User Profile Dropdown */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Primary Action & Interactive User Profile Dropdown */}
+        <div className="flex items-center gap-3">
           <Link
             href={`/${tenantSubdomain}/requests/new`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#274C77] hover:bg-[#1E3C60] text-white text-[13px] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#012F6B] hover:bg-[#033E79] active:bg-[#07182F] text-white text-[13px] font-medium transition-colors shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New request</span>
@@ -118,7 +125,7 @@ export default function Navbar({
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="User menu"
               aria-expanded={menuOpen}
-              className="w-[30px] h-[30px] rounded-full bg-[#F2F4F7] text-[#182230] border border-[#E4E7EC] hover:border-[#98A2B3] font-semibold text-[12px] flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#274C77]/20 active:scale-95 overflow-hidden"
+              className="w-[30px] h-[30px] rounded-full bg-[#F3F6F8] text-[#012F6B] border border-[#DDE5EC] hover:border-[#059DB0] font-semibold text-[12px] flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 active:scale-95 overflow-hidden"
             >
               {userAvatarUrl ? (
                 <img
@@ -132,11 +139,11 @@ export default function Navbar({
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#E4E7EC] rounded-[8px] shadow-[0_8px_24px_rgba(15,23,42,0.08)] z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
+              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#DDE5EC] rounded-[8px] shadow-dropdown z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
                 {/* Header info */}
-                <div className="px-3 py-2 border-b border-[#E4E7EC]">
-                  <p className="text-[13px] font-semibold text-[#182230] truncate">{userName}</p>
-                  <p className="text-[11px] font-normal text-[#667085] truncate">{tenantName}</p>
+                <div className="px-3 py-2 border-b border-[#DDE5EC]">
+                  <p className="text-[13px] font-semibold text-[#132238] truncate">{userName}</p>
+                  <p className="text-[11px] font-normal text-[#8190A0] truncate">{tenantName}</p>
                 </div>
 
                 {/* Menu items */}
@@ -144,18 +151,18 @@ export default function Navbar({
                   <Link
                     href={`/${tenantSubdomain}`}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#344054] rounded-[6px] hover:bg-[#F9FAFB] hover:text-[#182230] transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors"
                   >
-                    <LayoutDashboard className="w-4 h-4 text-[#667085]" />
+                    <LayoutDashboard className="w-4 h-4 text-[#8190A0]" />
                     <span>Dashboard</span>
                   </Link>
 
                   <Link
                     href={`/${tenantSubdomain}/settings`}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#344054] rounded-[6px] hover:bg-[#F9FAFB] hover:text-[#182230] transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors"
                   >
-                    <Settings className="w-4 h-4 text-[#667085]" />
+                    <Settings className="w-4 h-4 text-[#8190A0]" />
                     <span>Settings</span>
                   </Link>
 
@@ -164,18 +171,18 @@ export default function Navbar({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-1.5 text-[13px] font-normal text-[#344054] rounded-[6px] hover:bg-[#F9FAFB] hover:text-[#182230] transition-colors group"
+                    className="flex items-center justify-between px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors group"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Globe className="w-4 h-4 text-[#667085]" />
+                      <Globe className="w-4 h-4 text-[#8190A0]" />
                       <span>Landing page</span>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#98A2B3] group-hover:text-[#344054]" />
+                    <ExternalLink className="w-3.5 h-3.5 text-[#8190A0] group-hover:text-[#012F6B]" />
                   </Link>
                 </div>
 
                 {/* Divider & Logout */}
-                <div className="pt-0.5 border-t border-[#E4E7EC]">
+                <div className="pt-0.5 border-t border-[#DDE5EC]">
                   <form action={signOutAction}>
                     <button
                       type="submit"

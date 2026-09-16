@@ -31,8 +31,6 @@ function formatDate(dateStr: string | null) {
   }).format(new Date(dateStr));
 }
 
-
-  
 export default function ApprovalsSearchList({
   raisedByMe,
   involvedIn,
@@ -57,15 +55,6 @@ export default function ApprovalsSearchList({
   const [fromDate, setFromDate] = useState(searchParams.get('from_date') || '');
   const [toDate, setToDate] = useState(searchParams.get('to_date') || '');
   const [datePreset, setDatePreset] = useState('custom');
-  const [validityFilter, setValidityFilter] = useState<'all' | 'active' | 'expiring' | 'expired'>('all');
-  const filterByValidity = (req: any) => {
-    if (validityFilter === 'all') return true;
-    const info = getValidityInfo(req);
-    if (validityFilter === 'active') return info.state === 'ACTIVE';
-    if (validityFilter === 'expiring') return info.state === 'EXPIRING_SOON';
-    if (validityFilter === 'expired') return info.state === 'EXPIRED';
-    return true;
-  };
 
   // Update query state if searchParams change externally
   useEffect(() => {
@@ -196,56 +185,55 @@ export default function ApprovalsSearchList({
   if (fromDate || toDate) activeFilterCount++;
 
   const getStatusPillClasses = (status: string) => {
-    const base = "inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-black uppercase tracking-widest border font-mono ";
-    if (status === 'approved') return base + "bg-ok/10 text-ok border-ok/20";
-    if (status === 'rejected') return base + "bg-err/10 text-err border-err/20";
-    if (status === 'blocked') return base + "bg-err/10 text-err border-err/20 animate-pulse";
-    if (status === 'in_discussion') return base + "bg-info/10 text-info border-info/20";
-    return base + "bg-warn/10 text-warn border-warn/20"; // pending
+    const base = "inline-flex items-center px-2 py-0.5 rounded-[4px] text-[11px] font-medium border ";
+    if (status === 'approved') return base + "bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]";
+    if (status === 'rejected') return base + "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA]";
+    if (status === 'blocked') return base + "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA]";
+    if (status === 'in_discussion') return base + "bg-[#F1FBFC] text-[#078899] border-[#DDF5F7]";
+    return base + "bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]"; // pending
   };
 
   return (
-    <div className="space-y-6 font-sans text-ink">
-      
+    <div className="space-y-6 font-sans text-[#132238]">
       {/* Admin Tab Bar */}
       {isAdmin && (
-        <div className="flex border-b border-border gap-4 font-sans">
+        <div className="flex border-b border-[#DDE5EC] gap-6 font-sans">
           <button
             onClick={() => setActiveTab('active')}
-            className={`pb-3 text-sm font-bold transition relative ${
-              activeTab === 'active' ? 'text-brand' : 'text-muted hover:text-ink'
+            className={`pb-3 text-[14px] font-medium transition relative ${
+              activeTab === 'active' ? 'text-[#012F6B] font-semibold' : 'text-[#526377] hover:text-[#012F6B]'
             }`}
           >
             Active Requests
             {activeTab === 'active' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand rounded-md" />
+              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#059DB0] rounded-sm" />
             )}
           </button>
           <button
             onClick={() => setActiveTab('archived')}
-            className={`pb-3 text-sm font-bold transition relative ${
-              activeTab === 'archived' ? 'text-brand' : 'text-muted hover:text-ink'
+            className={`pb-3 text-[14px] font-medium transition relative ${
+              activeTab === 'archived' ? 'text-[#012F6B] font-semibold' : 'text-[#526377] hover:text-[#012F6B]'
             }`}
           >
             Archived Requests
             {activeTab === 'archived' && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand rounded-md" />
+              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#059DB0] rounded-sm" />
             )}
           </button>
         </div>
       )}
 
-      {/* FILTER BAR - Single Row responsive layout */}
-      <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] p-4 space-y-4">
-        <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center">
-          {/* Search (existing) */}
+      {/* FILTER BAR */}
+      <div className="bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs p-4 space-y-4">
+        <div className="flex flex-col xl:flex-row gap-3 items-stretch xl:items-center">
+          {/* Search */}
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-muted" />
+              <Search className="h-4 w-4 text-[#8190A0]" />
             </div>
             <input
               type="text"
-              className="block w-full pl-9 pr-4 py-2.5 rounded-xl border border-border text-xs text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition bg-white"
+              className="block w-full pl-9 pr-4 py-2 rounded-[6px] border border-[#DDE5EC] text-[13.5px] text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0] transition bg-[#F7FAFC]"
               placeholder="Search subject..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -255,7 +243,7 @@ export default function ApprovalsSearchList({
           {/* Status Select */}
           <div className="w-full xl:w-40 shrink-0">
             <select
-              className="block w-full px-3 py-2.5 rounded-xl border border-border text-xs text-ink focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent bg-white transition font-bold"
+              className="block w-full px-3 py-2 rounded-[6px] border border-[#DDE5EC] text-[13px] text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0] bg-white transition font-medium"
               value={statusFilter}
               onChange={(e) => handleStatusChange(e.target.value)}
             >
@@ -271,7 +259,7 @@ export default function ApprovalsSearchList({
           {/* Category Select */}
           <div className="w-full xl:w-44 shrink-0">
             <select
-              className="block w-full px-3 py-2.5 rounded-xl border border-border text-xs text-ink focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent bg-white transition font-bold"
+              className="block w-full px-3 py-2 rounded-[6px] border border-[#DDE5EC] text-[13px] text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0] bg-white transition font-medium"
               value={categoryFilter}
               onChange={(e) => handleCategoryChange(e.target.value)}
             >
@@ -282,7 +270,7 @@ export default function ApprovalsSearchList({
             </select>
           </div>
 
-          {/* Raised by Owner (PersonPicker searchable typeahead) */}
+          {/* Raised by Owner */}
           <div className="w-full xl:w-56 shrink-0 relative">
             <PersonPicker
               tenant={tenantSubdomain}
@@ -294,27 +282,27 @@ export default function ApprovalsSearchList({
 
           {/* Date range inputs & presets */}
           <div className="w-full xl:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 border border-border rounded-xl px-3 py-1.5 bg-white">
-              <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
+            <div className="flex items-center gap-1.5 border border-[#DDE5EC] rounded-[6px] px-2.5 py-1.5 bg-white">
+              <Calendar className="w-3.5 h-3.5 text-[#8190A0] shrink-0" />
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => handleFromDateChange(e.target.value)}
-                className="text-xs font-bold text-ink bg-transparent border-0 p-0 focus:ring-0 focus:outline-none font-mono"
+                className="text-[12px] text-[#132238] bg-transparent border-0 p-0 focus:ring-0 focus:outline-none font-mono"
               />
-              <span className="text-muted text-xs">-</span>
+              <span className="text-[#8190A0] text-xs">-</span>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => handleToDateChange(e.target.value)}
-                className="text-xs font-bold text-ink bg-transparent border-0 p-0 focus:ring-0 focus:outline-none font-mono"
+                className="text-[12px] text-[#132238] bg-transparent border-0 p-0 focus:ring-0 focus:outline-none font-mono"
               />
             </div>
 
             <select
               value={datePreset}
               onChange={(e) => handlePresetChange(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-border text-xs font-bold text-muted bg-white focus:outline-none focus:ring-2 focus:ring-accent/35 focus:border-transparent transition"
+              className="px-3 py-2 rounded-[6px] border border-[#DDE5EC] text-[12.5px] font-medium text-[#526377] bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0] transition"
             >
               <option value="custom">Date Preset</option>
               <option value="7days">Last 7 days</option>
@@ -328,41 +316,41 @@ export default function ApprovalsSearchList({
 
         {/* Removable chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border font-mono">
-            <span className="text-[10px] font-bold text-muted uppercase tracking-wider mr-1">Active filters:</span>
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#EAF0F4] text-[12px]">
+            <span className="text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider mr-1">Active filters:</span>
             
             {searchQuery && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg border border-border hover:bg-bg/80 text-muted text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('q')}>
-                Search: "{searchQuery}"
-                <span className="text-muted font-extrabold ml-1">×</span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#F3F6F8] border border-[#DDE5EC] text-[#526377] rounded-[4px] transition cursor-pointer hover:bg-[#EDF2F6]" onClick={() => clearFilter('q')}>
+                Search: &quot;{searchQuery}&quot;
+                <span className="font-bold ml-1">×</span>
               </span>
             )}
 
             {statusFilter !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg border border-border hover:bg-bg/80 text-muted text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('status')}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#F3F6F8] border border-[#DDE5EC] text-[#526377] rounded-[4px] transition cursor-pointer hover:bg-[#EDF2F6]" onClick={() => clearFilter('status')}>
                 Status: {statusFilter}
-                <span className="text-muted font-extrabold ml-1">×</span>
+                <span className="font-bold ml-1">×</span>
               </span>
             )}
 
             {categoryFilter !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg border border-border hover:bg-bg/80 text-muted text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('category_id')}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#F3F6F8] border border-[#DDE5EC] text-[#526377] rounded-[4px] transition cursor-pointer hover:bg-[#EDF2F6]" onClick={() => clearFilter('category_id')}>
                 Category: {categories.find(c => c.id === categoryFilter)?.name || 'Selected'}
-                <span className="text-muted font-extrabold ml-1">×</span>
+                <span className="font-bold ml-1">×</span>
               </span>
             )}
 
             {selectedOwner && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg border border-border hover:bg-bg/80 text-muted text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('owner_id')}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#F3F6F8] border border-[#DDE5EC] text-[#526377] rounded-[4px] transition cursor-pointer hover:bg-[#EDF2F6]" onClick={() => clearFilter('owner_id')}>
                 Owner: {selectedOwner.name}
-                <span className="text-muted font-extrabold ml-1">×</span>
+                <span className="font-bold ml-1">×</span>
               </span>
             )}
 
             {(fromDate || toDate) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg border border-border hover:bg-bg/80 text-muted text-[10px] font-bold rounded-lg transition cursor-pointer" onClick={() => clearFilter('date')}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#F3F6F8] border border-[#DDE5EC] text-[#526377] rounded-[4px] transition cursor-pointer hover:bg-[#EDF2F6]" onClick={() => clearFilter('date')}>
                 Date: {fromDate || '*'} to {toDate || '*'}
-                <span className="text-muted font-extrabold ml-1">×</span>
+                <span className="font-bold ml-1">×</span>
               </span>
             )}
 
@@ -370,7 +358,7 @@ export default function ApprovalsSearchList({
               <button
                 onClick={clearAllFilters}
                 type="button"
-                className="text-[10px] font-extrabold text-brand hover:text-brand-deep hover:underline ml-2"
+                className="text-[12px] font-semibold text-[#012F6B] hover:text-[#033E79] hover:underline ml-2"
               >
                 Clear all
               </button>
@@ -384,24 +372,24 @@ export default function ApprovalsSearchList({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
           {/* Bucket A: Involved In */}
-          <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
-            <div className="px-6 py-5 border-b border-border bg-bg/50 flex justify-between items-center">
+          <div className="bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#DDE5EC] bg-[#F7FAFC] flex justify-between items-center">
               <div>
-                <h3 className="text-base font-bold text-ink font-sans">Involved in</h3>
-                <p className="text-xs text-muted font-semibold mt-0.5">Requests where you are on the approval path</p>
+                <h3 className="text-[15px] font-semibold text-[#132238] font-sans">Involved in</h3>
+                <p className="text-[12px] text-[#526377] mt-0.5">Requests where you are on the approval path</p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-brand/10 text-brand border border-brand/20 font-mono">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#F1FBFC] text-[#012F6B] border border-[#DDF5F7]">
                 {involvedIn.length} requests
               </span>
             </div>
 
             {involvedIn.length === 0 ? (
-              <div className="text-center py-16 px-4 space-y-3">
-                <Inbox className="w-12 h-12 text-muted mx-auto" />
-                <h4 className="text-sm font-bold text-ink font-sans">
+              <div className="text-center py-16 px-4 space-y-2">
+                <Inbox className="w-10 h-10 text-[#8190A0] mx-auto" />
+                <h4 className="text-[15px] font-semibold text-[#132238] font-sans">
                   {hasActiveFilters ? 'No requests match your filters' : 'No requests found'}
                 </h4>
-                <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
+                <p className="text-[13px] text-[#526377] max-w-sm mx-auto leading-relaxed">
                   {hasActiveFilters 
                     ? 'Try clearing some filters to broaden your search results.' 
                     : 'Inbox is clean! You have no pending requests to approve.'}
@@ -409,33 +397,33 @@ export default function ApprovalsSearchList({
                 {hasActiveFilters && (
                   <button
                     onClick={clearAllFilters}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-border text-ink bg-transparent hover:bg-bg rounded-md text-xs font-bold transition shadow-3xs"
+                    className="inline-flex items-center justify-center px-3.5 py-1.5 border border-[#DDE5EC] text-[#132238] hover:bg-[#F7FAFC] rounded-[6px] text-[12px] font-medium transition"
                   >
                     Clear Filters
                   </button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border max-h-[480px] overflow-y-auto">
+              <div className="divide-y divide-[#EAF0F4] max-h-[480px] overflow-y-auto">
                 {involvedIn.map((req) => {
                   const catName = req.categories?.name || 'Uncategorized';
                   return (
-                    <div key={req.id} className="p-5 hover:bg-bg/30 transition flex items-center justify-between gap-4">
+                    <div key={req.id} className="p-4 hover:bg-[#F9FBFC] transition flex items-center justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
-                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="text-sm font-bold text-ink hover:text-brand transition truncate block">
+                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="text-[13.5px] font-medium text-[#132238] hover:text-[#012F6B] transition truncate block">
                           {req.subject}
                         </Link>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xs font-semibold text-muted uppercase tracking-wider font-mono">{catName}</span>
-                          <span className="text-hair">•</span>
-                          <span className="text-2xs text-muted font-semibold font-mono">{formatDate(req.created_at)}</span>
+                        <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
+                          <span className="font-medium text-[#526377]">{catName}</span>
+                          <span>•</span>
+                          <span className="font-mono">{formatDate(req.created_at)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className={getStatusPillClasses(req.status)}>
                           {req.status === 'in_discussion' ? 'discuss' : req.status === 'pending' ? 'pending' : req.status}
                         </span>
-                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="p-1 text-muted hover:text-brand transition">
+                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="p-1 text-[#8190A0] hover:text-[#012F6B] transition">
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </div>
@@ -447,24 +435,24 @@ export default function ApprovalsSearchList({
           </div>
 
           {/* Bucket B: Raised by Me */}
-          <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
-            <div className="px-6 py-5 border-b border-border bg-bg/50 flex justify-between items-center">
+          <div className="bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#DDE5EC] bg-[#F7FAFC] flex justify-between items-center">
               <div>
-                <h3 className="text-base font-bold text-ink font-sans">Raised by me</h3>
-                <p className="text-xs text-muted font-semibold mt-0.5">Requests you submitted for approval</p>
+                <h3 className="text-[15px] font-semibold text-[#132238] font-sans">Raised by me</h3>
+                <p className="text-[12px] text-[#526377] mt-0.5">Requests you submitted for approval</p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-brand/10 text-brand border border-brand/20 font-mono">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#F1FBFC] text-[#012F6B] border border-[#DDF5F7]">
                 {raisedByMe.length} requests
               </span>
             </div>
 
             {raisedByMe.length === 0 ? (
-              <div className="text-center py-16 px-4 space-y-3">
-                <FileText className="w-12 h-12 text-muted mx-auto" />
-                <h4 className="text-sm font-bold text-ink font-sans">
+              <div className="text-center py-16 px-4 space-y-2">
+                <FileText className="w-10 h-10 text-[#8190A0] mx-auto" />
+                <h4 className="text-[15px] font-semibold text-[#132238] font-sans">
                   {hasActiveFilters ? 'No requests match your filters' : 'No requests found'}
                 </h4>
-                <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
+                <p className="text-[13px] text-[#526377] max-w-sm mx-auto leading-relaxed">
                   {hasActiveFilters 
                     ? 'Try clearing some filters to broaden your search results.' 
                     : "You haven't submitted any requests."}
@@ -472,33 +460,33 @@ export default function ApprovalsSearchList({
                 {hasActiveFilters && (
                   <button
                     onClick={clearAllFilters}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-border text-ink bg-transparent hover:bg-bg rounded-md text-xs font-bold transition shadow-3xs"
+                    className="inline-flex items-center justify-center px-3.5 py-1.5 border border-[#DDE5EC] text-[#132238] hover:bg-[#F7FAFC] rounded-[6px] text-[12px] font-medium transition"
                   >
                     Clear Filters
                   </button>
                 )}
               </div>
             ) : (
-              <div className="divide-y divide-border max-h-[480px] overflow-y-auto">
+              <div className="divide-y divide-[#EAF0F4] max-h-[480px] overflow-y-auto">
                 {raisedByMe.map((req) => {
                   const catName = req.categories?.name || 'Uncategorized';
                   return (
-                    <div key={req.id} className="p-5 hover:bg-bg/30 transition flex items-center justify-between gap-4">
+                    <div key={req.id} className="p-4 hover:bg-[#F9FBFC] transition flex items-center justify-between gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
-                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="text-sm font-bold text-ink hover:text-brand transition truncate block">
+                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="text-[13.5px] font-medium text-[#132238] hover:text-[#012F6B] transition truncate block">
                           {req.subject}
                         </Link>
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xs font-semibold text-muted uppercase tracking-wider font-mono">{catName}</span>
-                          <span className="text-hair">•</span>
-                          <span className="text-2xs text-muted font-semibold font-mono">{formatDate(req.created_at)}</span>
+                        <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
+                          <span className="font-medium text-[#526377]">{catName}</span>
+                          <span>•</span>
+                          <span className="font-mono">{formatDate(req.created_at)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <span className={getStatusPillClasses(req.status)}>
                           {req.status === 'in_discussion' ? 'discuss' : req.status === 'pending' ? 'pending' : req.status}
                         </span>
-                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="p-1 text-muted hover:text-brand transition">
+                        <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="p-1 text-[#8190A0] hover:text-[#012F6B] transition">
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </div>
@@ -512,24 +500,24 @@ export default function ApprovalsSearchList({
         </div>
       ) : (
         /* Archived Requests Table */
-        <div className="bg-surface border border-border rounded-lg shadow-[0_10px_28px_rgba(60,55,30,0.10)] overflow-hidden">
-          <div className="px-6 py-5 border-b border-border bg-bg/50 flex justify-between items-center">
+        <div className="bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#DDE5EC] bg-[#F7FAFC] flex justify-between items-center">
             <div>
-              <h3 className="text-base font-bold text-ink font-sans">Archived Requests</h3>
-              <p className="text-xs text-muted font-semibold mt-0.5">Requests belonging to inactive/exited employees</p>
+              <h3 className="text-[15px] font-semibold text-[#132238] font-sans">Archived Requests</h3>
+              <p className="text-[12px] text-[#526377] mt-0.5">Requests belonging to inactive/exited employees</p>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-brand/10 text-brand border border-brand/20 font-mono">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#F1FBFC] text-[#012F6B] border border-[#DDF5F7]">
               {archivedRequests.length} requests
             </span>
           </div>
 
           {archivedRequests.length === 0 ? (
-            <div className="text-center py-16 px-4 space-y-3">
-              <Archive className="w-12 h-12 text-muted mx-auto" />
-              <h4 className="text-sm font-bold text-ink font-sans">
+            <div className="text-center py-16 px-4 space-y-2">
+              <Archive className="w-10 h-10 text-[#8190A0] mx-auto" />
+              <h4 className="text-[15px] font-semibold text-[#132238] font-sans">
                 {hasActiveFilters ? 'No archived requests match your filters' : 'No archived requests'}
               </h4>
-              <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
+              <p className="text-[13px] text-[#526377] max-w-sm mx-auto leading-relaxed">
                 {hasActiveFilters 
                   ? 'Try clearing some filters to broaden your search results.' 
                   : 'There are no archived requests.'}
@@ -537,7 +525,7 @@ export default function ApprovalsSearchList({
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-border text-ink bg-transparent hover:bg-bg rounded-md text-xs font-bold transition shadow-3xs"
+                  className="inline-flex items-center justify-center px-3.5 py-1.5 border border-[#DDE5EC] text-[#132238] hover:bg-[#F7FAFC] rounded-[6px] text-[12px] font-medium transition"
                 >
                   Clear Filters
                 </button>
@@ -545,36 +533,36 @@ export default function ApprovalsSearchList({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border text-left text-sm">
-                <thead className="bg-bg">
+              <table className="min-w-full divide-y divide-[#EAF0F4] text-left text-sm font-sans">
+                <thead className="bg-[#F7FAFC]">
                   <tr>
-                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-muted uppercase tracking-wider font-mono">Subject</th>
-                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-muted uppercase tracking-wider font-mono">Owner</th>
-                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-muted uppercase tracking-wider font-mono">Category</th>
-                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-muted uppercase tracking-wider font-mono">Status</th>
-                    <th scope="col" className="px-6 py-3.5 text-xs font-bold text-muted uppercase tracking-wider font-mono">Created</th>
-                    <th scope="col" className="relative px-6 py-3.5"><span className="sr-only">Actions</span></th>
+                    <th scope="col" className="px-6 py-3 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">Subject</th>
+                    <th scope="col" className="px-6 py-3 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">Owner</th>
+                    <th scope="col" className="px-6 py-3 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">Category</th>
+                    <th scope="col" className="px-6 py-3 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-3 text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">Created</th>
+                    <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
-                <tbody className="bg-surface divide-y divide-border">
+                <tbody className="bg-white divide-y divide-[#EAF0F4]">
                   {archivedRequests.map((req) => {
                     const ownerName = req.owner?.name || 'Unknown';
                     const categoryName = req.categories?.name || 'Uncategorized';
                     return (
-                      <tr key={req.id} className="hover:bg-bg/30 transition">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-ink">{req.subject}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-ink">{ownerName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-muted">{categoryName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={req.id} className="hover:bg-[#F9FBFC] transition">
+                        <td className="px-6 py-3.5 whitespace-nowrap text-[13.5px] font-medium text-[#132238]">{req.subject}</td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-[13px] text-[#526377]">{ownerName}</td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-[13px] text-[#526377]">{categoryName}</td>
+                        <td className="px-6 py-3.5 whitespace-nowrap">
                           <span className={getStatusPillClasses(req.status)}>
                             {req.status === 'in_discussion' ? 'discuss' : req.status === 'pending' ? 'pending' : req.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted font-semibold font-mono">{formatDate(req.created_at)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold">
-                          <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="inline-flex items-center gap-1 text-brand hover:text-brand-deep transition">
+                        <td className="px-6 py-3.5 whitespace-nowrap text-[12px] text-[#8190A0] font-mono">{formatDate(req.created_at)}</td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-right text-[13px]">
+                          <Link href={`/${tenantSubdomain}/requests/${req.id}`} className="inline-flex items-center gap-1 text-[#012F6B] hover:text-[#033E79] font-medium transition">
                             View
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
                         </td>
                       </tr>
@@ -587,8 +575,8 @@ export default function ApprovalsSearchList({
         </div>
       )}
 
-      {/* Sub-second Retrieval Timer Footer (§5 & §7) */}
-      <div className="pt-4 text-center text-xs font-mono font-semibold text-[#667085]">
+      {/* Footer */}
+      <div className="pt-4 text-center text-[12px] font-mono text-[#8190A0]">
         {VOCABULARY.searchFooter(involvedIn.length + raisedByMe.length, '0.4s')}
       </div>
     </div>

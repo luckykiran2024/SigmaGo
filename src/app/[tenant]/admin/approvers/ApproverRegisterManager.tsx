@@ -110,15 +110,15 @@ export default function ApproverRegisterManager({
     <div className="space-y-6 font-sans">
       {/* Warning Banners for System Health */}
       {unstaffedCategories.length > 0 && (
-        <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 space-y-2">
-          <div className="flex items-center gap-2 font-bold text-sm">
-            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
-            <span>Production Outage Risk: Unstaffed Approval Stages Detected</span>
+        <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900 space-y-2">
+          <div className="flex items-center gap-2 font-bold text-xs">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>Governance Risk: Unstaffed Approval Stages Detected</span>
           </div>
-          <p className="text-xs text-red-800">
+          <p className="text-xs text-rose-800">
             The following categories contain configured approval stages with zero active approvers. Approval requests in these categories will block:
           </p>
-          <ul className="list-disc list-inside text-xs font-mono font-medium text-red-950 space-y-0.5">
+          <ul className="list-disc list-inside text-xs font-mono font-medium text-rose-950 space-y-0.5">
             {unstaffedCategories.map((c) => (
               <li key={c.categoryName}>
                 <strong className="font-bold">{c.categoryName}:</strong> Unstaffed Stage(s): {c.unstaffedStages.join(', ')}
@@ -129,8 +129,8 @@ export default function ApproverRegisterManager({
       )}
 
       {zeroAuthorityApprovers.length > 0 && (
-        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 flex items-start gap-3">
-          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 flex items-start gap-2.5">
+          <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-xs space-y-0.5">
             <h4 className="font-bold text-amber-950">Inert Approver Warning</h4>
             <p className="text-amber-900 font-medium">
@@ -143,65 +143,65 @@ export default function ApproverRegisterManager({
       {/* Top Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          <Search className="w-3.5 h-3.5 text-[#8190A0] absolute left-3 top-3" />
           <input
             type="text"
             placeholder="Search approvers by name, email, department..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#DDE5EC] text-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
           />
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold shadow-sm transition-all"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold shadow-xs transition"
         >
-          <Plus className="w-4 h-4" /> Add Approver
+          <Plus className="w-3.5 h-3.5" /> Add Approver
         </button>
       </div>
 
       {/* Approvers Register Table */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#DDE5EC] rounded-xl shadow-xs overflow-hidden">
         <table className="w-full text-left text-xs font-sans">
-          <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider">
+          <thead className="bg-[#F7FAFC] border-b border-[#DDE5EC] text-[#526377] font-bold uppercase tracking-wider text-[11px]">
             <tr>
-              <th className="py-3.5 px-4">Approver Person</th>
-              <th className="py-3.5 px-4">Department & Title</th>
-              <th className="py-3.5 px-4">Configured Authorities</th>
-              <th className="py-3.5 px-4">Added On</th>
-              <th className="py-3.5 px-4">Status</th>
+              <th className="py-3 px-4">Approver Person</th>
+              <th className="py-3 px-4">Department & Title</th>
+              <th className="py-3 px-4">Configured Authorities</th>
+              <th className="py-3 px-4">Added On</th>
+              <th className="py-3 px-4">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[#DDE5EC]">
             {filteredApprovers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-gray-400 font-medium">
+                <td colSpan={5} className="py-8 text-center text-[#8190A0] font-medium">
                   No approvers match the search criteria.
                 </td>
               </tr>
             ) : (
               filteredApprovers.map((approver) => (
-                <tr key={approver.id} className={approver.removedAt ? 'bg-gray-50/60 opacity-60' : ''}>
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-gray-900">{approver.fullName}</div>
-                    <div className="text-2xs text-gray-500 font-mono">{approver.email}</div>
+                <tr key={approver.id} className={`hover:bg-[#F7FAFC] transition ${approver.removedAt ? 'bg-gray-50/60 opacity-60' : ''}`}>
+                  <td className="py-3 px-4">
+                    <div className="font-bold text-[#132238]">{approver.fullName}</div>
+                    <div className="text-[11px] text-[#8190A0] font-mono">{approver.email}</div>
                   </td>
-                  <td className="py-3.5 px-4 text-gray-600">
-                    <div className="font-medium">{approver.jobTitle || '—'}</div>
-                    <div className="text-2xs text-gray-400">{approver.department || 'General'}</div>
+                  <td className="py-3 px-4 text-[#526377]">
+                    <div className="font-medium text-[#132238]">{approver.jobTitle || '—'}</div>
+                    <div className="text-[11px] text-[#8190A0]">{approver.department || 'General'}</div>
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3 px-4">
                     {approver.authorities.length === 0 ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-extrabold bg-amber-100 text-amber-800 uppercase">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase">
                         0 Authorities
                       </span>
                     ) : (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1">
                         {approver.authorities.map((auth, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-extrabold bg-blue-100 text-blue-900 border border-blue-200"
+                            className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]"
                           >
                             {auth.categoryName} · Stage {auth.stage}
                           </span>
@@ -209,16 +209,16 @@ export default function ApproverRegisterManager({
                       </div>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-gray-500 font-medium">
+                  <td className="py-3 px-4 text-[#526377] font-mono text-[11px]">
                     {new Date(approver.addedAt).toLocaleDateString()}
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3 px-4">
                     {approver.removedAt ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-extrabold bg-gray-200 text-gray-700 uppercase">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">
                         Removed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-extrabold bg-emerald-100 text-emerald-800 uppercase">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase">
                         Active
                       </span>
                     )}
@@ -232,28 +232,28 @@ export default function ApproverRegisterManager({
 
       {/* Modal for Adding Approver */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-lg w-full p-6 space-y-4">
-            <h3 className="text-lg font-extrabold text-gray-900 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl shadow-lg border border-[#DDE5EC] max-w-lg w-full p-6 space-y-4">
+            <h3 className="text-base font-bold text-[#012F6B]">
               Add Approver to Register
             </h3>
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
+              <div className="p-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200 text-xs font-semibold">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleAddApprover} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#132238] uppercase tracking-wider mb-1">
                   Search & Select Directory Person
                 </label>
                 <select
                   required
                   value={selectedDirEmail}
                   onChange={(e) => setSelectedDirEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 rounded-lg border border-[#DDE5EC] text-xs text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
                 >
                   <option value="">-- Select Person from Directory --</option>
                   {directoryPeople.map((person) => (
@@ -262,13 +262,13 @@ export default function ApproverRegisterManager({
                     </option>
                   ))}
                 </select>
-                <p className="text-2xs text-gray-400 mt-1">
+                <p className="text-[11px] text-[#8190A0] mt-1">
                   Approvers must be verified persons in the directory. Free-text email entry is disabled.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#132238] uppercase tracking-wider mb-1">
                   Authority Note / Justification
                 </label>
                 <textarea
@@ -276,22 +276,22 @@ export default function ApproverRegisterManager({
                   placeholder="State why this person holds approval authority..."
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  className="w-full px-3 py-2 rounded-lg border border-[#DDE5EC] text-xs text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#DDE5EC]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs font-bold"
+                  className="px-3.5 py-1.5 rounded-lg border border-[#DDE5EC] text-[#526377] hover:bg-[#F7FAFC] text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 rounded-xl bg-gray-900 hover:bg-black text-white text-xs font-bold shadow-sm"
+                  className="px-4 py-1.5 rounded-lg bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold shadow-xs"
                 >
                   {loading ? 'Adding...' : 'Add to Register'}
                 </button>
