@@ -26,7 +26,15 @@ export function ThemeProvider({
 
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem('sigmago_theme') as ThemeMode | null;
+    let savedTheme: ThemeMode | null = null;
+    try {
+      if (typeof window !== 'undefined') {
+        savedTheme = localStorage.getItem('sigmago_theme') as ThemeMode | null;
+      }
+    } catch {
+      // Storage access blocked by browser security policy (e.g. iframe or third-party cookies disabled)
+    }
+
     if (savedTheme && ['light', 'dark', 'midnight', 'forest'].includes(savedTheme)) {
       setThemeState(savedTheme);
       applyTheme(savedTheme);
@@ -36,16 +44,26 @@ export function ThemeProvider({
   }, [initialTheme]);
 
   const applyTheme = (newTheme: ThemeMode) => {
-    const root = document.documentElement;
-    root.classList.remove('dark', 'midnight', 'forest', 'light');
-    if (newTheme !== 'light') {
-      root.classList.add(newTheme);
+    try {
+      const root = document.documentElement;
+      root.classList.remove('dark', 'midnight', 'forest', 'light');
+      if (newTheme !== 'light') {
+        root.classList.add(newTheme);
+      }
+    } catch {
+      // Ignore if document not accessible
     }
   };
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
-    localStorage.setItem('sigmago_theme', newTheme);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sigmago_theme', newTheme);
+      }
+    } catch {
+      // Storage access blocked
+    }
     applyTheme(newTheme);
   };
 
