@@ -20,7 +20,6 @@ export function verifyCronAuthorization(request: Request): CronAuthResult {
   }
 
   const authHeader = request.headers.get('authorization');
-  const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
 
   if (authHeader) {
     const expected = `Bearer ${cronSecret.trim()}`;
@@ -30,11 +29,6 @@ export function verifyCronAuthorization(request: Request): CronAuthResult {
     if (crypto.timingSafeEqual(hashExpected, hashReceived)) {
       return { authorized: true };
     }
-  }
-
-  if (isVercelCron && (!authHeader || authHeader.trim() === '')) {
-    // Standard Vercel Cron invocation without custom authorization header
-    return { authorized: true };
   }
 
   return {

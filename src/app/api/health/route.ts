@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/supabase/admin';
-import { logger } from '@/lib/observability/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,9 +22,6 @@ export async function GET() {
 
   const totalDurationMs = Math.round(performance.now() - startTime);
 
-  // Retrieve comprehensive CPU, Memory, OS, and Process metrics
-  const systemMetrics = logger.getSystemMetrics();
-
   const healthData = {
     status: dbStatus === 'healthy' ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
@@ -34,11 +30,6 @@ export async function GET() {
         status: dbStatus,
         latencyMs: dbLatencyMs,
       },
-    },
-    metrics: {
-      cpu: systemMetrics.cpu,
-      memory: systemMetrics.memory,
-      process: systemMetrics.process,
     },
     performance: {
       responseTimeMs: totalDurationMs,

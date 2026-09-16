@@ -1,4 +1,5 @@
 import os from 'os';
+import { redactSensitiveData, redactStringContent } from './redaction';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'metric';
 
@@ -108,12 +109,21 @@ class ObservabilityLogger {
 
   private formatLog(level: LogLevel, message: string, context?: LogContext) {
     const timestamp = new Date().toISOString();
+    const service = process.env.OTEL_SERVICE_NAME || process.env.SIGMAGO_SERVICE_NAME || 'sigmago-web';
+    const environment = process.env.NODE_ENV || 'development';
+
+    const safeContext = context ? redactSensitiveData(context) : {};
+
     const logPayload = {
       timestamp,
       level,
-      message,
-      environment: process.env.NODE_ENV || 'development',
-      ...context,
+      service,
+      environment,
+      message: redactStringContent(message),
+      traceId: safeContext.traceId || safeContext.trace_id || undefined,
+      spanId: safeContext.spanId || safeContext.span_id || undefined,
+      correlationId: safeContext.correlationId || safeContext.correlation_id || safeContext.requestId || safeContext.request_id || undefined,
+      ...safeContext,
     };
     return JSON.stringify(logPayload);
   }
@@ -134,7 +144,7 @@ class ObservabilityLogger {
     console.error(
       this.formatLog('error', message, {
         ...context,
-        error: errorDetails,
+        error: redactSensitiveData(errorDetails),
       })
     );
   }

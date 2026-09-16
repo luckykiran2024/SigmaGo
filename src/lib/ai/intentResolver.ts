@@ -16,7 +16,7 @@ export async function resolveUserIntent(
 
   // 1. Resolve relative dates
   let dateFrom = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
-  let dateTo = new Date().toISOString();
+  const dateTo = new Date().toISOString();
   let resolvedRangeText = 'Last 1 Year';
 
   if (q.includes('quarter') || q.includes('this quarter')) {

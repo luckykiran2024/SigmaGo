@@ -64,3 +64,4 @@ _archive/
 docker-compose.yml
 .vercel
 .env*
+!.env.example

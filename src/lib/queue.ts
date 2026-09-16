@@ -1,13 +1,6 @@
 import { Queue } from 'bullmq';
-
-const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
-
-const connectionOptions = redisUrl
-  ? { url: redisUrl }
-  : {
-      host: process.env.REDIS_HOST || '127.0.0.1',
-      port: Number(process.env.REDIS_PORT) || 6379,
-    };
+import { getRedisConfig } from './redis/client';
+import { recordQueueMetric } from './observability/telemetry';
 
 // Lazy-initialized queues
 let nudgeQueue: Queue | null = null;
@@ -15,8 +8,9 @@ let webhookQueue: Queue | null = null;
 
 function getNudgeQueue(): Queue {
   if (!nudgeQueue) {
+    const { options } = getRedisConfig();
     nudgeQueue = new Queue('approval-nudges', {
-      connection: connectionOptions as any,
+      connection: options as any,
       defaultJobOptions: {
         attempts: 3,
         backoff: { type: 'exponential', delay: 5000 },
@@ -32,8 +26,9 @@ function getNudgeQueue(): Queue {
 
 function getWebhookQueue(): Queue {
   if (!webhookQueue) {
+    const { options } = getRedisConfig();
     webhookQueue = new Queue('webhook-deliveries', {
-      connection: connectionOptions as any,
+      connection: options as any,
       defaultJobOptions: {
         attempts: 5,
         backoff: { type: 'exponential', delay: 2000 },

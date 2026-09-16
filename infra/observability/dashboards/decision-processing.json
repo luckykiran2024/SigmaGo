@@ -1,0 +1,39 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Approval Actions Rate by Step Type",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum by (step_type) (rate(sigmago_approval_actions_total[5m]))" }]
+    },
+    {
+      "title": "Atomic Approval RPC Duration (P95 ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(sigmago_approval_rpc_duration_bucket[5m])) by (le))" }]
+    },
+    {
+      "title": "Seal Generation Duration (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
+      "targets": [{ "expr": "rate(sigmago_seal_duration_sum[5m]) / rate(sigmago_seal_duration_count[5m])" }]
+    },
+    {
+      "title": "Seal Verification Mismatches (Critical)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "targets": [{ "expr": "sum(sigmago_seal_verification_failures_total)" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "title": "SigmaGo - Decision Processing",
+  "uid": "sigmago-decision-processing"
+}

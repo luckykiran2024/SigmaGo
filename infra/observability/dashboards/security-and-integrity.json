@@ -1,0 +1,45 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Cross-Tenant Access Violations (Critical)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(sigmago_cross_tenant_violations_total)" }]
+    },
+    {
+      "title": "Authorization Denials Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "targets": [{ "expr": "rate(sigmago_authorization_denied_total[5m])" }]
+    },
+    {
+      "title": "Cryptographic Seal Verification Failures",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+      "targets": [{ "expr": "sum(sigmago_seal_verification_failures_total)" }]
+    },
+    {
+      "title": "Webhook Signature Verification Failures",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
+      "targets": [{ "expr": "rate(sigmago_webhook_auth_failures_total[5m])" }]
+    },
+    {
+      "title": "Unauthorized Cron Invocations",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "targets": [{ "expr": "rate(sigmago_cron_auth_failures_total[5m])" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "title": "SigmaGo - Security and Integrity",
+  "uid": "sigmago-security-integrity"
+}

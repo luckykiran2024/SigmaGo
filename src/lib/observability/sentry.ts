@@ -7,43 +7,13 @@ export interface SentryEvent {
   [key: string]: any;
 }
 
-const REDACTED_FIELDS = new Set([
-  'reasoning',
-  'comment',
-  'statement',
-  'note',
-  'subject',
-  'body_json',
-  'custom_fields',
-  'hrms_sync_secret',
-  'hmac_secret',
-  'secret',
-  'token',
-]);
+import { redactSensitiveData } from './redaction';
 
 /**
  * Deeply scrubs sensitive fields from Sentry event payloads before dispatching.
  */
 export function scrubSentryPayload(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj !== 'object') return obj;
-
-  if (Array.isArray(obj)) {
-    return obj.map((item) => scrubSentryPayload(item));
-  }
-
-  const cleaned: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (REDACTED_FIELDS.has(key.toLowerCase())) {
-      cleaned[key] = '[REDACTED]';
-    } else if (typeof value === 'object' && value !== null) {
-      cleaned[key] = scrubSentryPayload(value);
-    } else {
-      cleaned[key] = value;
-    }
-  }
-
-  return cleaned;
+  return redactSensitiveData(obj);
 }
 
 /**

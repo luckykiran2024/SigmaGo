@@ -7,13 +7,25 @@
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src --quiet",
     "test": "vitest run",
+    "worker": "tsx src/workers/workerRunner.ts",
+    "job:digest": "tsx src/jobs/runJob.ts digest",
+    "job:nudge": "tsx src/jobs/runJob.ts nudge",
+    "job:validity-nudge": "tsx src/jobs/runJob.ts validity-nudge",
+    "job:platform-monitor": "tsx src/jobs/runJob.ts platform-monitor",
     "migrate:deploy": "prisma migrate deploy",
     "load-test": "node scripts/loadTestSimulation.js",
     "heavy-load-test": "node scripts/heavyLoadTestSimulation.js"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.80.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.222.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.222.0",
+    "@opentelemetry/resources": "^2.11.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
     "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
@@ -35,7 +47,8 @@
     "next": "^16.2.9",
     "pg": "^8.21.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",

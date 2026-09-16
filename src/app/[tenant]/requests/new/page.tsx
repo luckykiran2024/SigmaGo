@@ -31,7 +31,7 @@ export default async function NewRequestPage({ params, searchParams }: { params:
   let categories: any[] = [];
   let activeUsers: { id: string; name: string; designation: string | null; career_level: string | null; employee_id: string | null }[] = [];
   let workflows: any[] = [];
-  let renewFromRequest: any = null;
+  const renewFromRequest: any = null;
   let customFields: any[] = [];
   let allActivePolicies: any[] = [];
 

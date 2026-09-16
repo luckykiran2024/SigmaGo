@@ -47,12 +47,13 @@ describe('Cron Pipeline Security & Fail-Closed Guard (src/lib/security/cronAuth.
     expect(result.authorized).toBe(true);
   });
 
-  it('4. Successfully authorizes request with Vercel Cron header', () => {
+  it('4. Rejects request with x-vercel-cron header alone (Bypass removed for Coolify)', () => {
     const req = new Request('http://localhost:3000/api/cron/validity-nudge', {
       headers: { 'x-vercel-cron': 'true' },
     });
 
     const result = verifyCronAuthorization(req);
-    expect(result.authorized).toBe(true);
+    expect(result.authorized).toBe(false);
+    expect(result.reason).toContain('Unauthorized');
   });
 });

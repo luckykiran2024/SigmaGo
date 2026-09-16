@@ -1,0 +1,42 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Queue Enqueued vs Processed Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "sum by (queue_name) (rate(sigmago_queue_enqueued_total[1m]))", "legendFormat": "Enqueued: {{queue_name}}" },
+        { "expr": "sum by (queue_name) (rate(sigmago_queue_completed_total[1m]))", "legendFormat": "Completed: {{queue_name}}" }
+      ]
+    },
+    {
+      "title": "Queue Job Failures Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sum by (queue_name) (rate(sigmago_queue_failed_total[1m]))" }]
+    },
+    {
+      "title": "Scheduled Task Last Success Timestamp",
+      "type": "table",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
+      "targets": [{ "expr": "sigmago_job_last_success_timestamp" }]
+    },
+    {
+      "title": "Scheduled Task Duration (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "targets": [{ "expr": "sigmago_job_duration_ms" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "title": "SigmaGo - Background Processing",
+  "uid": "sigmago-background-processing"
+}

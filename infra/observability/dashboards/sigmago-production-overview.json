@@ -1,0 +1,51 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Web Process Availability",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [{ "expr": "up{job=\"sigmago-otel-collector\"}" }]
+    },
+    {
+      "title": "HTTP Request Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [{ "expr": "rate(http_server_duration_count[1m])" }]
+    },
+    {
+      "title": "Database Readiness Latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [{ "expr": "sigmago_db_latency_ms" }]
+    },
+    {
+      "title": "Background Worker Heartbeat",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [{ "expr": "sigmago_worker_heartbeat" }]
+    },
+    {
+      "title": "Cryptographic Seal Failures",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 4 },
+      "targets": [{ "expr": "sum(sigmago_seal_failures_total)" }]
+    },
+    {
+      "title": "Approval RPC Failures",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 4 },
+      "targets": [{ "expr": "sum(sigmago_approval_rpc_failures_total)" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "title": "SigmaGo - Production Overview",
+  "uid": "sigmago-prod-overview"
+}

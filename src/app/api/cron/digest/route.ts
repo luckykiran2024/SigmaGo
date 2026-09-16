@@ -1,23 +1,24 @@
-import { NextResponse } from 'next/server'
-import { getDigestPayload } from '@/lib/db/digest'
-import { verifyCronAuthorization } from '@/lib/security/cronAuth'
+import { NextResponse } from 'next/server';
+import { verifyCronAuthorization } from '@/lib/security/cronAuth';
+import { runDigestJob } from '@/jobs/digestJob';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const authResult = verifyCronAuthorization(request)
+    const authResult = verifyCronAuthorization(request);
     if (!authResult.authorized) {
-      return NextResponse.json({ error: authResult.reason || 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: authResult.reason || 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await getDigestPayload()
-    console.log("Digest payload:", payload)
-    // Emailing logic goes here
+    const result = await runDigestJob();
 
-    return NextResponse.json({ success: true, count: payload?.length || 0 })
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, count: result.affectedCount, durationMs: result.durationMs });
   } catch (error: any) {
-    console.error("Digest Cron Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
