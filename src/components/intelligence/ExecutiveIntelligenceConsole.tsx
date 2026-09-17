@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import {
-  ArrowRight,
-  X,
-  Lock,
-  Check,
-} from 'lucide-react';
-import { StepType, StepShareMetric, StepDistributionResult } from '@/lib/intelligence/analytics/distributions';
-import { StepMovementAnalysis, WorkflowContribution, ConsequentialDecision } from '@/lib/intelligence/analytics/contributors';
+import React, { useState, useMemo } from 'react';
+import { StepType, StepDistributionResult } from '@/lib/intelligence/analytics/distributions';
+import { StepMovementAnalysis } from '@/lib/intelligence/analytics/contributors';
 import { IntelligenceSignal } from '@/lib/intelligence/analytics/signals';
+import { generateOverviewSummaries } from '@/lib/intelligence/analytics/summary';
+import { getStepStatus } from '@/lib/intelligence/analytics/status';
+
+import IntelligenceHeader from './IntelligenceHeader';
+import IntelligenceOverview, { IntelligenceTab } from './IntelligenceOverview';
+import ActivityView from './views/ActivityView';
+import ChangeView from './views/ChangeView';
+import AttentionView from './views/AttentionView';
+import ConfidenceView from './views/ConfidenceView';
+import IntelligenceEvidenceDrawer from './IntelligenceEvidenceDrawer';
 
 interface ExecutiveIntelligenceConsoleProps {
   tenant: string;
@@ -47,611 +50,173 @@ export default function ExecutiveIntelligenceConsole({
   sealedDecisions,
   coverage,
 }: ExecutiveIntelligenceConsoleProps) {
-  const [activeStepDrawer, setActiveStepDrawer] = useState<StepType | null>(null);
-
-  const stepsList: StepType[] = ['STRUCTURAL', 'TRANSACTIONAL', 'EXCEPTION', 'PROCESS'];
-
-  // Official SigmaGo Palette for STEP Framework
-  const stepMeta: Record<StepType, { label: string; dotClass: string; barClass: string }> = {
-    STRUCTURAL: {
-      label: 'Structural',
-      dotClass: 'bg-[#012F6B]',
-      barClass: 'bg-[#012F6B]',
-    },
-    TRANSACTIONAL: {
-      label: 'Transactional',
-      dotClass: 'bg-[#059DB0]',
-      barClass: 'bg-[#059DB0]',
-    },
-    EXCEPTION: {
-      label: 'Exception',
-      dotClass: 'bg-[#B54708]',
-      barClass: 'bg-[#B54708]',
-    },
-    PROCESS: {
-      label: 'Process',
-      dotClass: 'bg-[#526377]',
-      barClass: 'bg-[#526377]',
-    },
-  };
-
-  const activeAnalysis = activeStepDrawer ? movementAnalyses[activeStepDrawer] : null;
-
-  // Format percentage point movement with sign
-  const formatMovement = (pp: number) => {
-    const sign = pp > 0 ? '+' : '';
-    return `${sign}${pp.toFixed(1)} pp`;
-  };
-
-  // Determine status chip for each step
-  const getStepStatus = (st: StepType, item: StepShareMetric) => {
-    if (distribution.totalComparatorDecisions === 0) {
-      return { label: 'Baseline pending', badge: 'badge-normal', desc: 'Awaiting comparable baseline period' };
+  // Determine if there is a meaningful alert state justifying opening Attention first
+  const initialTab = useMemo<IntelligenceTab>(() => {
+    const hasHighImpactSignal = (signals || []).some((s) => s.impact === 'HIGH');
+    const exceptionStatus = getStepStatus(
+      'EXCEPTION',
+      distribution.steps.EXCEPTION,
+      distribution.totalComparatorDecisions,
+      comparatorDisplayName
+    );
+    if (hasHighImpactSignal || exceptionStatus.label === 'Attention') {
+      return 'attention';
     }
-    if (st === 'EXCEPTION') {
-      if (item.movementPp > 2.0) return { label: 'Watch', badge: 'badge-watch', desc: `Higher than ${comparatorDisplayName}` };
-      if (item.movementPp > 4.0) return { label: 'Attention', badge: 'badge-attention', desc: `Above baseline (${comparatorDisplayName})` };
-      return { label: 'Normal', badge: 'badge-normal', desc: 'Within expected baseline' };
-    }
-    if (Math.abs(item.movementPp) <= 0.5) return { label: 'Stable', badge: 'badge-normal', desc: `Consistent with ${comparatorDisplayName}` };
-    if (item.movementPp > 0) return { label: 'Normal', badge: 'badge-normal', desc: `Higher than ${comparatorDisplayName}` };
-    return { label: 'Normal', badge: 'badge-normal', desc: `Lower than ${comparatorDisplayName}` };
-  };
+    return 'activity';
+  }, [signals, distribution, comparatorDisplayName]);
+
+  const [activeTab, setActiveTab] = useState<IntelligenceTab>(initialTab);
+
+  // Level 3 Drill-down Drawer State
+  const [evidenceTarget, setEvidenceTarget] = useState<{
+    type: 'step' | 'signal';
+    id: string;
+  } | null>(null);
+
+  // Generate deterministic Level 1 overview summaries
+  const summaries = useMemo(() => {
+    return generateOverviewSummaries({
+      distribution,
+      periodDisplayName,
+      comparatorDisplayName,
+      signals,
+      coverage,
+    });
+  }, [distribution, periodDisplayName, comparatorDisplayName, signals, coverage]);
+
+  const tabs: Array<{ id: IntelligenceTab; label: string; question: string }> = [
+    { id: 'activity', label: 'Activity', question: 'What is happening?' },
+    { id: 'change', label: 'Change', question: 'What changed?' },
+    { id: 'attention', label: 'Attention', question: 'Where should I look?' },
+    { id: 'confidence', label: 'Confidence', question: 'How much can I trust this?' },
+  ];
 
   return (
-    <div className="space-y-8 font-sans text-[#132238]">
-      {/* Admin Notice */}
-      {isAdmin && (
-        <div className="p-3.5 rounded-[10px] bg-white border border-[#DDE5EC] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[13px] shadow-xs">
-          <div className="flex items-center gap-2 text-[#526377]">
-            <Lock className="w-4 h-4 shrink-0 text-[#012F6B]" />
-            <span>Administrator access: Manage recipient access grants and issue explicit intelligence permissions.</span>
-          </div>
-          <Link
-            href={`/${tenant}/admin/intelligence`}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[6px] border border-[#DDE5EC] bg-[#F7FAFC] hover:bg-[#F3F6F8] text-[#012F6B] text-[12px] font-medium transition-colors shrink-0"
-          >
-            <span>Manage access grants</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      )}
+    <div className="space-y-6 font-sans text-[#132238]">
+      {/* Header & Filter Context */}
+      <IntelligenceHeader
+        tenant={tenant}
+        userEmail={userEmail}
+        grantScope={grantScope}
+        isAdmin={isAdmin}
+        periodDisplayName={periodDisplayName}
+        comparatorDisplayName={comparatorDisplayName}
+        coverage={coverage}
+      />
 
-      {/* Page Header & Compact Period Filters */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-[#DDE5EC] pb-5">
-          <div>
-            <h1 className="text-[28px] font-semibold text-[#132238] tracking-tight leading-tight">
-              Organisational Intelligence
-            </h1>
-            <p className="text-[14px] text-[#526377] mt-1">
-              How decision behaviour and judgment patterns are evolving across the enterprise.
-            </p>
-          </div>
+      {/* Level 1: At a Glance Overview (Above the fold) */}
+      <IntelligenceOverview
+        summaries={summaries}
+        activeTab={activeTab}
+        onSelectTab={(tab) => setActiveTab(tab)}
+      />
 
-          <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
-            <span>Decoupled access for <strong className="text-[#132238] font-medium">{userEmail}</strong></span>
-            <span>·</span>
-            <span className="px-2 py-0.5 rounded-[4px] bg-[#F3F6F8] text-[#526377] font-medium uppercase text-[10px] border border-[#DDE5EC]">
-              {grantScope}
-            </span>
-          </div>
-        </div>
-
-        {/* Compact Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-[10px] bg-white border border-[#DDE5EC] shadow-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-[6px] border border-[#DDE5EC] bg-[#F7FAFC] text-[13px] h-[34px]">
-              <span className="text-[#8190A0] text-[12px]">Period:</span>
-              <span className="font-semibold text-[#132238]">{periodDisplayName}</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-[6px] border border-[#DDE5EC] bg-white text-[13px] h-[34px]">
-              <span className="text-[#8190A0] text-[12px]">Compare with:</span>
-              <span className="font-medium text-[#132238]">{comparatorDisplayName}</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-[6px] border border-[#DDE5EC] bg-white text-[13px] h-[34px]">
-              <span className="text-[#8190A0] text-[12px]">Function:</span>
-              <span className="font-medium text-[#132238]">All functions</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium flex items-center gap-1.5 h-[32px] ${
-              coverage?.isReliable ? 'badge-reliable' : 'bg-[#F3F6F8] text-[#526377]'
-            }`}>
-              {coverage?.isReliable && <Check className="w-3.5 h-3.5" />}
-              <span>{coverage?.label || 'Data coverage'}</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Empty State Banner if no decisions in selected period */}
-      {distribution.totalCurrentDecisions === 0 && (
-        <div className="p-8 rounded-[10px] bg-white border border-[#DDE5EC] text-center space-y-2 shadow-xs">
-          <h3 className="text-[15px] font-semibold text-[#132238]">
-            No decision data available for {periodDisplayName}
-          </h3>
-          <p className="text-[13px] text-[#526377] max-w-lg mx-auto leading-relaxed">
-            There are no decisions recorded or finalized within this selected timeframe. Historical baseline comparisons and STEP movements will calculate automatically as decisions occur.
-          </p>
-        </div>
-      )}
-
-      {/* Horizontal Stacked Distribution Bar */}
-      <div className="bg-white border border-[#DDE5EC] rounded-[10px] p-5 space-y-3 shadow-xs">
-        <div className="flex items-center justify-between text-[12.5px]">
-          <span className="font-semibold text-[#132238]">STEP Portfolio Distribution</span>
-          <span className="text-[#8190A0] tabular-nums">{distribution.totalCurrentDecisions.toLocaleString()} decisions recorded</span>
-        </div>
-
-        {/* Stacked bar */}
-        <div className="h-2.5 w-full rounded-[4px] bg-[#F3F6F8] overflow-hidden flex">
-          {stepsList.map((st) => {
-            const share = distribution.steps[st]?.currentShare || 0;
-            const pct = Math.max(0, Math.round(share * 100));
-            return (
-              <div
-                key={st}
-                style={{ width: `${pct}%` }}
-                className={`${stepMeta[st].barClass} transition-all duration-300`}
-                title={`${stepMeta[st].label}: ${(share * 100).toFixed(1)}%`}
-              />
-            );
-          })}
-        </div>
-
-        {/* Compact Legend */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[12px]">
-          {stepsList.map((st) => {
-            const item = distribution.steps[st];
-            return (
-              <div key={st} className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${stepMeta[st].dotClass}`} />
-                <span className="text-[#526377]">{stepMeta[st].label}:</span>
-                <span className="font-semibold text-[#132238] tabular-nums">{(item.currentShare * 100).toFixed(1)}%</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Section: Decision Behaviour (4 STEP Cards) */}
-      <div className="space-y-3">
-        <div className="border-b border-[#DDE5EC] pb-2 flex items-center justify-between">
-          <h2 className="text-[18px] font-semibold text-[#132238]">
-            Decision Behaviour
-          </h2>
-          <span className="text-[12px] text-[#8190A0]">Click any card to view drivers</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stepsList.map((st) => {
-            const item = distribution.steps[st];
-            const meta = stepMeta[st];
-            const statusInfo = getStepStatus(st, item);
-            const isUp = item.movementPp > 0;
-            const isZero = item.movementPp === 0;
-
-            return (
-              <div
-                key={st}
-                onClick={() => setActiveStepDrawer(st)}
-                className="bg-white border border-[#DDE5EC] hover:border-[#059DB0] rounded-[10px] p-5 shadow-xs transition-all cursor-pointer flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Top: Dot + Name */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${meta.dotClass}`} />
-                      <span className="text-[14.5px] font-semibold text-[#132238]">{meta.label}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${statusInfo.badge}`}>
-                      {statusInfo.label}
-                    </span>
-                  </div>
-
-                  {/* Number & Movement */}
-                  <div className="mt-4 flex items-baseline justify-between">
-                    <span className="text-[30px] font-bold text-[#132238] leading-none tabular-nums">
-                      {(item.currentShare * 100).toFixed(1)}%
-                    </span>
-                    <span
-                      className={`text-[13px] font-semibold tabular-nums ${
-                        isZero
-                          ? 'text-[#8190A0]'
-                          : st === 'EXCEPTION'
-                          ? isUp ? 'text-[#B54708]' : 'text-[#0F7548]'
-                          : isUp ? 'text-[#0F7548]' : 'text-[#526377]'
-                      }`}
-                    >
-                      {formatMovement(item.movementPp)}
-                    </span>
-                  </div>
-
-                  {/* Decision count */}
-                  <p className="text-[12.5px] text-[#8190A0] tabular-nums mt-1.5">
-                    {item.currentCount.toLocaleString()} decisions
-                  </p>
-
-                  {/* Baseline context */}
-                  <div className="text-[12px] text-[#526377] mt-3 pt-3 border-t border-[#EAF0F4] space-y-0.5">
-                    <p>{statusInfo.desc}</p>
-                    <p className="text-[11px] text-[#8190A0]">
-                      {item.historicalRange
-                        ? `Observed range (${item.historicalRange.samplePeriodsCount || item.historicalRange.periodCount} periods): ${(item.historicalRange.minShare * 100).toFixed(1)}%–${(item.historicalRange.maxShare * 100).toFixed(1)}%`
-                        : distribution.totalComparatorDecisions > 0
-                        ? `Prior comparable period: ${(item.comparatorShare * 100).toFixed(1)}%`
-                        : 'No historical comparator data'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Action Link */}
-                <div className="mt-3 pt-2 text-[12px] font-medium text-[#078899] group-hover:text-[#012F6B] flex items-center gap-1">
-                  <span>View drivers</span>
-                  <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Section: What Needs Attention & What Changed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* What Needs Attention (2 columns) */}
-        <div className="lg:col-span-2 space-y-3">
-          <div className="border-b border-[#DDE5EC] pb-2 flex items-center justify-between">
-            <h2 className="text-[18px] font-semibold text-[#132238]">
-              What Needs Attention
-            </h2>
-            <span className="text-[12px] text-[#8190A0]">Ranked governance signals</span>
-          </div>
-
-          <div className="space-y-3">
-            {signals.map((sig) => {
-              const badgeClass =
-                sig.impact === 'HIGH' ? 'badge-attention' : 'badge-watch';
-              const badgeText = sig.impact === 'HIGH' ? 'Attention' : 'Review';
-
-              return (
-                <div
-                  key={sig.id}
-                  className="p-4 rounded-[10px] border border-[#DDE5EC] bg-white shadow-xs space-y-2.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-[14.5px] font-semibold text-[#132238]">
-                      {sig.title}
-                    </h3>
-                    <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium shrink-0 ${badgeClass}`}>
-                      {badgeText}
-                    </span>
-                  </div>
-
-                  <p className="text-[13px] text-[#526377] leading-relaxed">
-                    {sig.fact} {sig.pattern}
-                  </p>
-
-                  <div className="pt-2 border-t border-[#EAF0F4] flex items-center justify-between text-[12px]">
-                    <span className="text-[#8190A0]">
-                      Confidence: {sig.confidence.toLowerCase()}
-                    </span>
-                    <button
-                      onClick={() => setActiveStepDrawer('EXCEPTION')}
-                      className="text-[#078899] hover:text-[#012F6B] font-medium inline-flex items-center gap-1"
-                    >
-                      <span>Review evidence</span>
-                      <span>→</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-
-            {signals.length === 0 && (
-              <div className="p-6 rounded-[10px] border border-[#DDE5EC] bg-white text-center text-[13px] text-[#8190A0] shadow-xs">
-                No elevated governance signals detected for this period.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* What Changed (1 column) */}
-        <div className="space-y-3">
-          <div className="border-b border-[#DDE5EC] pb-2 flex items-center justify-between">
-            <h2 className="text-[18px] font-semibold text-[#132238]">
-              What Changed
-            </h2>
-            <span className="text-[12px] text-[#8190A0]">Period movement</span>
-          </div>
-
-          <div className="p-4 rounded-[10px] border border-[#DDE5EC] bg-white shadow-xs space-y-4">
-            {stepsList.map((st) => {
-              const item = distribution.steps[st];
-              const analysis = movementAnalyses[st];
-              const topContributors = (analysis?.contributors || []).slice(0, 2);
-
-              return (
-                <div key={st} className="space-y-1.5 pb-3 border-b border-[#EAF0F4] last:border-b-0 last:pb-0">
-                  <div className="flex items-center justify-between text-[13px]">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${stepMeta[st].dotClass}`} />
-                      <span className="font-semibold text-[#132238]">{stepMeta[st].label}</span>
-                    </div>
-                    <span className="font-semibold tabular-nums text-[#132238]">
-                      {formatMovement(item.movementPp)}
-                    </span>
-                  </div>
-
-                  {topContributors.map((c) => (
-                    <div key={c.workflowId} className="flex items-center justify-between text-[12px] pl-3.5 text-[#526377]">
-                      <span className="truncate pr-2">{c.workflowName}</span>
-                      <span className="tabular-nums font-medium text-[#8190A0] shrink-0">
-                        {formatMovement(c.movementContributionPp)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Section: Decisions Shaping the Organisation */}
-      <div className="bg-white border border-[#DDE5EC] rounded-[10px] p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-[#DDE5EC] pb-3">
-          <div>
-            <h2 className="text-[18px] font-semibold text-[#132238]">
-              Decisions Shaping the Organisation
-            </h2>
-            <p className="text-[13px] text-[#526377] mt-0.5">
-              Structured ledger of sealed decisions, downstream reliance, and governance status.
-            </p>
-          </div>
-          <span className="text-[12px] text-[#8190A0] tabular-nums font-mono">
-            {(sealedDecisions || []).length} records displayed
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-[13px] text-[#132238] font-sans">
-            <thead className="bg-[#F7FAFC] text-[#8190A0] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DDE5EC]">
-              <tr>
-                <th className="py-2.5 px-3">Reference</th>
-                <th className="py-2.5 px-3">Decision subject</th>
-                <th className="py-2.5 px-3">Domain</th>
-                <th className="py-2.5 px-3 text-center">Blast radius</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
-                <th className="py-2.5 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#EAF0F4]">
-              {(sealedDecisions || []).map((item: any) => (
-                <tr key={item.id} className="hover:bg-[#F9FBFC] transition-colors">
-                  <td className="py-2.5 px-3 font-mono font-medium text-[#012F6B] text-[12px]">
-                    {item.ref}
-                  </td>
-                  <td className="py-2.5 px-3 font-medium text-[#132238]">
-                    {item.subject}
-                  </td>
-                  <td className="py-2.5 px-3 text-[#526377]">
-                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#F3F6F8] text-[#526377] border border-[#DDE5EC]">
-                      {item.categories?.domain || 'General'}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-center tabular-nums">
-                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium bg-[#F3F6F8] text-[#526377]">
-                      {item.blast_at_seal ?? 0} descendants
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-center">
-                    <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-medium badge-normal">
-                      {item.status === 'sealed' ? 'Sealed' : item.status}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
-                    {grantScope === 'FULL' ? (
-                      <Link
-                        href={`/${tenant}/requests/${item.id}`}
-                        className="text-[12px] font-medium text-[#078899] hover:text-[#012F6B] inline-flex items-center gap-0.5"
-                      >
-                        <span>Inspect</span>
-                        <span>→</span>
-                      </Link>
-                    ) : (
-                      <span className="text-[11px] text-[#8190A0]">Aggregate only</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-
-              {(!sealedDecisions || sealedDecisions.length === 0) && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-[13px] text-[#8190A0]">
-                    {grantScope === 'AGGREGATE_ONLY'
-                      ? 'Row-level decision ledger is restricted under AGGREGATE_ONLY grant scope.'
-                      : 'No decisions recorded for the current filter selection.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Right Slide-over Drawer for Analytical Drill-down */}
-      {activeStepDrawer && activeAnalysis && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
+      {/* Level 2: Explore Tabs Navigation */}
+      <section aria-label="Analytical Exploration" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DDE5EC] pb-2">
+          {/* Segmented Control / Tab Row */}
           <div
-            onClick={() => setActiveStepDrawer(null)}
-            className="fixed inset-0 bg-[#07182F]/30 backdrop-blur-[1px] transition-opacity"
-          />
-
-          {/* Slide-over panel */}
-          <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-white border-l border-[#DDE5EC] shadow-modal z-50 p-6 overflow-y-auto space-y-6 flex flex-col justify-between font-sans">
-            <div className="space-y-5">
-              {/* Drawer Header */}
-              <div className="flex items-start justify-between border-b border-[#DDE5EC] pb-4">
-                <div>
-                  <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
-                    <span className={`w-2 h-2 rounded-full ${stepMeta[activeStepDrawer].dotClass}`} />
-                    <span className="font-semibold text-[#132238]">{stepMeta[activeStepDrawer].label} movement</span>
-                    <span>·</span>
-                    <span>{periodDisplayName} vs. {comparatorDisplayName}</span>
-                  </div>
-                  <h2 className="text-[20px] font-semibold text-[#132238] mt-1">
-                    Movement Drivers
-                  </h2>
-                </div>
+            role="tablist"
+            aria-label="Intelligence Perspectives"
+            className="inline-flex p-1 rounded-[8px] bg-[#F7FAFC] border border-[#DDE5EC]"
+          >
+            {tabs.map((tab) => {
+              const isSelected = activeTab === tab.id;
+              return (
                 <button
-                  onClick={() => setActiveStepDrawer(null)}
-                  className="p-1.5 rounded-[6px] text-[#8190A0] hover:text-[#132238] hover:bg-[#F3F6F8] transition-colors"
+                  key={tab.id}
+                  id={`tab-${tab.id}`}
+                  role="tab"
+                  type="button"
+                  aria-selected={isSelected}
+                  aria-controls={`tabpanel-${tab.id}`}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-1.5 rounded-[6px] text-[13px] font-medium transition-all focus:outline-hidden focus:ring-2 focus:ring-[#059DB0] ${
+                    isSelected
+                      ? 'bg-white text-[#132238] shadow-xs font-semibold'
+                      : 'text-[#526377] hover:text-[#132238] hover:bg-[#F3F6F8]'
+                  }`}
                 >
-                  <X className="w-4 h-4" />
+                  <span className="block leading-snug">{tab.label}</span>
+                  <span className="block text-[11px] text-[#8190A0] font-normal sm:hidden">
+                    {tab.question}
+                  </span>
                 </button>
-              </div>
+              );
+            })}
+          </div>
 
-              {/* 3-Column Metrics Comparison */}
-              <div className="grid grid-cols-3 gap-3 p-3.5 rounded-[8px] bg-[#F7FAFC] border border-[#EAF0F4] text-center">
-                <div>
-                  <span className="text-[11px] text-[#8190A0] font-medium">Current share</span>
-                  <p className="text-[18px] font-semibold text-[#132238] tabular-nums mt-0.5">
-                    {(activeAnalysis.currentShare * 100).toFixed(1)}%
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[11px] text-[#8190A0] font-medium">{comparatorDisplayName}</span>
-                  <p className="text-[18px] font-semibold text-[#8190A0] tabular-nums mt-0.5">
-                    {(activeAnalysis.comparatorShare * 100).toFixed(1)}%
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[11px] text-[#8190A0] font-medium">Movement</span>
-                  <p className="text-[18px] font-semibold text-[#132238] tabular-nums mt-0.5">
-                    {formatMovement(activeAnalysis.movementPp)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Contributor Workflows Table */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-[#132238]">
-                    Top Contributors
-                  </h3>
-                  <span className="text-[11px] text-[#8190A0]">Workflow breakdown</span>
-                </div>
-
-                <div className="border border-[#DDE5EC] rounded-[8px] overflow-hidden">
-                  <table className="w-full text-left text-[13px] text-[#132238]">
-                    <thead className="bg-[#F7FAFC] text-[#8190A0] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DDE5EC]">
-                      <tr>
-                        <th className="py-2 px-3">Workflow</th>
-                        <th className="py-2 px-3 text-center">Current</th>
-                        <th className="py-2 px-3 text-center">Baseline</th>
-                        <th className="py-2 px-3 text-right">Contribution</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#EAF0F4]">
-                      {activeAnalysis.contributors.map((c) => (
-                        <tr key={c.workflowId} className="hover:bg-[#F9FBFC]">
-                          <td className="py-2 px-3 font-medium text-[#132238]">
-                            {c.workflowName}
-                          </td>
-                          <td className="py-2 px-3 text-center tabular-nums text-[#8190A0]">
-                            {c.currentCount}
-                          </td>
-                          <td className="py-2 px-3 text-center tabular-nums text-[#8190A0]">
-                            {c.baselineCount}
-                          </td>
-                          <td className="py-2 px-3 text-right tabular-nums font-semibold text-[#132238]">
-                            {formatMovement(c.movementContributionPp)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Top Consequential Decisions */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-[#132238]">
-                    Consequential Decisions
-                  </h3>
-                  <span className="text-[11px] text-[#8190A0]">Ranked by blast radius</span>
-                </div>
-
-                {grantScope === 'FULL' ? (
-                  <div className="border border-[#DDE5EC] rounded-[8px] overflow-hidden">
-                    <table className="w-full text-left text-[13px] text-[#132238]">
-                      <thead className="bg-[#F7FAFC] text-[#8190A0] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DDE5EC]">
-                        <tr>
-                          <th className="py-2 px-3">Ref</th>
-                          <th className="py-2 px-3">Subject</th>
-                          <th className="py-2 px-3 text-center">Blast radius</th>
-                          <th className="py-2 px-3 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EAF0F4]">
-                        {(activeAnalysis.topConsequentialDecisions || []).map((d) => (
-                          <tr key={d.requestId} className="hover:bg-[#F9FBFC]">
-                            <td className="py-2 px-3 font-mono text-[12px] font-medium text-[#012F6B]">
-                              {d.ref}
-                            </td>
-                            <td className="py-2 px-3 text-[#132238] font-medium truncate max-w-[200px]">
-                              {d.subject}
-                            </td>
-                            <td className="py-2 px-3 text-center tabular-nums text-[12px]">
-                              {d.transitiveDescendants}
-                            </td>
-                            <td className="py-2 px-3 text-right">
-                              <Link
-                                href={`/${tenant}/requests/${d.requestId}`}
-                                className="text-[12px] font-medium text-[#078899] hover:text-[#012F6B]"
-                              >
-                                View →
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
-
-                        {(!activeAnalysis.topConsequentialDecisions || activeAnalysis.topConsequentialDecisions.length === 0) && (
-                          <tr>
-                            <td colSpan={4} className="py-4 text-center text-[12px] text-[#8190A0]">
-                              No consequential decisions found for this step type.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-[8px] bg-[#F7FAFC] border border-[#DDE5EC] text-[12px] text-[#8190A0]">
-                    Individual decision rows are omitted under AGGREGATE_ONLY grant scope. Aggregate workflow contributions remain fully available.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Drawer Footer */}
-            <div className="pt-4 border-t border-[#DDE5EC] flex justify-end">
-              <button
-                onClick={() => setActiveStepDrawer(null)}
-                className="px-3.5 py-1.5 rounded-[6px] border border-[#DDE5EC] bg-white hover:bg-[#F7FAFC] text-[13px] font-medium text-[#132238] transition-colors"
-              >
-                Close drawer
-              </button>
-            </div>
+          {/* Context subtitle matching the active tab */}
+          <div className="text-[12.5px] text-[#526377]">
+            Exploring:{' '}
+            <strong className="text-[#132238] font-medium">
+              {tabs.find((t) => t.id === activeTab)?.question}
+            </strong>
           </div>
         </div>
-      )}
+
+        {/* Level 2 Active View Panel (Only ONE expanded at a time) */}
+        <div
+          id={`tabpanel-${activeTab}`}
+          role="tabpanel"
+          aria-labelledby={`tab-${activeTab}`}
+          className="focus:outline-hidden"
+        >
+          {activeTab === 'activity' && (
+            <ActivityView
+              distribution={distribution}
+              periodDisplayName={periodDisplayName}
+              movementAnalyses={movementAnalyses}
+              onInspectStep={(st) => setEvidenceTarget({ type: 'step', id: st })}
+            />
+          )}
+
+          {activeTab === 'change' && (
+            <ChangeView
+              distribution={distribution}
+              periodDisplayName={periodDisplayName}
+              comparatorDisplayName={comparatorDisplayName}
+              movementAnalyses={movementAnalyses}
+              coverage={coverage}
+              onOpenDrawer={(st) => setEvidenceTarget({ type: 'step', id: st })}
+            />
+          )}
+
+          {activeTab === 'attention' && (
+            <AttentionView
+              signals={signals}
+              distribution={distribution}
+              comparatorDisplayName={comparatorDisplayName}
+              movementAnalyses={movementAnalyses}
+              onOpenEvidence={(type, id) => setEvidenceTarget({ type, id })}
+            />
+          )}
+
+          {activeTab === 'confidence' && (
+            <ConfidenceView
+              distribution={distribution}
+              periodDisplayName={periodDisplayName}
+              coverage={coverage}
+              signals={signals}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* Level 3: Drill-down Evidence Drawer */}
+      <IntelligenceEvidenceDrawer
+        isOpen={evidenceTarget !== null}
+        onClose={() => setEvidenceTarget(null)}
+        evidenceTarget={evidenceTarget}
+        tenant={tenant}
+        grantScope={grantScope}
+        periodDisplayName={periodDisplayName}
+        comparatorDisplayName={comparatorDisplayName}
+        distribution={distribution}
+        movementAnalyses={movementAnalyses}
+        signals={signals}
+        coverage={coverage}
+      />
     </div>
   );
 }
