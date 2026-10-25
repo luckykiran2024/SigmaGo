@@ -37,7 +37,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Back navigation link */}
         <Link 
           href="/blog"
-          className="inline-flex items-center text-xs font-bold text-brand hover:text-[#E3B02A] transition"
+          className="inline-flex items-center text-xs font-bold text-brand hover:text-[#108C94] transition"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to all essays
@@ -55,11 +55,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         {/* Main Content Area */}
         <article 
-          className="prose max-w-none text-[#4B5347] font-inter select-text
+          className="prose max-w-none text-[#526679] font-inter select-text
                      prose-headings:font-sans prose-headings:text-ink prose-headings:font-bold
                      prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
                      prose-p:mb-6 prose-p:leading-relaxed
-                     prose-a:text-brand hover:prose-a:text-[#E3B02A] prose-a:font-bold prose-a:no-underline hover:prose-a:underline"
+                     prose-a:text-brand hover:prose-a:text-[#108C94] prose-a:font-bold prose-a:no-underline hover:prose-a:underline"
           style={{ fontSize: '17.5px', lineHeight: '1.8' }}
           dangerouslySetInnerHTML={{ __html: post.contentHtml }}
         />
@@ -68,7 +68,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="pt-8 border-t border-border mt-12">
           <Link 
             href="/blog"
-            className="inline-flex items-center text-xs font-bold text-brand hover:text-[#E3B02A] transition"
+            className="inline-flex items-center text-xs font-bold text-brand hover:text-[#108C94] transition"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to all essays

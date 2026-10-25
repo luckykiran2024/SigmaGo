@@ -30,13 +30,13 @@ export default function TopNav({ tenant, isAdmin }: { tenant: string; isAdmin: b
             href={item.href}
             className={`text-[13.5px] font-medium transition-colors relative py-1 ${
               isActive
-                ? 'text-[#012F6B] font-semibold'
-                : 'text-[#526377] hover:text-[#012F6B]'
+                ? 'text-[#17324D] font-semibold'
+                : 'text-[#526679] hover:text-[#17324D]'
             }`}
           >
             {item.name}
             {isActive && (
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#059DB0] rounded-sm" />
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0B7780] rounded-sm" />
             )}
           </Link>
         );

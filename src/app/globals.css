@@ -4,54 +4,54 @@
 
 :root {
   /* Official SigmaGo Enterprise Palette */
-  --sigma-navy-950: #07182F;
-  --sigma-navy-900: #012F6B; /* Core Brand Navy */
-  --sigma-navy-800: #033E79;
-  --sigma-navy-700: #07508B;
+  --sigma-navy-950: #0C1C2D;
+  --sigma-navy-900: #17324D; /* Core Brand Navy */
+  --sigma-navy-800: #224564;
+  --sigma-navy-700: #315878;
 
-  --sigma-teal-700: #078899;
-  --sigma-teal-600: #059DB0; /* Core Brand Teal */
-  --sigma-teal-500: #05B2C0;
-  --sigma-teal-100: #DDF5F7;
-  --sigma-teal-50:  #F1FBFC;
+  --sigma-teal-700: #096A72;
+  --sigma-teal-600: #0B7780; /* Core Brand Teal */
+  --sigma-teal-500: #108C94;
+  --sigma-teal-100: #D7ECEA;
+  --sigma-teal-50:  #ECF6F5;
 
-  --sigma-blue-300: #70A4BD;
-  --sigma-blue-100: #B8D6E1;
+  --sigma-blue-300: #8BA6B7;
+  --sigma-blue-100: #D1E1E6;
 
   /* Neutrals & Surfaces */
-  --page-background: #F7FAFC;
+  --page-background: #F6F8F9;
   --surface-primary: #FFFFFF;
-  --surface-secondary: #F3F6F8;
-  --surface-tertiary: #EDF2F6;
+  --surface-secondary: #EEF2F4;
+  --surface-tertiary: #E7EDF0;
 
-  --text-primary: #132238;
-  --text-secondary: #526377;
-  --text-muted: #8190A0;
+  --text-primary: #182B3D;
+  --text-secondary: #526679;
+  --text-muted: #637587;
 
-  --border-default: #DDE5EC;
-  --border-subtle: #EAF0F4;
+  --border-default: #DCE5EA;
+  --border-subtle: #EAF0F2;
 
   /* Legacy Bridge Tokens */
-  --bg: #F7FAFC;
-  --alt: #F7FAFC;
-  --alt2: #F3F6F8;
+  --bg: #F6F8F9;
+  --alt: #F6F8F9;
+  --alt2: #EEF2F4;
   --card: #FFFFFF;
-  --border: #DDE5EC;
+  --border: #DCE5EA;
   --border2: #D0D5DD;
 
-  --ink: #132238;
-  --ink2: #526377;
+  --ink: #182B3D;
+  --ink2: #526679;
   --muted: #667085;
-  --muted2: #8190A0;
+  --muted2: #637587;
 
-  --brand: #012F6B;
-  --brand-h: #033E79;
-  --brand-lt: #F1FBFC;
-  --brand-lt2: #DDF5F7;
+  --brand: #17324D;
+  --brand-h: #224564;
+  --brand-lt: #ECF6F5;
+  --brand-lt2: #D7ECEA;
 
   /* Seal & Cryptographic Proofs */
-  --seal: #C9A227;
-  --seal-lt: #FDF6E3;
+  --seal: #0B7780;
+  --seal-lt: #E7F4F3;
   --seal-bd: #E8DDB0;
 
   /* Semantic Statuses */
@@ -77,7 +77,7 @@
   --e: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Official Signature Gradient (Spare usage only) */
-  --sigma-gradient: linear-gradient(135deg, #012F6B 0%, #033E79 35%, #059DB0 72%, #05B2C0 100%);
+  --sigma-gradient: linear-gradient(135deg, #17324D 0%, #224564 35%, #0B7780 72%, #108C94 100%);
 }
 
 body {
@@ -101,15 +101,15 @@ table, td, th, .tabular-nums, .font-mono {
 
 /* STEP Framework System Badges */
 .badge-step-structural {
-  background-color: #F1FBFC;
-  color: #012F6B;
-  border: 1px solid #DDF5F7;
+  background-color: #ECF6F5;
+  color: #17324D;
+  border: 1px solid #D7ECEA;
   border-radius: 4px;
 }
 .badge-step-transactional {
-  background-color: #F1FBFC;
-  color: #078899;
-  border: 1px solid #DDF5F7;
+  background-color: #ECF6F5;
+  color: #096A72;
+  border: 1px solid #D7ECEA;
   border-radius: 4px;
 }
 .badge-step-exceptional {
@@ -119,9 +119,9 @@ table, td, th, .tabular-nums, .font-mono {
   border-radius: 4px;
 }
 .badge-step-process {
-  background-color: #F3F6F8;
+  background-color: #EEF2F4;
   color: #475467;
-  border: 1px solid #DDE5EC;
+  border: 1px solid #DCE5EA;
   border-radius: 4px;
 }
 

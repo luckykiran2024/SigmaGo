@@ -38,7 +38,7 @@ export default function PersonPicker({
     if (value) {
       if (selectedUser && selectedUser.id === value) return; // already loaded
       setLoading(true);
-      getUserByIdAction(value)
+      getUserByIdAction(value, tenant)
         .then((user) => {
           setSelectedUser(user);
           setQuery(user ? user.name : '');
@@ -49,7 +49,7 @@ export default function PersonPicker({
       setSelectedUser(null);
       setQuery('');
     }
-  }, [value]);
+  }, [value, tenant]);
 
   // 2. Debounce and trigger search
   useEffect(() => {

@@ -129,18 +129,18 @@ export default function AdminSettingsForm({
       )}
 
       {/* SECTION 1 - ORGANIZATION PROFILE */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-5">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-5">
         <div>
-          <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-            <Building className="w-4 h-4 text-[#059DB0]" />
+          <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+            <Building className="w-4 h-4 text-[#0B7780]" />
             Organization Profile
           </h3>
-          <p className="text-xs text-[#526377] mt-0.5 font-medium">Configure company display names, branding, and details.</p>
+          <p className="text-xs text-[#526679] mt-0.5 font-medium">Configure company display names, branding, and details.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Tenant Name
             </label>
             <input
@@ -148,42 +148,42 @@ export default function AdminSettingsForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Subdomain (Read-only)
             </label>
             <input
               type="text"
               value={tenantData.subdomain}
               readOnly
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-none text-[#8190A0] text-xs font-mono bg-[#F7FAFC] cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-none text-[#637587] text-xs font-mono bg-[#F6F8F9] cursor-not-allowed"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2.5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Branding Logo (PNG/JPG/SVG, max 2MB)
             </label>
             
             <div className="flex items-center gap-4">
-              <div className="w-20 h-12 bg-[#F7FAFC] border border-[#DDE5EC] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-20 h-12 bg-[#F6F8F9] border border-[#DCE5EA] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo preview" className="max-h-full max-w-full object-contain p-1" />
                 ) : (
-                  <span className="text-[10px] font-bold text-[#8190A0] uppercase tracking-wider">No logo</span>
+                  <span className="text-[10px] font-bold text-[#637587] uppercase tracking-wider">No logo</span>
                 )}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DDE5EC] hover:bg-[#F7FAFC] text-[#526377] hover:text-[#012F6B] rounded-lg text-xs font-semibold cursor-pointer transition shadow-xs">
-                    <Upload className="w-3.5 h-3.5 text-[#059DB0]" />
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE5EA] hover:bg-[#F6F8F9] text-[#526679] hover:text-[#17324D] rounded-lg text-xs font-semibold cursor-pointer transition shadow-xs">
+                    <Upload className="w-3.5 h-3.5 text-[#0B7780]" />
                     Upload
                     <input
                       type="file"
@@ -208,14 +208,14 @@ export default function AdminSettingsForm({
 
                       {logoConfirmOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-                          <div className="bg-white rounded-xl shadow-lg border border-[#DDE5EC] max-w-xs w-full p-5 space-y-4">
-                            <h4 className="text-sm font-bold text-[#132238]">Remove Tenant Logo?</h4>
-                            <p className="text-xs text-[#526377] font-medium">Are you sure you want to remove the organization logo?</p>
-                            <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#DDE5EC]">
+                          <div className="bg-white rounded-xl shadow-lg border border-[#DCE5EA] max-w-xs w-full p-5 space-y-4">
+                            <h4 className="text-sm font-bold text-[#182B3D]">Remove Tenant Logo?</h4>
+                            <p className="text-xs text-[#526679] font-medium">Are you sure you want to remove the organization logo?</p>
+                            <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#DCE5EA]">
                               <button
                                 type="button"
                                 onClick={() => setLogoConfirmOpen(false)}
-                                className="px-3 py-1.5 border border-[#DDE5EC] text-[#526377] rounded-lg text-xs font-semibold hover:bg-[#F7FAFC]"
+                                className="px-3 py-1.5 border border-[#DCE5EA] text-[#526679] rounded-lg text-xs font-semibold hover:bg-[#F6F8F9]"
                               >
                                 Cancel
                               </button>
@@ -234,43 +234,43 @@ export default function AdminSettingsForm({
                   )}
                 </div>
                 {uploading && (
-                  <span className="text-xs font-semibold text-[#059DB0] animate-pulse">Uploading file...</span>
+                  <span className="text-xs font-semibold text-[#0B7780] animate-pulse">Uploading file...</span>
                 )}
               </div>
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Created Date (Read-only)
             </label>
             <input
               type="text"
               value={formatDate(tenantData.created_at)}
               readOnly
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-none text-[#8190A0] text-xs font-mono bg-[#F7FAFC] cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-none text-[#637587] text-xs font-mono bg-[#F6F8F9] cursor-not-allowed"
             />
           </div>
         </div>
       </div>
 
       {/* SECTION 2 - NOTIFICATION & SLA POLICY */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-5">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-5">
         <div>
-          <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#059DB0]" />
+          <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#0B7780]" />
             Notification & SLA Policy
           </h3>
-          <p className="text-xs text-[#526377] mt-0.5 font-medium">Configure overdue reminders, cadence, and default limits.</p>
+          <p className="text-xs text-[#526679] mt-0.5 font-medium">Configure overdue reminders, cadence, and default limits.</p>
         </div>
 
         <div className="space-y-3">
-          <label className="flex items-center gap-2 text-xs font-semibold text-[#132238] cursor-pointer">
+          <label className="flex items-center gap-2 text-xs font-semibold text-[#182B3D] cursor-pointer">
             <input
               type="checkbox"
               checked={remindersEnabled}
               onChange={(e) => setRemindersEnabled(e.target.checked)}
-              className="w-3.5 h-3.5 rounded text-[#059DB0] border-[#DDE5EC] focus:ring-[#059DB0]"
+              className="w-3.5 h-3.5 rounded text-[#0B7780] border-[#DCE5EA] focus:ring-[#0B7780]"
             />
             Send automated overdue reminders to pending approvers
           </label>
@@ -278,7 +278,7 @@ export default function AdminSettingsForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Send first reminder after (Hours)
             </label>
             <input
@@ -288,12 +288,12 @@ export default function AdminSettingsForm({
               disabled={!remindersEnabled}
               min={1}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Repeat reminder interval (Hours)
             </label>
             <input
@@ -303,20 +303,20 @@ export default function AdminSettingsForm({
               disabled={!remindersEnabled}
               min={1}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Blocked Request Alerts
             </label>
             <select
               value={blockedAlerts}
               onChange={(e) => setBlockedAlerts(e.target.value)}
-              className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+              className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
             >
               <option value="owner_only">Notify Request Owner Only</option>
               <option value="owner_and_admins">Notify Owner + All Admins</option>
@@ -324,7 +324,7 @@ export default function AdminSettingsForm({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Default Category SLA (Hours)
             </label>
             <input
@@ -333,39 +333,39 @@ export default function AdminSettingsForm({
               onChange={(e) => setDefaultSla(Number(e.target.value))}
               min={1}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white"
             />
           </div>
         </div>
       </div>
 
       {/* SECTION 3 - APPROVAL POLICY */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#059DB0]" />
+          <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#0B7780]" />
             Approval Policy (Read-Only)
           </h3>
-          <p className="text-xs text-[#526377] mt-0.5 font-medium">Platform-enforced policies and business safety rules.</p>
+          <p className="text-xs text-[#526679] mt-0.5 font-medium">Platform-enforced policies and business safety rules.</p>
         </div>
 
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between p-3 bg-[#F7FAFC] border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377]">
+          <div className="flex items-center justify-between p-3 bg-[#F6F8F9] border border-[#DCE5EA] rounded-lg text-xs font-semibold text-[#526679]">
             <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-[#8190A0]" />
+              <Lock className="w-3.5 h-3.5 text-[#637587]" />
               <span>Self-approvals: Requesters cannot approve their own requests</span>
             </div>
-            <span className="text-[10px] bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Enforced</span>
+            <span className="text-[10px] bg-[#ECF6F5] text-[#17324D] border border-[#DCE5EA] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Enforced</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-[#F7FAFC] border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377]">
+          <div className="flex items-center justify-between p-3 bg-[#F6F8F9] border border-[#DCE5EA] rounded-lg text-xs font-semibold text-[#526679]">
             <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-[#8190A0]" />
+              <Lock className="w-3.5 h-3.5 text-[#637587]" />
               <span>Workflow locks: Enforce locked chains per category workflow definition</span>
             </div>
             <Link
               href={`/${tenantSubdomain}/admin/workflows`}
-              className="text-[11px] text-[#059DB0] hover:text-[#078899] flex items-center gap-1 font-bold"
+              className="text-[11px] text-[#0B7780] hover:text-[#096A72] flex items-center gap-1 font-bold"
             >
               View Workflows
               <Eye className="w-3 h-3" />
@@ -375,13 +375,13 @@ export default function AdminSettingsForm({
       </div>
 
       {/* SECTION 4 - COMING SOON */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-4 opacity-75">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-4 opacity-75">
         <div>
-          <h3 className="text-sm font-bold text-[#526377] font-sans flex items-center gap-2">
-            <Key className="w-4 h-4 text-[#8190A0]" />
+          <h3 className="text-sm font-bold text-[#526679] font-sans flex items-center gap-2">
+            <Key className="w-4 h-4 text-[#637587]" />
             Roadmap & Compliance
           </h3>
-          <p className="text-xs text-[#8190A0] mt-0.5 font-medium">Upcoming security, single sign-on, and compliance features.</p>
+          <p className="text-xs text-[#637587] mt-0.5 font-medium">Upcoming security, single sign-on, and compliance features.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -391,12 +391,12 @@ export default function AdminSettingsForm({
             { name: 'Session Timeout Policies', desc: 'Enforce absolute session logout after absence intervals' },
             { name: 'Audit Log Exports', desc: 'CSV/JSON compliance exports of activity registers' }
           ].map((item, idx) => (
-            <div key={idx} className="p-3.5 border border-[#DDE5EC] rounded-lg bg-[#F7FAFC] flex items-start justify-between gap-4">
+            <div key={idx} className="p-3.5 border border-[#DCE5EA] rounded-lg bg-[#F6F8F9] flex items-start justify-between gap-4">
               <div className="space-y-0.5">
-                <h4 className="text-xs font-bold text-[#526377]">{item.name}</h4>
-                <p className="text-[11px] text-[#8190A0] font-normal leading-relaxed">{item.desc}</p>
+                <h4 className="text-xs font-bold text-[#526679]">{item.name}</h4>
+                <p className="text-[11px] text-[#637587] font-normal leading-relaxed">{item.desc}</p>
               </div>
-              <span className="text-[9px] bg-white text-[#8190A0] border border-[#DDE5EC] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0">
+              <span className="text-[9px] bg-white text-[#637587] border border-[#DCE5EA] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0">
                 Coming soon
               </span>
             </div>
@@ -409,7 +409,7 @@ export default function AdminSettingsForm({
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center justify-center px-5 py-2.5 bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold rounded-lg shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-5 py-2.5 bg-[#17324D] hover:bg-[#224564] text-white text-xs font-bold rounded-lg shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving changes...' : 'Save Configuration'}
         </button>

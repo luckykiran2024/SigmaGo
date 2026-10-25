@@ -1,20 +1,20 @@
 /**
  * Workflow Stage Transition Engine
- * Models real process progression inside comparable workflow instances.
- * GUARDRAIL: Never models chronological STEP-to-STEP sequences across unrelated decisions.
+ * Reports empirical transitions within comparable workflow instances.
+ * Rates describe observed counts; they are not forecasts or probabilities of future outcomes.
  */
 
 import { StepType } from './distributions';
 
 export type StageTransition = {
-  stepType: StepType;          // which type's process this describes
+  stepType: StepType;
   fromStage: number | 'START' | string;
   toStage: number | 'SEALED' | 'REJECTED' | string;
-  observedProbability: number;
+  observedRate: number;
   sampleSize: number;
-  transitionCount?: number;
-  denominatorCount?: number;
-  confidenceLabel?: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
+  transitionCount: number;
+  denominatorCount: number;
+  evidenceLevel: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
   workflowId?: string;
   contextId?: string;
   historicalBaseline?: number;
@@ -30,32 +30,38 @@ export function computeWorkflowStageTransitions(params: {
   }>;
 }): StageTransition[] {
   const { stepType, workflowId, transitions } = params;
-
-  // Group by fromStage to calculate denominators
-  const stageTotals = new Map<string, number>();
-  for (const t of transitions) {
-    stageTotals.set(t.fromStage, (stageTotals.get(t.fromStage) || 0) + t.count);
+  for (const transition of transitions) {
+    if (!Number.isSafeInteger(transition.count) || transition.count < 0) {
+      throw new RangeError('Transition counts must be non-negative integers');
+    }
   }
 
-  return transitions.map((t) => {
-    const totalFrom = stageTotals.get(t.fromStage) || 1;
-    const observedProbability = Math.round((t.count / totalFrom) * 1000) / 1000;
+  const stageTotals = new Map<string, number>();
+  for (const transition of transitions) {
+    stageTotals.set(transition.fromStage, (stageTotals.get(transition.fromStage) || 0) + transition.count);
+  }
 
-    let confidenceLabel: StageTransition['confidenceLabel'] = 'DEVELOPING';
-    if (totalFrom >= 50) confidenceLabel = 'HIGH';
-    else if (totalFrom >= 20) confidenceLabel = 'RELIABLE';
-    else if (totalFrom < 5) confidenceLabel = 'LOW';
+  return transitions.map((transition) => {
+    const denominatorCount = stageTotals.get(transition.fromStage) || 0;
+    const observedRate = denominatorCount > 0
+      ? Math.round((transition.count / denominatorCount) * 1000) / 1000
+      : 0;
+
+    let evidenceLevel: StageTransition['evidenceLevel'] = 'DEVELOPING';
+    if (denominatorCount >= 50) evidenceLevel = 'HIGH';
+    else if (denominatorCount >= 20) evidenceLevel = 'RELIABLE';
+    else if (denominatorCount < 5) evidenceLevel = 'LOW';
 
     return {
       stepType,
       workflowId,
-      fromStage: t.fromStage,
-      toStage: t.toStage,
-      transitionCount: t.count,
-      denominatorCount: totalFrom,
-      observedProbability,
-      sampleSize: totalFrom,
-      confidenceLabel,
+      fromStage: transition.fromStage,
+      toStage: transition.toStage,
+      transitionCount: transition.count,
+      denominatorCount,
+      observedRate,
+      sampleSize: denominatorCount,
+      evidenceLevel,
     };
   });
 }

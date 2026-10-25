@@ -39,6 +39,9 @@ export async function requireTenantAdmin(tenantSubdomain: string): Promise<Guard
   if (!profile) {
     throw new Error('Unauthorized: User profile not found');
   }
+  if (profile.status === 'inactive') {
+    throw new Error('Forbidden: Account inactive');
+  }
 
   // Systemic Tenant Isolation Check (C2 Fix): Profile tenant_id MUST match target tenant_id
   if (profile.tenant_id !== tenantData.id) {
@@ -87,6 +90,9 @@ export async function requireTenantMember(tenantSubdomain: string): Promise<Guar
 
   if (!profile) {
     throw new Error('Unauthorized: User profile not found');
+  }
+  if (profile.status === 'inactive') {
+    throw new Error('Forbidden: Account inactive');
   }
 
   // Systemic Tenant Isolation Check (C2 Fix)

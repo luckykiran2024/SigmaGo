@@ -242,7 +242,10 @@ describe('Golden Organisational Intelligence Dataset — Verification Suite', ()
           totalDecisions: 50,
           exceptionCount: 22,
           currentRate: 0.44,
+          baselineDecisionCount: 40,
+          baselineExceptionCount: 6,
           historicalBaselineRate: 0.15,
+          policyCoverage: 0.92,
         },
       ],
       stepMovements: [
@@ -263,10 +266,10 @@ describe('Golden Organisational Intelligence Dataset — Verification Suite', ()
     const expSignal = signals.find(s => s.signalType === 'EXCEPTION_PRESSURE');
     expect(expSignal).toBeDefined();
     // 4-layer structure
-    expect(expSignal?.fact).toContain('22 of 50 comparable decisions were exceptions');
-    expect(expSignal?.pattern).toContain('29.0 percentage points above the historical comparable baseline');
-    expect(expSignal?.interpretation).toBe('Operating behaviour consistently deviates from configured policy criteria during this period.');
-    expect(expSignal?.recommendation).toContain('policy review of Global Travel & Expense Policy criteria');
+    expect(expSignal?.fact).toContain('22 of 50 current-period decisions and 6 of 40 comparator-period decisions');
+    expect(expSignal?.pattern).toContain('29.0 percentage points higher');
+    expect(expSignal?.interpretation).toBe('Recorded exception activity is higher than the selected comparable period; review the underlying decisions before drawing conclusions.');
+    expect(expSignal?.recommendation).toContain('Review the Global Travel & Expense Policy criteria');
     expect(expSignal?.impact).toBe('HIGH');
   });
 
@@ -288,18 +291,18 @@ describe('Golden Organisational Intelligence Dataset — Verification Suite', ()
     const st1Advance = transitions.find(
       t => t.fromStage === 'STAGE_1_INITIAL_REVIEW' && t.toStage === 'STAGE_2_EXECUTIVE_PANEL'
     );
-    expect(st1Advance?.observedProbability).toBe(0.9);
+    expect(st1Advance?.observedRate).toBe(0.9);
     expect(st1Advance?.sampleSize).toBe(50);
-    expect(st1Advance?.confidenceLabel).toBe('HIGH');
+    expect(st1Advance?.evidenceLevel).toBe('HIGH');
 
     // Stage 1 -> Rejected: 5 / 50 = 10% (0.100)
     const st1Reject = transitions.find(
       t => t.fromStage === 'STAGE_1_INITIAL_REVIEW' && t.toStage === 'REJECTED'
     );
-    expect(st1Reject?.observedProbability).toBe(0.1);
+    expect(st1Reject?.observedRate).toBe(0.1);
 
-    // Sum of outgoing probabilities from Stage 1 equals 1.0
-    expect(Number((st1Advance!.observedProbability + st1Reject!.observedProbability).toFixed(3))).toBe(1.0);
+    // Sum of observed outgoing rates from Stage 1 equals 1.0
+    expect(Number((st1Advance!.observedRate + st1Reject!.observedRate).toFixed(3))).toBe(1.0);
   });
 
   it('processes outbox batch idempotently and isolates event failures', async () => {

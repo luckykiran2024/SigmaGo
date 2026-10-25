@@ -55,6 +55,26 @@ describe('Organisational Intelligence Correctness Suite (Sprint 4)', () => {
     expect(result.reconciledMovementPp).toBe(movementPp);
   });
 
+  it('reconciles rounding across many small workflow contributions', () => {
+    const result = analyzeStepMovement({
+      stepType: 'STRUCTURAL',
+      currentShare: 1,
+      comparatorShare: 0,
+      movementPp: 100,
+      totalCurrentAll: 17,
+      totalBaselineAll: 17,
+      workflowData: Array.from({ length: 17 }, (_, index) => ({
+        workflowId: `wf-${index}`,
+        workflowName: `Workflow ${index}`,
+        currentCount: 1,
+        baselineCount: 0,
+      })),
+      consequentialDecisions: [],
+    });
+    expect(result.reconciledMovementPp).toBe(100);
+    expect(result.contributors.reduce((sum, item) => sum + item.movementContributionPp, 0)).toBeCloseTo(100, 8);
+  });
+
   it('2. Evaluates classification rules correctly against numeric bounds and policy thresholds', () => {
     const rules = [
       {

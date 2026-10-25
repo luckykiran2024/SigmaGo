@@ -36,7 +36,6 @@ import crypto from 'crypto';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 export async function generateActionToken(
   stepId: string,
@@ -68,16 +67,13 @@ export async function generateActionToken(
 }
 
 export async function sendOutboundEmail(to: string, subject: string, html: string): Promise<boolean> {
-  console.log(`[EMAIL SEND] To: ${to} | Subject: ${subject}`);
-  
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
-    console.log("------------------ FALLBACK EMAIL CONTEXT ------------------");
-    console.log(`TO: ${to}`);
-    console.log(`SUBJECT: ${subject}`);
-    console.log("HTML CONTENT:");
-    console.log(html);
-    console.log("-------------------------------------------------------------");
-    return true;
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('RESEND_API_KEY is required for outbound email in production');
+    }
+    console.warn('[EMAIL SEND] Skipped: RESEND_API_KEY is not configured');
+    return false;
   }
 
   try {
@@ -191,41 +187,41 @@ export async function sendApprovalActionEmail(
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #F7F8FA; color: #4B5347;">
       ${headerHtml}
-      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Approval Required</h2>
+      <h2 style="color: #FFFFFF; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Approval Required</h2>
       <p style="font-size: 14px; color: #4B5347; font-weight: 500;">A request requires your review.</p>
       
       <table style="width: 100%; font-size: 14px; margin: 20px 0; border-collapse: collapse;">
         <tr>
           <td style="padding: 6px 0; font-weight: bold; color: #667085; width: 120px;">Subject</td>
-          <td style="padding: 6px 0; color: #17200F; font-weight: bold;">${req.subject}</td>
+          <td style="padding: 6px 0; color: #FFFFFF; font-weight: bold;">${req.subject}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; font-weight: bold; color: #667085;">Category</td>
-          <td style="padding: 6px 0; color: #17200F;">${categoryName}</td>
+          <td style="padding: 6px 0; color: #FFFFFF;">${categoryName}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; font-weight: bold; color: #667085;">Raised By</td>
-          <td style="padding: 6px 0; color: #17200F;">${ownerName}</td>
+          <td style="padding: 6px 0; color: #FFFFFF;">${ownerName}</td>
         </tr>
         <tr>
           <td style="padding: 6px 0; font-weight: bold; color: #667085;">Current Stage</td>
-          <td style="padding: 6px 0; color: #17200F;">Stage ${step.stage_index + 1}</td>
+          <td style="padding: 6px 0; color: #FFFFFF;">Stage ${step.stage_index + 1}</td>
         </tr>
       </table>
  
-      <div style="background-color: #F1EEE4; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #C9A227;">
-        <h4 style="margin: 0 0 10px 0; color: #17200F;">Justification Summary</h4>
+      <div style="background-color: #E7F4F3; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #0B7780;">
+        <h4 style="margin: 0 0 10px 0; color: #FFFFFF;">Justification Summary</h4>
         <div style="font-size: 13px; color: #4B5347; line-height: 1.5;">${justification}</div>
       </div>
  
       <div style="margin: 30px 0; text-align: center;">
-        <a href="${approveUrl}" style="background-color: #C9A227; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; margin-right: 8px; display: inline-block;">Approve</a>
+        <a href="${approveUrl}" style="background-color: #0B7780; color: #FFFFFF; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; margin-right: 8px; display: inline-block;">Approve</a>
         <a href="${rejectUrl}" style="background-color: transparent; border: 2px solid #B4453C; color: #B4453C; padding: 8px 22px; text-decoration: none; font-weight: bold; border-radius: 9999px; margin-right: 8px; display: inline-block;">Reject</a>
         <a href="${discussUrl}" style="background-color: transparent; border: 2px solid #3B6B8F; color: #3B6B8F; padding: 8px 22px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Discuss</a>
       </div>
  
       <p style="font-size: 12px; color: #667085; text-align: center; border-top: 1px solid rgba(30,43,28,.12); padding-top: 15px;">
-        You can also <a href="${viewUrl}" style="color: #C9A227; text-decoration: none; font-weight: bold;">Open in SigmaGo</a> to view details.
+        You can also <a href="${viewUrl}" style="color: #0B7780; text-decoration: none; font-weight: bold;">Open in SigmaGo</a> to view details.
       </p>
     </div>
   `;
@@ -393,18 +389,18 @@ export async function sendDiscussionNotificationEmail(
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid rgba(30,43,28,.12); border-radius: 12px; background-color: #F7F8FA; color: #4B5347;">
       ${headerHtml}
-      <h2 style="color: #17200F; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Discussion Required</h2>
+      <h2 style="color: #FFFFFF; font-weight: 800; border-bottom: 1px solid rgba(30,43,28,.12); padding-bottom: 10px; margin-top: 0;">Discussion Required</h2>
       <p style="font-size: 14px; color: #4B5347;">
         Approver <strong>${raiserName}</strong> has requested discussion on your request: <strong>${request.subject}</strong>.
       </p>
       
       <div style="background-color: #FBF6E6; border-left: 4px solid #C08A2E; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <h4 style="margin: 0 0 5px 0; color: #C08A2E; font-weight: bold;">Approver's Comment</h4>
-        <p style="margin: 0; font-size: 13px; color: #17200F; font-style: italic;">"${comment}"</p>
+        <p style="margin: 0; font-size: 13px; color: #FFFFFF; font-style: italic;">"${comment}"</p>
       </div>
 
       <div style="margin: 25px 0; text-align: center;">
-        <a href="${viewUrl}" style="background-color: #C9A227; color: #17200F; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Resume & Review</a>
+        <a href="${viewUrl}" style="background-color: #0B7780; color: #FFFFFF; padding: 10px 24px; text-decoration: none; font-weight: bold; border-radius: 9999px; display: inline-block;">Resume & Review</a>
       </div>
     </div>
   `;

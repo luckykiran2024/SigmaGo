@@ -32,7 +32,7 @@ export default function IntelligenceOverview({
       primaryText: summaries.activity.primaryText,
       subText: summaries.activity.subText,
       actionLabel: summaries.activity.actionLabel,
-      icon: <Activity className="w-4 h-4 text-[#059DB0]" aria-hidden="true" />,
+      icon: <Activity className="w-4 h-4 text-[#0B7780]" aria-hidden="true" />,
     },
     {
       id: 'change',
@@ -40,7 +40,7 @@ export default function IntelligenceOverview({
       primaryText: summaries.change.primaryText,
       subText: summaries.change.subText,
       actionLabel: summaries.change.actionLabel,
-      icon: <TrendingUp className="w-4 h-4 text-[#012F6B]" aria-hidden="true" />,
+      icon: <TrendingUp className="w-4 h-4 text-[#17324D]" aria-hidden="true" />,
     },
     {
       id: 'attention',
@@ -57,7 +57,7 @@ export default function IntelligenceOverview({
     },
     {
       id: 'confidence',
-      question: 'How much can I trust this?',
+      question: 'How strong is the evidence?',
       primaryText: summaries.confidence.primaryText,
       subText: summaries.confidence.subText,
       actionLabel: summaries.confidence.actionLabel,
@@ -67,7 +67,7 @@ export default function IntelligenceOverview({
 
   return (
     <section aria-label="Overview Summaries (At a glance)" className="space-y-2">
-      <div className="flex items-center justify-between text-[11px] font-semibold tracking-wider text-[#8190A0] uppercase">
+      <div className="flex items-center justify-between text-[11px] font-semibold tracking-wider text-[#637587] uppercase">
         <span>Executive Briefing · At a glance</span>
         <span>4 Core Dimensions</span>
       </div>
@@ -83,16 +83,16 @@ export default function IntelligenceOverview({
               onClick={() => onSelectTab(card.id)}
               aria-selected={isActive}
               aria-label={`${card.question}: ${card.primaryText}. ${card.subText}. Click to view details.`}
-              className={`text-left p-4 rounded-[8px] border transition-all flex flex-col justify-between h-full group focus:outline-hidden focus:ring-2 focus:ring-[#059DB0] focus:ring-offset-1 ${
+              className={`text-left p-4 rounded-[8px] border transition-all flex flex-col justify-between h-full group focus:outline-hidden focus:ring-2 focus:ring-[#0B7780] focus:ring-offset-1 ${
                 isActive
-                  ? 'bg-white border-[#059DB0] shadow-xs'
-                  : 'bg-white border-[#DDE5EC] hover:border-[#8190A0] hover:bg-[#FDFEFE]'
+                  ? 'bg-white border-[#0B7780] shadow-xs'
+                  : 'bg-white border-[#DCE5EA] hover:border-[#637587] hover:bg-[#FDFEFE]'
               }`}
             >
               <div>
                 {/* Question Label */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[12px] font-medium text-[#526377]">
+                  <span className="text-[12px] font-medium text-[#526679]">
                     {card.question}
                   </span>
                   {card.icon}
@@ -100,23 +100,23 @@ export default function IntelligenceOverview({
 
                 {/* Primary Answer */}
                 <div className="mt-2.5">
-                  <p className="text-[17px] font-semibold text-[#132238] leading-snug tracking-tight">
+                  <p className="text-[17px] font-semibold text-[#182B3D] leading-snug tracking-tight">
                     {card.primaryText}
                   </p>
-                  <p className="text-[12.5px] text-[#526377] mt-1 leading-normal">
+                  <p className="text-[12.5px] text-[#526679] mt-1 leading-normal">
                     {card.subText}
                   </p>
                 </div>
               </div>
 
               {/* Action link */}
-              <div className="mt-3 pt-2.5 border-t border-[#EAF0F4] flex items-center justify-between text-[12px] font-medium">
-                <span className={isActive ? 'text-[#012F6B]' : 'text-[#078899] group-hover:text-[#012F6B]'}>
+              <div className="mt-3 pt-2.5 border-t border-[#EAF0F2] flex items-center justify-between text-[12px] font-medium">
+                <span className={isActive ? 'text-[#17324D]' : 'text-[#096A72] group-hover:text-[#17324D]'}>
                   {card.actionLabel}
                 </span>
                 <ArrowRight
                   className={`w-3.5 h-3.5 transition-transform ${
-                    isActive ? 'text-[#012F6B] translate-x-0.5' : 'text-[#078899] group-hover:translate-x-0.5'
+                    isActive ? 'text-[#17324D] translate-x-0.5' : 'text-[#096A72] group-hover:translate-x-0.5'
                   }`}
                   aria-hidden="true"
                 />

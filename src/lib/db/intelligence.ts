@@ -1,5 +1,7 @@
 import { adminClient } from '@/lib/supabase/admin';
 import { IntelligenceScope } from '@/lib/intelligence/access';
+import { getExceptionContext } from '@/lib/intelligence/exceptionContext';
+import { collectPages } from '@/lib/intelligence/analytics/pagination';
 
 export interface InlineExceptionSummary {
   policyId?: string;
@@ -14,76 +16,26 @@ export interface PolicyHealthMetrics {
   activePolicies: number;
   impactFactorTotal: number | string;
   deviationFactorYtd: number;
-  averageVelocityHours: number;
+  averageVelocityHours: number | null;
   excludedCategoryCount: number;
 }
 
 const SMALL_NUMBER_SUPPRESSION_THRESHOLD = 5;
 
 /**
- * Computes real-time YTD inline exception count for approver guidance at decision time.
- * Suppresses exact count when Impact Factor < 5 for AGGREGATE_ONLY scope.
+ * Shows prior finalized exceptions to the same policy plus the pending request.
+ * Suppresses small counts for AGGREGATE_ONLY access.
  */
 export async function getInlineExceptionCount(
   tenantId: string,
-  categoryId?: string,
-  policyId?: string,
+  requestId: string,
   scope: IntelligenceScope = 'AGGREGATE_ONLY'
 ): Promise<InlineExceptionSummary | null> {
   try {
-    let targetPolicyId = policyId;
-    let policyTitle = 'Governing Policy';
-    let policyReasoning = '';
-
-    // 1. Check if category is excluded from intelligence
-    if (categoryId) {
-      const { data: category } = await adminClient
-        .from('categories')
-        .select('id, name, step_type, governing_policy_id, exclude_from_intelligence')
-        .eq('id', categoryId)
-        .eq('tenant_id', tenantId)
-        .maybeSingle();
-
-      if (category?.exclude_from_intelligence) {
-        return null; // Excluded categories contribute to no metrics
-      }
-
-      if (category?.governing_policy_id && !targetPolicyId) {
-        targetPolicyId = category.governing_policy_id;
-      }
-    }
-
-    // 2. Fetch policy details if policy ID is known
-    if (targetPolicyId) {
-      const { data: policy } = await adminClient
-        .from('policies')
-        .select('id, title, reasoning')
-        .eq('id', targetPolicyId)
-        .eq('tenant_id', tenantId)
-        .maybeSingle();
-
-      if (policy) {
-        policyTitle = policy.title;
-        // Exception justification notes/reasoning are masked for AGGREGATE_ONLY
-        policyReasoning = scope === 'FULL' ? (policy.reasoning || '') : '';
-      }
-    }
-
-    // 3. Calculate YTD exceptions for this tenant & policy
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString();
-
-    let query = adminClient
-      .from('approval_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .gte('created_at', startOfYear);
-
-    if (categoryId) {
-      query = query.eq('category_id', categoryId);
-    }
-
-    const { count } = await query;
-    const currentCount = (count || 0) + 1;
+    const context = await getExceptionContext(tenantId, requestId);
+    if (!context.policy) return null;
+    const currentCount = context.ordinalThisYear;
+    const policyTitle = context.policy.title;
 
     // Apply Small-Number Suppression for AGGREGATE_ONLY if count < threshold
     let displayCount: number | string = currentCount;
@@ -103,9 +55,9 @@ export async function getInlineExceptionCount(
     }
 
     return {
-      policyId: targetPolicyId,
+      policyId: context.policy.id,
       policyTitle,
-      policyReasoning,
+      policyReasoning: scope === 'FULL' ? (context.policy.reasoning || '') : '',
       exceptionCountYtd: displayCount,
       ordinalText,
     };
@@ -133,13 +85,15 @@ export async function getPolicyHealthMetrics(
       .eq('exclude_from_intelligence', true);
 
     // 2. Fetch policies
-    const { data: policies } = await adminClient
+    const { count: totalPolicies } = await adminClient
       .from('policies')
-      .select('id, status')
+      .select('id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId);
-
-    const totalPolicies = policies?.length || 0;
-    const activePolicies = (policies || []).filter((p) => p.status === 'ACTIVE').length;
+    const { count: activePolicies } = await adminClient
+      .from('policies')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .eq('status', 'ACTIVE');
 
     // 3. Fetch Impact Factor (BASED_ON reference links)
     const { count: rawImpactFactor } = await adminClient
@@ -165,12 +119,13 @@ export async function getPolicyHealthMetrics(
       .gte('created_at', startOfYear);
 
     // 5. Calculate Average Decision Velocity (hours from entered_at to acted_at)
-    const { data: completedSteps } = await adminClient
+    const completedSteps = await collectPages<any>((from, to) => adminClient
       .from('approval_steps')
-      .select('entered_at, acted_at, approval_requests!inner(tenant_id)')
+      .select('id, entered_at, acted_at, approval_requests!inner(tenant_id)')
       .eq('approval_requests.tenant_id', tenantId)
       .not('acted_at', 'is', null)
-      .limit(100);
+      .order('id', { ascending: true })
+      .range(from, to));
 
     let totalDurationHours = 0;
     let stepCount = 0;
@@ -178,16 +133,18 @@ export async function getPolicyHealthMetrics(
     (completedSteps || []).forEach((step) => {
       if (step.entered_at && step.acted_at) {
         const diffMs = new Date(step.acted_at).getTime() - new Date(step.entered_at).getTime();
-        totalDurationHours += diffMs / (1000 * 60 * 60);
-        stepCount++;
+        if (Number.isFinite(diffMs) && diffMs >= 0) {
+          totalDurationHours += diffMs / (1000 * 60 * 60);
+          stepCount++;
+        }
       }
     });
 
-    const averageVelocityHours = stepCount > 0 ? Number((totalDurationHours / stepCount).toFixed(1)) : 12;
+    const averageVelocityHours = stepCount > 0 ? Number((totalDurationHours / stepCount).toFixed(1)) : null;
 
     return {
-      totalPolicies,
-      activePolicies,
+      totalPolicies: totalPolicies || 0,
+      activePolicies: activePolicies || 0,
       impactFactorTotal,
       deviationFactorYtd: deviationFactorYtd || 0,
       averageVelocityHours,
@@ -200,7 +157,7 @@ export async function getPolicyHealthMetrics(
       activePolicies: 0,
       impactFactorTotal: 0,
       deviationFactorYtd: 0,
-      averageVelocityHours: 0,
+      averageVelocityHours: null,
       excludedCategoryCount: 0,
     };
   }

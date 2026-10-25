@@ -53,26 +53,8 @@ export async function signIn(formData: FormData) {
   return redirect(redirectPath);
 }
 
-export async function signUp(formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const supabase = await createClient();
-
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
-    },
-  });
-
-  if (error) {
-    return redirect(`/login?message=${encodeURIComponent(error.message)}`);
-  }
-
-  // With Supabase email confirmation OFF, the signup is immediately usable.
-  // We send them to the login page with a success message.
-  return redirect('/login?message=Account created successfully. Please sign in.');
+export async function signUp(_formData: FormData) {
+  return redirect('/login?message=Workspace accounts are provisioned by an administrator. Please request access.');
 }
 
 export async function resetPassword(email: string) {

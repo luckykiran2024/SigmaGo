@@ -635,7 +635,7 @@ export async function getCertificateBlocks(
 ): Promise<CertificateBlocks> {
   const { data: steps, error: stepsErr } = await adminClient
     .from('approval_steps')
-    .select('order_index, status, acted_at, users_approval_steps_approver_idTousers(name, email)')
+    .select('order_index, status, acted_at, approver:users!approver_id(name, email)')
     .eq('request_id', requestId)
     .order('order_index', { ascending: true });
 
@@ -651,8 +651,8 @@ export async function getCertificateBlocks(
 
   const authority: CertificateAuthorityStep[] = (steps || []).map((s: any) => ({
     stage: (s.order_index ?? 0) + 1,
-    approverName: s.users_approval_steps_approver_idTousers?.name || 'Approver',
-    approverEmail: s.users_approval_steps_approver_idTousers?.email || '',
+    approverName: s.approver?.name || 'Approver',
+    approverEmail: s.approver?.email || '',
     status: s.status,
     actedAt: s.acted_at,
     isAuthoritative: true,

@@ -18,12 +18,12 @@ export default function AdminSidebar({ tenant }: { tenant: string }) {
   ];
 
   return (
-    <aside className="w-full md:w-60 shrink-0 bg-white border border-[#DDE5EC] rounded-[10px] p-3 self-start shadow-xs space-y-3 font-sans">
-      <div className="px-2.5 pt-1 pb-1 border-b border-[#EAF0F4]">
-        <h3 className="text-[11px] font-semibold text-[#8190A0] uppercase tracking-wider">
+    <aside className="w-full md:w-60 shrink-0 bg-white border border-[#DCE5EA] rounded-[10px] p-3 self-start shadow-xs space-y-3 font-sans">
+      <div className="px-2.5 pt-1 pb-1 border-b border-[#EAF0F2]">
+        <h3 className="text-[11px] font-semibold text-[#637587] uppercase tracking-wider">
           Administration
         </h3>
-        <p className="text-[12px] text-[#526377] mt-0.5">Governance rules & settings</p>
+        <p className="text-[12px] text-[#526679] mt-0.5">Governance rules & settings</p>
       </div>
 
       <nav className="space-y-1">
@@ -36,11 +36,11 @@ export default function AdminSidebar({ tenant }: { tenant: string }) {
               href={item.href}
               className={`flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[6px] transition-all relative ${
                 isActive
-                  ? 'bg-[#F1FBFC] text-[#012F6B] font-semibold border-l-2 border-[#059DB0]'
-                  : 'text-[#526377] font-normal hover:bg-[#F7FAFC] hover:text-[#012F6B]'
+                  ? 'bg-[#ECF6F5] text-[#17324D] font-semibold border-l-2 border-[#0B7780]'
+                  : 'text-[#526679] font-normal hover:bg-[#F6F8F9] hover:text-[#17324D]'
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#059DB0]' : 'text-[#8190A0]'}`} />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#0B7780]' : 'text-[#637587]'}`} />
               <span>{item.name}</span>
             </Link>
           );

@@ -64,10 +64,14 @@ export function analyzeStepMovement(params: {
   const validTotalCurrent = Math.max(1, totalCurrentAll);
   const validTotalBaseline = Math.max(1, totalBaselineAll);
 
+  const hasComparator = totalCurrentAll > 0 && totalBaselineAll > 0;
+  const rawTenths: number[] = [];
   const contributors: WorkflowContribution[] = workflowData.map((w) => {
     const cShare = w.currentCount / validTotalCurrent;
     const bShare = w.baselineCount / validTotalBaseline;
-    const diffPp = Math.round((cShare - bShare) * 1000) / 10;
+    const raw = hasComparator ? (cShare - bShare) * 1000 : 0;
+    rawTenths.push(raw);
+    const diffPp = Math.round(raw) / 10;
 
     let direction: WorkflowContribution['direction'] = 'STABLE';
     if (diffPp > 0.05) direction = 'UP';
@@ -86,26 +90,31 @@ export function analyzeStepMovement(params: {
     };
   });
 
-  // Sort contributors descending by absolute movement contribution
-  contributors.sort((a, b) => Math.abs(b.movementContributionPp) - Math.abs(a.movementContributionPp));
-
-  // Verify mathematical reconciliation (sum of workflow movement pp)
-  let reconciledMovementPp = Math.round(
-    contributors.reduce((acc, c) => acc + c.movementContributionPp, 0) * 10
-  ) / 10;
-
-  // Exact reconciliation: If fractional rounding discrepancy exists, assign remainder to highest contributor
-  if (contributors.length > 0 && totalCurrentAll > 0 && totalBaselineAll > 0) {
-    const roundingDelta = Math.round((movementPp - reconciledMovementPp) * 10) / 10;
-    if (Math.abs(roundingDelta) > 0 && Math.abs(roundingDelta) <= 0.2) {
-      contributors[0].movementContributionPp = Math.round(
-        (contributors[0].movementContributionPp + roundingDelta) * 10
-      ) / 10;
-      reconciledMovementPp = Math.round(
-        contributors.reduce((acc, c) => acc + c.movementContributionPp, 0) * 10
-      ) / 10;
-    }
+  // Distribute decimal rounding by largest remainder. Never use rounding to
+  // conceal a missing workflow or a genuinely inconsistent denominator.
+  const rawTotalTenths = rawTenths.reduce((sum, value) => sum + value, 0);
+  const targetTenths = Math.round(movementPp * 10);
+  if (hasComparator && Math.abs(rawTotalTenths - targetTenths) > 1) {
+    throw new Error('Workflow contributions do not reconcile with STEP movement');
   }
+  const roundedTenths = contributors.map(c => Math.round(c.movementContributionPp * 10));
+  let remainder = targetTenths - roundedTenths.reduce((sum, value) => sum + value, 0);
+  const order = rawTenths.map((raw, index) => index).sort((a, b) =>
+    remainder >= 0
+      ? (rawTenths[b] - roundedTenths[b]) - (rawTenths[a] - roundedTenths[a])
+      : (rawTenths[a] - roundedTenths[a]) - (rawTenths[b] - roundedTenths[b])
+  );
+  for (let index = 0; remainder !== 0 && index < order.length; index++) {
+    roundedTenths[order[index]] += Math.sign(remainder);
+    remainder -= Math.sign(remainder);
+  }
+  if (remainder !== 0) throw new Error('Unable to reconcile workflow contribution rounding');
+  contributors.forEach((contributor, index) => {
+    contributor.movementContributionPp = roundedTenths[index] / 10;
+    contributor.direction = roundedTenths[index] > 0 ? 'UP' : roundedTenths[index] < 0 ? 'DOWN' : 'STABLE';
+  });
+  contributors.sort((a, b) => Math.abs(b.movementContributionPp) - Math.abs(a.movementContributionPp));
+  const reconciledMovementPp = roundedTenths.reduce((sum, value) => sum + value, 0) / 10;
 
   // Top 10 consequential decisions ranked by footprint score
   const topConsequentialDecisions = consequentialDecisions

@@ -21,13 +21,13 @@ export default function MarketingLayout({
       {/* UNIFIED ENTERPRISE TOP NAVIGATION RIBBON */}
       <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur-xs">
         <div className="max-w-[1140px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 font-bold text-[#132238]">
+          <Link href="/" className="flex items-center gap-3 font-bold text-[#182B3D]">
             <img
               src="/brand/sigmago-logo.png"
               alt="SigmaGo"
               className="w-7 h-7 object-contain"
             />
-            <span className="font-bold text-[18px] tracking-tight text-[#012F6B]">SigmaGo</span>
+            <span className="font-bold text-[18px] tracking-tight text-[#17324D]">SigmaGo</span>
           </Link>
 
           {/* Desktop Nav Links */}

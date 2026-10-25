@@ -19,14 +19,14 @@ export default function StepBadge({
 
   let letter = 'T';
   let label = 'Transactional';
-  let badgeClasses = 'bg-[#F1FBFC] text-[#078899] border-[#DDF5F7]';
-  let letterBg = 'bg-[#059DB0] text-white';
+  let badgeClasses = 'bg-[#ECF6F5] text-[#096A72] border-[#D7ECEA]';
+  let letterBg = 'bg-[#0B7780] text-white';
 
   if (normalized.startsWith('STRUCT')) {
     letter = 'S';
     label = 'Structural';
-    badgeClasses = 'bg-[#EDF2F6] text-[#012F6B] border-[#DDE5EC]';
-    letterBg = 'bg-[#012F6B] text-white';
+    badgeClasses = 'bg-[#E7EDF0] text-[#17324D] border-[#DCE5EA]';
+    letterBg = 'bg-[#17324D] text-white';
   } else if (normalized.startsWith('EXCEPT')) {
     letter = 'E';
     label = 'Exceptional';
@@ -35,8 +35,8 @@ export default function StepBadge({
   } else if (normalized.startsWith('PROC')) {
     letter = 'P';
     label = 'Process';
-    badgeClasses = 'bg-[#F3F6F8] text-[#475467] border-[#DDE5EC]';
-    letterBg = 'bg-[#526377] text-white';
+    badgeClasses = 'bg-[#EEF2F4] text-[#475467] border-[#DCE5EA]';
+    letterBg = 'bg-[#526679] text-white';
   }
 
   const padClass = size === 'sm' ? 'px-1.5 py-0.5 text-[11px]' : 'px-2 py-0.5 text-[12px]';

@@ -96,6 +96,13 @@ export default async function CertificatePage({
     );
   }
 
+  const [{ count: precedentCount }, { count: citedByCount }] = await Promise.all([
+    adminClient.from('decision_references').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('source_id', request.id),
+    adminClient.from('decision_references').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('target_id', request.id),
+  ]);
+
   const generatedAt = formatDate(new Date().toISOString());
 
   return (
@@ -130,10 +137,10 @@ export default async function CertificatePage({
       {/* Approval Certificate Document */}
       <div className="max-w-4xl mx-auto bg-white border border-[#E8DDB0] shadow-md rounded-[8px] overflow-hidden text-[#101828] print:border-0 print:shadow-none font-sans">
         {/* Certificate Gold Header (§4) */}
-        <div className="bg-[#101828] text-white p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between border-b border-[#C9A227] gap-6">
+        <div className="bg-[#101828] text-white p-8 flex flex-col sm:flex-row sm:items-start sm:justify-between border-b border-[#0B7780] gap-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <Award className="w-6 h-6 text-[#C9A227]" />
+              <Award className="w-6 h-6 text-[#0B7780]" />
               <span>SigmaGo</span>
             </div>
             <p className="text-[11px] text-[#98A2B3] uppercase tracking-widest font-mono font-semibold">
@@ -144,7 +151,7 @@ export default async function CertificatePage({
             <h1 className="text-xl font-extrabold tracking-wider text-white uppercase font-sans">
               Approval Certificate
             </h1>
-            <p className="text-xs text-[#C9A227] font-mono">Ref: {request.ref || request.id}</p>
+            <p className="text-xs text-[#0B7780] font-mono">Ref: {request.ref || request.id}</p>
           </div>
         </div>
 
@@ -152,7 +159,7 @@ export default async function CertificatePage({
         <div className="p-8 sm:p-12 space-y-8">
           {/* PROOF 1: WHAT WAS DECIDED */}
           <section className="space-y-2 border-b border-[#E4E7EC] pb-6">
-            <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#C9A227] font-mono">
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#0B7780] font-mono">
               1. WHAT WAS DECIDED
             </div>
             <h2 className="text-xl font-bold text-[#101828]">{request.subject}</h2>
@@ -171,7 +178,7 @@ export default async function CertificatePage({
           {/* PROOF 2: AUTHORITY */}
           <section className="space-y-3 border-b border-[#E4E7EC] pb-6">
             <div>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#C9A227] font-mono">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#0B7780] font-mono">
                 2. AUTHORITY
               </div>
               <p className="text-xs text-[#667085]">Who held the power to decide this</p>
@@ -192,7 +199,7 @@ export default async function CertificatePage({
           {/* PROOF 3: SEQUENCE */}
           <section className="space-y-3 border-b border-[#E4E7EC] pb-6">
             <div>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#C9A227] font-mono">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#0B7780] font-mono">
                 3. SEQUENCE
               </div>
               <p className="text-xs text-[#667085]">The order in which it happened, enforced</p>
@@ -212,7 +219,7 @@ export default async function CertificatePage({
           {/* PROOF 4: REASONING */}
           <section className="space-y-3 border-b border-[#E4E7EC] pb-6">
             <div>
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#C9A227] font-mono">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#0B7780] font-mono">
                 4. REASONING
               </div>
               <p className="text-xs text-[#667085]">What was weighed, recorded at the time</p>
@@ -234,8 +241,8 @@ export default async function CertificatePage({
 
           {/* PROOF 5: AUTHENTICITY & PERMANENCE */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-[#E4E7EC] pb-6">
-            <div className="space-y-2 p-4 bg-[#FDF6E3] border border-[#E8DDB0] rounded-[6px]">
-              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#C9A227] font-mono">
+            <div className="space-y-2 p-4 bg-[#E7F4F3] border border-[#E8DDB0] rounded-[6px]">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#0B7780] font-mono">
                 5. AUTHENTICITY
               </div>
               <p className="text-xs text-[#667085]">Proof it has not been altered</p>
@@ -265,11 +272,11 @@ export default async function CertificatePage({
               What this decision rests on and what rests on it:
             </p>
             <div className="flex flex-wrap gap-2 text-xs font-mono">
-              <span className="px-2.5 py-1 bg-[#FEF3E5] text-[#B54708] border border-[#FDE3C0] rounded-[4px]">
-                Exception to: Category Policy Rules
+              <span className="px-2.5 py-1 bg-[#ECF6F5] text-[#0B7780] border border-[#D7ECEA] rounded-[4px]">
+                {precedentCount || 0} linked precedents
               </span>
               <span className="px-2.5 py-1 bg-[#E8EDF4] text-[#274C77] border border-[#D3DEEB] rounded-[4px]">
-                Cited by: 0 later decisions
+                Cited by: {citedByCount || 0} later decisions
               </span>
             </div>
           </section>
@@ -301,7 +308,7 @@ export default async function CertificatePage({
           {/* CERTIFICATE MANDATORY FOOTER DISCLAIMER (§4) */}
           <div className="pt-6 border-t border-[#E8DDB0] text-center space-y-1">
             <p className="text-xs font-bold text-[#101828] font-sans italic">
-              This certificate can be verified by anyone, without access to SigmaGo, at any point in the future.
+              This certificate reflects the finalized decision record and its stored integrity seal.
             </p>
             <p className="text-[10.5px] font-mono text-[#98A2B3]">
               Generated by SigmaGo · {generatedAt}

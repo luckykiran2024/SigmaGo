@@ -87,7 +87,7 @@ export default function PersonalSettingsForm({
       fyi_emails: fyiEmails,
       overdue_reminders: overdueReminders
     };
-    updateProfileAndSettingsAction(userData.id, name, updatedSettings).catch(console.error);
+    updateProfileAndSettingsAction(name, updatedSettings).catch(console.error);
   };
 
 function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: string }> {
@@ -148,7 +148,7 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
 
     try {
       const { base64, mimeType } = await compressImageToAvatar(file);
-      const res = await uploadUserAvatarAction(userData.id, base64, mimeType, file.name);
+      const res = await uploadUserAvatarAction(base64, mimeType);
       setUploading(false);
 
       if (res.success && res.avatarUrl) {
@@ -170,7 +170,7 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
     setUploading(true);
     setMsg(null);
     try {
-      await removeUserAvatarAction(userData.id);
+      await removeUserAvatarAction();
       setAvatarUrl(null);
       setAvatarConfirmOpen(false);
       setMsg({ type: 'success', text: 'Display picture removed successfully.' });
@@ -196,7 +196,7 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
     };
 
     try {
-      await updateProfileAndSettingsAction(userData.id, name, updatedSettings);
+      await updateProfileAndSettingsAction(name, updatedSettings);
       setMsg({ type: 'success', text: 'Profile and preferences updated successfully!' });
       router.refresh();
     } catch (err: any) {
@@ -238,13 +238,13 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
   return (
     <div className="space-y-6 font-sans max-w-4xl mx-auto">
       {/* SECTION 1 - PROFILE SETTINGS */}
-      <form onSubmit={handleSaveProfile} className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-6 space-y-6">
+      <form onSubmit={handleSaveProfile} className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-6 space-y-6">
         <div>
-          <h3 className="text-sm font-bold text-[#132238] font-sans flex items-center gap-2">
-            <User className="w-4 h-4 text-[#012F6B]" />
+          <h3 className="text-sm font-bold text-[#182B3D] font-sans flex items-center gap-2">
+            <User className="w-4 h-4 text-[#17324D]" />
             My Profile
           </h3>
-          <p className="text-xs text-[#8190A0] mt-0.5">Manage your identity, job info, and notification preferences.</p>
+          <p className="text-xs text-[#637587] mt-0.5">Manage your identity, job info, and notification preferences.</p>
         </div>
 
         {msg && (
@@ -255,8 +255,8 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center gap-6 pb-5 border-b border-[#F3F6F8]">
-          <div className="w-16 h-16 rounded-lg bg-[#F3F6F8] border border-[#DDE5EC] flex items-center justify-center font-bold text-[#012F6B] text-xl overflow-hidden shrink-0">
+        <div className="flex flex-col sm:flex-row items-center gap-6 pb-5 border-b border-[#EEF2F4]">
+          <div className="w-16 h-16 rounded-lg bg-[#EEF2F4] border border-[#DCE5EA] flex items-center justify-center font-bold text-[#17324D] text-xl overflow-hidden shrink-0">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar preview" className="w-full h-full object-cover" />
             ) : (
@@ -266,8 +266,8 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DDE5EC] hover:bg-[#F7FAFC] text-[#132238] rounded-lg text-xs font-medium cursor-pointer transition">
-                <Upload className="w-3.5 h-3.5 text-[#526377]" />
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#DCE5EA] hover:bg-[#F6F8F9] text-[#182B3D] rounded-lg text-xs font-medium cursor-pointer transition">
+                <Upload className="w-3.5 h-3.5 text-[#526679]" />
                 Upload Photo
                 <input
                   type="file"
@@ -291,15 +291,15 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
                   </button>
 
                   {avatarConfirmOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07182F]/40 backdrop-blur-xs p-4">
-                      <div className="bg-white rounded-xl shadow-lg border border-[#DDE5EC] max-w-xs w-full p-5 space-y-4">
-                        <h4 className="text-sm font-bold text-[#132238]">Remove Display Picture?</h4>
-                        <p className="text-xs text-[#526377] font-normal leading-relaxed">Are you sure you want to remove your profile picture?</p>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0C1C2D]/40 backdrop-blur-xs p-4">
+                      <div className="bg-white rounded-xl shadow-lg border border-[#DCE5EA] max-w-xs w-full p-5 space-y-4">
+                        <h4 className="text-sm font-bold text-[#182B3D]">Remove Display Picture?</h4>
+                        <p className="text-xs text-[#526679] font-normal leading-relaxed">Are you sure you want to remove your profile picture?</p>
                         <div className="flex items-center justify-end gap-2 pt-2">
                           <button
                             type="button"
                             onClick={() => setAvatarConfirmOpen(false)}
-                            className="px-3 py-1.5 border border-[#DDE5EC] text-[#526377] hover:bg-[#F7FAFC] rounded-lg text-xs font-medium transition"
+                            className="px-3 py-1.5 border border-[#DCE5EA] text-[#526679] hover:bg-[#F6F8F9] rounded-lg text-xs font-medium transition"
                           >
                             Cancel
                           </button>
@@ -318,14 +318,14 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               )}
             </div>
             {uploading && (
-              <span className="text-xs font-medium text-[#059DB0] animate-pulse">Uploading photo...</span>
+              <span className="text-xs font-medium text-[#0B7780] animate-pulse">Uploading photo...</span>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#526377]">
+            <label className="block text-xs font-semibold text-[#526679]">
               Display Name
             </label>
             <input
@@ -333,67 +333,67 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-2xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition sm:text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-2xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition sm:text-xs font-medium bg-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#8190A0]">
+            <label className="block text-xs font-semibold text-[#637587]">
               Email Address (Read-only)
             </label>
             <input
               type="text"
               value={userData.email}
               readOnly
-              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F4] rounded-lg shadow-none text-[#8190A0] sm:text-xs font-medium bg-[#F7FAFC] cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F2] rounded-lg shadow-none text-[#637587] sm:text-xs font-medium bg-[#F6F8F9] cursor-not-allowed"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#8190A0]">
+            <label className="block text-xs font-semibold text-[#637587]">
               Designation (Read-only)
             </label>
             <input
               type="text"
               value={userData.designation || 'Staff'}
               readOnly
-              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F4] rounded-lg shadow-none text-[#8190A0] sm:text-xs font-medium bg-[#F7FAFC] cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F2] rounded-lg shadow-none text-[#637587] sm:text-xs font-medium bg-[#F6F8F9] cursor-not-allowed"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#8190A0]">
+            <label className="block text-xs font-semibold text-[#637587]">
               Employee ID (Read-only)
             </label>
             <input
               type="text"
               value={userData.employee_id || 'N/A'}
               readOnly
-              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F4] rounded-lg shadow-none text-[#8190A0] sm:text-xs font-medium bg-[#F7FAFC] cursor-not-allowed"
+              className="appearance-none block w-full px-3 py-2 border border-[#EAF0F2] rounded-lg shadow-none text-[#637587] sm:text-xs font-medium bg-[#F6F8F9] cursor-not-allowed"
             />
           </div>
         </div>
 
         {/* SECTION 3 - NOTIFICATION PREFERENCES */}
-        <div className="border-t border-[#F3F6F8] pt-5 space-y-3.5">
+        <div className="border-t border-[#EEF2F4] pt-5 space-y-3.5">
           <div>
-            <h4 className="text-xs font-bold text-[#132238] font-sans flex items-center gap-2">
-              <Bell className="w-3.5 h-3.5 text-[#012F6B]" />
+            <h4 className="text-xs font-bold text-[#182B3D] font-sans flex items-center gap-2">
+              <Bell className="w-3.5 h-3.5 text-[#17324D]" />
               Email Notification Preferences
             </h4>
-            <p className="text-[11px] text-[#8190A0] mt-0.5">Control when you receive transactional system notifications.</p>
+            <p className="text-[11px] text-[#637587] mt-0.5">Control when you receive transactional system notifications.</p>
           </div>
 
           <div className="space-y-2.5">
             <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2.5 text-xs font-medium text-[#132238] cursor-pointer">
+              <label className="flex items-center gap-2.5 text-xs font-medium text-[#182B3D] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={actionNeededEmails}
                   onChange={(e) => setActionNeededEmails(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#012F6B] border-[#DDE5EC] focus:ring-[#059DB0]"
+                  className="w-4 h-4 rounded text-[#17324D] border-[#DCE5EA] focus:ring-[#0B7780]"
                 />
                 Receive "Action Needed" approval requests
               </label>
@@ -405,33 +405,33 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               )}
             </div>
 
-            <label className="flex items-center gap-2.5 text-xs font-medium text-[#132238] cursor-pointer">
+            <label className="flex items-center gap-2.5 text-xs font-medium text-[#182B3D] cursor-pointer">
               <input
                 type="checkbox"
                 checked={fyiEmails}
                 onChange={(e) => setFyiEmails(e.target.checked)}
-                className="w-4 h-4 rounded text-[#012F6B] border-[#DDE5EC] focus:ring-[#059DB0]"
+                className="w-4 h-4 rounded text-[#17324D] border-[#DCE5EA] focus:ring-[#0B7780]"
               />
               Receive FYI / Reference notifications
             </label>
 
-            <label className="flex items-center gap-2.5 text-xs font-medium text-[#132238] cursor-pointer">
+            <label className="flex items-center gap-2.5 text-xs font-medium text-[#182B3D] cursor-pointer">
               <input
                 type="checkbox"
                 checked={overdueReminders}
                 onChange={(e) => setOverdueReminders(e.target.checked)}
-                className="w-4 h-4 rounded text-[#012F6B] border-[#DDE5EC] focus:ring-[#059DB0]"
+                className="w-4 h-4 rounded text-[#17324D] border-[#DCE5EA] focus:ring-[#0B7780]"
               />
               Receive overdue pending SLA reminders
             </label>
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-[#F3F6F8]">
+        <div className="flex justify-end pt-3 border-t border-[#EEF2F4]">
           <button
             type="submit"
             disabled={savingProfile}
-            className="inline-flex items-center justify-center px-4 py-2 bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold rounded-lg shadow-2xs transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#17324D] hover:bg-[#224564] text-white text-xs font-bold rounded-lg shadow-2xs transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingProfile ? 'Saving profile...' : 'Save Profile & Preferences'}
           </button>
@@ -439,13 +439,13 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
       </form>
 
       {/* SECTION - THEME & APPEARANCE */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-6 space-y-5">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-6 space-y-5">
         <div>
-          <h3 className="text-sm font-bold text-[#132238] font-sans flex items-center gap-2">
-            <Palette className="w-4 h-4 text-[#012F6B]" />
+          <h3 className="text-sm font-bold text-[#182B3D] font-sans flex items-center gap-2">
+            <Palette className="w-4 h-4 text-[#17324D]" />
             Theme & Appearance
           </h3>
-          <p className="text-xs text-[#8190A0] mt-0.5">Customize the visual mode and contrast profile.</p>
+          <p className="text-xs text-[#637587] mt-0.5">Customize the visual mode and contrast profile.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -458,8 +458,8 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
                 onClick={() => handleThemeSelect(opt.id)}
                 className={`p-4 rounded-xl border text-left transition-all relative overflow-hidden flex flex-col justify-between h-28 ${opt.bg} ${
                   isSelected
-                    ? 'ring-2 ring-[#059DB0] border-transparent shadow-xs'
-                    : 'hover:border-[#DDE5EC] hover:shadow-xs'
+                    ? 'ring-2 ring-[#0B7780] border-transparent shadow-xs'
+                    : 'hover:border-[#DCE5EA] hover:shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -468,7 +468,7 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
                     <span className="text-xs font-bold font-sans">{opt.label}</span>
                   </div>
                   {isSelected && (
-                    <div className="w-4 h-4 rounded-full bg-[#059DB0] text-white flex items-center justify-center">
+                    <div className="w-4 h-4 rounded-full bg-[#0B7780] text-white flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                   )}
@@ -487,13 +487,13 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
       </div>
 
       {/* SECTION 2 - CHANGE PASSWORD */}
-      <form onSubmit={handleChangePassword} className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-6 space-y-5">
+      <form onSubmit={handleChangePassword} className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-6 space-y-5">
         <div>
-          <h3 className="text-sm font-bold text-[#132238] font-sans flex items-center gap-2">
-            <Key className="w-4 h-4 text-[#012F6B]" />
+          <h3 className="text-sm font-bold text-[#182B3D] font-sans flex items-center gap-2">
+            <Key className="w-4 h-4 text-[#17324D]" />
             Security & Password
           </h3>
-          <p className="text-xs text-[#8190A0] mt-0.5">Keep your account credentials updated.</p>
+          <p className="text-xs text-[#637587] mt-0.5">Keep your account credentials updated.</p>
         </div>
 
         {pwdMsg && (
@@ -506,7 +506,7 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#526377]">
+            <label className="block text-xs font-semibold text-[#526679]">
               Current Password
             </label>
             <input
@@ -514,12 +514,12 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-2xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition sm:text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-2xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition sm:text-xs font-medium bg-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#526377]">
+            <label className="block text-xs font-semibold text-[#526679]">
               New Password
             </label>
             <input
@@ -527,12 +527,12 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-2xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition sm:text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-2xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition sm:text-xs font-medium bg-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-[#526377]">
+            <label className="block text-xs font-semibold text-[#526679]">
               Confirm New Password
             </label>
             <input
@@ -540,16 +540,16 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-2xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition sm:text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-2xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition sm:text-xs font-medium bg-white"
             />
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-[#F3F6F8]">
+        <div className="flex justify-end pt-3 border-t border-[#EEF2F4]">
           <button
             type="submit"
             disabled={changingPassword}
-            className="inline-flex items-center justify-center px-4 py-2 bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold rounded-lg shadow-2xs transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#17324D] hover:bg-[#224564] text-white text-xs font-bold rounded-lg shadow-2xs transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {changingPassword ? 'Updating password...' : 'Update Password'}
           </button>
@@ -557,20 +557,20 @@ function compressImageToAvatar(file: File): Promise<{ base64: string; mimeType: 
       </form>
 
       {/* SECTION 4 - MY DELEGATIONS LINK */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-6 space-y-4">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#132238] font-sans flex items-center gap-2">
-            <Shield className="w-4 h-4 text-[#012F6B]" />
+          <h3 className="text-sm font-bold text-[#182B3D] font-sans flex items-center gap-2">
+            <Shield className="w-4 h-4 text-[#17324D]" />
             Approval Authority & Delegations
           </h3>
-          <p className="text-xs text-[#8190A0] mt-0.5">Delegate your signing authority to another peer during absences.</p>
+          <p className="text-xs text-[#637587] mt-0.5">Delegate your signing authority to another peer during absences.</p>
         </div>
 
-        <div className="flex items-center justify-between p-3.5 bg-[#F7FAFC] border border-[#DDE5EC] rounded-lg">
-          <span className="text-xs font-medium text-[#526377]">Configure delegation schedules and acting approver assignments.</span>
+        <div className="flex items-center justify-between p-3.5 bg-[#F6F8F9] border border-[#DCE5EA] rounded-lg">
+          <span className="text-xs font-medium text-[#526679]">Configure delegation schedules and acting approver assignments.</span>
           <Link
             href={`/${tenantSubdomain}/delegations`}
-            className="inline-flex items-center justify-center px-3.5 py-1.5 border border-[#DDE5EC] text-[#132238] bg-white hover:bg-[#F3F6F8] rounded-lg text-xs font-semibold shadow-2xs transition"
+            className="inline-flex items-center justify-center px-3.5 py-1.5 border border-[#DCE5EA] text-[#182B3D] bg-white hover:bg-[#EEF2F4] rounded-lg text-xs font-semibold shadow-2xs transition"
           >
             Configure Delegations
           </Link>

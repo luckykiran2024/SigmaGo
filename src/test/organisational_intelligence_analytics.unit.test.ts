@@ -123,10 +123,10 @@ describe('Organisational Intelligence Analytics Engine — Acceptance Test Suite
 
     expect(stageTransitions).toHaveLength(5);
     const startToManager = stageTransitions.find(t => t.fromStage === 'START')!;
-    expect(startToManager.observedProbability).toBe(1.0);
+    expect(startToManager.observedRate).toBe(1.0);
 
     const managerRejections = stageTransitions.find(t => t.fromStage === 'Stage 0 (Manager)' && t.toStage === 'REJECTED')!;
-    expect(managerRejections.observedProbability).toBe(0.10); // 10 / 100 = 10%
+    expect(managerRejections.observedRate).toBe(0.10); // 10 / 100 = 10%
   });
 
   // Test 5: Policy Health Evaluation & Longitudinal Transition
@@ -155,7 +155,10 @@ describe('Organisational Intelligence Analytics Engine — Acceptance Test Suite
           totalDecisions: 50,
           exceptionCount: 20, // 40% exception rate
           currentRate: 0.40,
+          baselineDecisionCount: 40,
+          baselineExceptionCount: 6,
           historicalBaselineRate: 0.15,
+          policyCoverage: 0.92,
         },
       ],
       stepMovements: [
@@ -171,10 +174,22 @@ describe('Organisational Intelligence Analytics Engine — Acceptance Test Suite
 
     expect(signals).toHaveLength(2);
     const expSignal = signals.find(s => s.signalType === 'EXCEPTION_PRESSURE')!;
-    expect(expSignal.fact).toBe('20 of 50 comparable decisions were exceptions under Equipment Expense Policy.');
-    expect(expSignal.pattern).toContain('25.0 percentage points above');
-    expect(expSignal.interpretation).toBe('Operating behaviour consistently deviates from configured policy criteria during this period.');
-    expect(expSignal.recommendation).toContain('Conduct a policy review of Equipment Expense Policy criteria');
+    expect(expSignal.fact).toContain('20 of 50 current-period decisions and 6 of 40 comparator-period decisions');
+    expect(expSignal.pattern).toContain('25.0 percentage points higher');
+    expect(expSignal.confidenceBasis.baselineSampleSize).toBe(40);
+    expect(expSignal.confidence).toBe('RELIABLE');
+    expect(expSignal.interpretation).toBe('Recorded exception activity is higher than the selected comparable period; review the underlying decisions before drawing conclusions.');
+    expect(expSignal.recommendation).toContain('Review the Equipment Expense Policy criteria');
     expect(expSignal.impact).toBe('HIGH');
+  });
+
+  it('does not call a missing comparator a zero-rate baseline', () => {
+    const signals = generateIntelligenceSignals({
+      exceptionSignals: [{
+        policyId: 'pol-new', policyTitle: 'New Policy', totalDecisions: 20, exceptionCount: 8, currentRate: 0.4,
+        baselineDecisionCount: 0, baselineExceptionCount: 0, historicalBaselineRate: 0, policyCoverage: 1,
+      }],
+    });
+    expect(signals).toHaveLength(0);
   });
 });

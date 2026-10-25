@@ -1,6 +1,7 @@
 'use server';
 
 import { adminClient } from '@/lib/supabase/admin';
+import { requireTenantMember } from '@/lib/auth/guards';
 
 export interface PickableUser {
   id: string;
@@ -16,19 +17,7 @@ export async function searchUsersAction(
   excludeIds: string[] = [],
   activeOnly: boolean = true
 ): Promise<PickableUser[]> {
-  // 1. Resolve tenant ID first from subdomain
-  const { data: tenant, error: tenantErr } = await adminClient
-    .from('tenants')
-    .select('id')
-    .eq('subdomain', tenantSubdomain)
-    .single();
-
-  if (tenantErr || !tenant) {
-    console.error("Error resolving tenant subdomain in searchUsersAction:", tenantErr);
-    return [];
-  }
-
-  const tenantId = tenant.id;
+  const { tenantId } = await requireTenantMember(tenantSubdomain);
 
   // 2. Query public.users
   let builder = adminClient
@@ -41,14 +30,15 @@ export async function searchUsersAction(
   }
 
   // Handle query filtering
-  const trimmed = (query || '').trim();
+  const trimmed = (query || '').trim().slice(0, 80).replace(/[^\p{L}\p{N} @_-]/gu, '');
   if (trimmed) {
     builder = builder.or(`name.ilike.%${trimmed}%,email.ilike.%${trimmed}%,employee_id.ilike.%${trimmed}%`);
   }
 
   // Handle exclusions
   if (excludeIds && excludeIds.length > 0) {
-    builder = builder.not('id', 'in', `(${excludeIds.join(',')})`);
+    const safeIds = excludeIds.filter(id => /^[0-9a-f-]{36}$/i.test(id));
+    if (safeIds.length) builder = builder.not('id', 'in', `(${safeIds.join(',')})`);
   }
 
   // Capped at 9 results (to know if there are more than 8 matches)
@@ -62,12 +52,14 @@ export async function searchUsersAction(
   return data as PickableUser[];
 }
 
-export async function getUserByIdAction(id: string): Promise<PickableUser | null> {
+export async function getUserByIdAction(id: string, tenantSubdomain: string): Promise<PickableUser | null> {
+  const { tenantId } = await requireTenantMember(tenantSubdomain);
   if (!id) return null;
   const { data, error } = await adminClient
     .from('users')
     .select('id, name, email, employee_id, designation')
     .eq('id', id)
+    .eq('tenant_id', tenantId)
     .maybeSingle();
 
   if (error) {

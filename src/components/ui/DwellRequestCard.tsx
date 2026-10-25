@@ -25,9 +25,10 @@ export interface DwellRequestCardProps {
 }
 
 export function formatDwellDuration(enteredAtIso?: string | null): { text: string; days: number } {
-  if (!enteredAtIso) return { text: '1 hr', days: 0.04 };
+  if (!enteredAtIso) return { text: 'unavailable', days: 0 };
 
   const entered = new Date(enteredAtIso).getTime();
+  if (!Number.isFinite(entered)) return { text: 'unavailable', days: 0 };
   const now = new Date().getTime();
   const diffMs = Math.max(0, now - entered);
   const minutes = Math.floor(diffMs / (1000 * 60));
@@ -35,10 +36,10 @@ export function formatDwellDuration(enteredAtIso?: string | null): { text: strin
   const days = Number((diffMs / (1000 * 60 * 60 * 24)).toFixed(1));
 
   if (minutes < 90) {
-    return { text: `${Math.max(1, minutes)} min`, days: days || 0.04 };
+    return { text: minutes < 1 ? 'less than 1 min' : `${minutes} min`, days };
   }
   if (hours < 24) {
-    return { text: `${hours} hrs`, days: days || 0.04 };
+    return { text: `${hours} hrs`, days };
   }
   return { text: `${Math.max(1, Math.floor(days))} ${Math.floor(days) === 1 ? 'day' : 'days'}`, days };
 }
@@ -73,8 +74,8 @@ export default function DwellRequestCard({
   const barWidth = Math.min(1, ratio) * 100;
 
   // 2. State Threshold Colors
-  let barColor = 'bg-[#059DB0]';
-  let statusTextClass = 'text-[#012F6B]';
+  let barColor = 'bg-[#0B7780]';
+  let statusTextClass = 'text-[#17324D]';
 
   if (ratio >= 0.5 && ratio <= 1.0) {
     barColor = 'bg-[#B54708]';
@@ -85,17 +86,17 @@ export default function DwellRequestCard({
   }
 
   return (
-    <article className="p-5 bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs space-y-4 font-sans hover:shadow-card hover:border-[#059DB0]/40 transition-all duration-150">
+    <article className="p-5 bg-white border border-[#DCE5EA] rounded-[10px] shadow-xs space-y-4 font-sans hover:shadow-card hover:border-[#0B7780]/40 transition-all duration-150">
       {/* 1. Header: Title, Reference, and STEP Badge */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
-          <h3 className="text-[14.5px] font-semibold text-[#132238] tracking-tight leading-snug truncate">
+          <h3 className="text-[14.5px] font-semibold text-[#182B3D] tracking-tight leading-snug truncate">
             {subject}
           </h3>
-          <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
-            <span className="font-mono text-[#526377] font-medium">{refCode}</span>
+          <div className="flex items-center gap-2 text-[12px] text-[#637587]">
+            <span className="font-mono text-[#526679] font-medium">{refCode}</span>
             <span>·</span>
-            <span className="font-medium text-[#132238]">{requesterName}</span>
+            <span className="font-medium text-[#182B3D]">{requesterName}</span>
             <span>·</span>
             <span>{department}</span>
           </div>
@@ -105,14 +106,14 @@ export default function DwellRequestCard({
       </div>
 
       {/* 2. The Aging Block (Dwell Progress Bar) */}
-      <div className="space-y-1.5 bg-[#F7FAFC] p-3 rounded-[6px] border border-[#EAF0F4]">
+      <div className="space-y-1.5 bg-[#F6F8F9] p-3 rounded-[6px] border border-[#EAF0F2]">
         <div className="flex items-center justify-between text-[11.5px] font-medium">
           <span className={`font-semibold ${statusTextClass}`}>
-            Waiting {dwellText} on you
+            {dwellText === 'unavailable' ? 'Waiting time unavailable' : `Waiting ${dwellText} on you`}
           </span>
-          <span className="text-[#8190A0]">Target {targetDays} days</span>
+          <span className="text-[#637587]">Target {targetDays} days</span>
         </div>
-        <div className="w-full h-1.5 bg-[#DDE5EC] rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-[#DCE5EA] rounded-full overflow-hidden">
           <div
             className={`h-full ${barColor} transition-all duration-700 ease-out`}
             style={{ width: `${barWidth}%` }}
@@ -144,13 +145,13 @@ export default function DwellRequestCard({
                   isCompleted
                     ? 'bg-[#0F7548]'
                     : isCurrent
-                    ? 'bg-[#059DB0] ring-2 ring-[#DDF5F7]'
-                    : 'border border-[#DDE5EC] bg-transparent'
+                    ? 'bg-[#0B7780] ring-2 ring-[#D7ECEA]'
+                    : 'border border-[#DCE5EA] bg-transparent'
                 }`}
               />
             );
           })}
-          <span className="ml-2 text-[11.5px] font-medium text-[#526377]">
+          <span className="ml-2 text-[11.5px] font-medium text-[#526679]">
             {currentStageIndex === totalStages - 1
               ? 'You are the final approver'
               : `Stage ${currentStageIndex + 1} of ${totalStages}`}
@@ -161,14 +162,14 @@ export default function DwellRequestCard({
         <div className="flex items-center gap-2">
           <Link
             href={`/${tenantSubdomain}/requests/${requestId}`}
-            className="px-3 py-1.5 rounded-[6px] border border-[#DDE5EC] text-[#526377] hover:bg-[#F7FAFC] hover:text-[#012F6B] text-[12.5px] font-medium transition-colors"
+            className="px-3 py-1.5 rounded-[6px] border border-[#DCE5EA] text-[#526679] hover:bg-[#F6F8F9] hover:text-[#17324D] text-[12.5px] font-medium transition-colors"
           >
             Open
           </Link>
           {onApprove && (
             <button
               onClick={() => onApprove(requestId)}
-              className="px-3.5 py-1.5 rounded-[6px] bg-[#012F6B] hover:bg-[#033E79] text-white text-[12.5px] font-semibold shadow-xs transition-colors"
+              className="px-3.5 py-1.5 rounded-[6px] bg-[#17324D] hover:bg-[#224564] text-white text-[12.5px] font-semibold shadow-xs transition-colors"
             >
               Approve
             </button>

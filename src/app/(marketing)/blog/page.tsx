@@ -28,7 +28,7 @@ export default function BlogPage() {
           </span>
           
           <h1 className="text-[34px] sm:text-[52px] font-bold text-ink leading-[1.1] tracking-tight">
-            Notes on <span className="text-brand">[Decision Debt.]</span>
+            Notes on <span className="text-brand">decision debt.</span>
           </h1>
           
           <p className="text-[18px] text-muted max-w-2xl font-normal leading-[1.65]">
@@ -65,7 +65,7 @@ export default function BlogPage() {
               </div>
 
               <div className="pt-4 border-t border-border flex items-center justify-between">
-                <span className="text-[14px] font-mono text-muted">{post.author || 'SigmaGo'}</span>
+                <span className="text-[14px] font-mono text-muted">{post.author && post.author !== 'Unknown Author' ? post.author : 'SigmaGo editorial'}</span>
                 <Link 
                   href={`/blog/${post.slug}`}
                   className="inline-flex items-center gap-1.5 text-[15px] font-bold text-brand hover:text-brand-deep transition"

@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { collectPages } from '@/lib/intelligence/analytics/pagination';
 
 export interface PriorExceptionItem {
   requestId: string;
@@ -79,6 +80,7 @@ export async function getExceptionContext(
     .from('policies')
     .select('id, title, statement, reasoning, status')
     .eq('id', policyId)
+    .eq('tenant_id', tenantId)
     .single();
 
   if (!policy) {
@@ -94,9 +96,9 @@ export async function getExceptionContext(
   }
 
   // 4. Query prior EXCEPTION_TO references strictly for current ACTIVE policy version, in current calendar year, for FINALISED decisions
-  const currentYearStart = new Date(new Date().getFullYear(), 0, 1).toISOString();
+  const currentYearStart = new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1)).toISOString();
 
-  const { data: priorRefs } = await adminClient
+  const priorRefs = await collectPages<any>((from, to) => adminClient
     .from('decision_references')
     .select(`
       id, created_at, created_by,
@@ -106,12 +108,14 @@ export async function getExceptionContext(
     .eq('tenant_id', tenantId)
     .eq('to_policy_id', policyId)
     .eq('relationship', 'EXCEPTION_TO')
-    .gte('created_at', currentYearStart);
+    .order('id', { ascending: true })
+    .range(from, to));
 
-  // Filter only finalized/sealed prior exceptions
+  // Count finalized decisions in the year they were finalized, excluding the current request.
   const validPrior = (priorRefs || []).filter((r: any) => {
     const req = r.approval_requests;
-    return req && (req.finalized_at || req.checksum_sha256 || req.status === 'approved');
+    return req && req.id !== requestId && req.finalized_at &&
+      req.finalized_at >= currentYearStart && req.checksum_sha256;
   });
 
   const priorExceptions: PriorExceptionItem[] = validPrior.map((r: any) => ({

@@ -62,15 +62,15 @@ export default function AttentionView({
   // Empty state: Nothing requires attention right now
   if (totalAttentionItems === 0) {
     return (
-      <div className="p-8 rounded-[8px] bg-white border border-[#DDE5EC] text-center space-y-3">
+      <div className="p-8 rounded-[8px] bg-white border border-[#DCE5EA] text-center space-y-3">
         <div className="w-10 h-10 rounded-full bg-[#ECFDF3] text-[#027A48] flex items-center justify-center mx-auto">
           <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
         </div>
         <div className="space-y-1">
-          <h3 className="text-[16px] font-semibold text-[#132238]">
+          <h3 className="text-[16px] font-semibold text-[#182B3D]">
             Nothing requires attention right now
           </h3>
-          <p className="text-[13px] text-[#526377] max-w-md mx-auto leading-relaxed">
+          <p className="text-[13px] text-[#526679] max-w-md mx-auto leading-relaxed">
             Current decision behaviour is broadly consistent with the observed historical range. No policies are under elevated exception pressure.
           </p>
         </div>
@@ -81,16 +81,16 @@ export default function AttentionView({
   return (
     <div className="space-y-5">
       {/* Header Note */}
-      <div className="flex items-baseline justify-between border-b border-[#DDE5EC] pb-3">
+      <div className="flex items-baseline justify-between border-b border-[#DCE5EA] pb-3">
         <div>
-          <h3 className="text-[15px] font-semibold text-[#132238]">
+          <h3 className="text-[15px] font-semibold text-[#182B3D]">
             Areas Warranting Review
           </h3>
-          <p className="text-[12.5px] text-[#526377] mt-0.5">
+          <p className="text-[12.5px] text-[#526679] mt-0.5">
             Displaying only policies and decision streams currently outside normal historical thresholds.
           </p>
         </div>
-        <span className="text-[12px] text-[#8190A0]">
+        <span className="text-[12px] text-[#637587]">
           {totalAttentionItems} item{totalAttentionItems === 1 ? '' : 's'} identified
         </span>
       </div>
@@ -108,7 +108,7 @@ export default function AttentionView({
             <div
               key={`step-alert-${stepType}`}
               className={`p-4 rounded-[8px] bg-white border transition-colors ${
-                isAttention ? 'border-[#FECDCA] shadow-xs' : 'border-[#DDE5EC]'
+                isAttention ? 'border-[#FECDCA] shadow-xs' : 'border-[#DCE5EA]'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -127,33 +127,33 @@ export default function AttentionView({
                     )}
                     <span>{statusInfo.label}</span>
                   </span>
-                  <h4 className="text-[14.5px] font-semibold text-[#132238]">
+                  <h4 className="text-[14.5px] font-semibold text-[#182B3D]">
                     {stepType === 'EXCEPTION' ? 'Exception Decisions' : `${stepType} Decisions`}
                   </h4>
                 </div>
 
-                <div className="flex items-center gap-3 text-[12px] text-[#8190A0]">
-                  <span>Impact: <strong className="text-[#132238] font-medium">{isAttention ? 'High' : 'Moderate'}</strong></span>
+                <div className="flex items-center gap-3 text-[12px] text-[#637587]">
+                  <span>Impact: <strong className="text-[#182B3D] font-medium">{isAttention ? 'High' : 'Moderate'}</strong></span>
                   {downstreamCount > 0 && (
                     <span>
-                      Downstream reliance: <strong className="text-[#132238] font-medium">{downstreamCount} related decisions</strong>
+                      Downstream reliance: <strong className="text-[#182B3D] font-medium">{downstreamCount} related decisions</strong>
                     </span>
                   )}
                 </div>
               </div>
 
-              <p className="text-[13px] text-[#526377] mt-2 leading-relaxed">
+              <p className="text-[13px] text-[#526679] mt-2 leading-relaxed">
                 Exception activity is above the comparable historical range ({item.movementPp > 0 ? '+' : ''}{item.movementPp.toFixed(1)} pp vs {comparatorDisplayName}). This area warrants review to determine whether operating boundaries should be updated.
               </p>
 
-              <div className="mt-3 pt-2.5 border-t border-[#EAF0F4] flex items-center justify-between text-[12px]">
-                <span className="text-[#8190A0]">
+              <div className="mt-3 pt-2.5 border-t border-[#EAF0F2] flex items-center justify-between text-[12px]">
+                <span className="text-[#637587]">
                   Evidence: {item.currentCount} current decisions · {statusInfo.desc}
                 </span>
                 <button
                   type="button"
                   onClick={() => onOpenEvidence('step', stepType)}
-                  className="text-[12px] font-medium text-[#078899] hover:text-[#012F6B] inline-flex items-center gap-1"
+                  className="text-[12px] font-medium text-[#096A72] hover:text-[#17324D] inline-flex items-center gap-1"
                 >
                   <span>View evidence</span>
                   <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -172,7 +172,7 @@ export default function AttentionView({
             <div
               key={sig.id}
               className={`p-4 rounded-[8px] bg-white border transition-colors ${
-                isHigh ? 'border-[#FECDCA] shadow-xs' : 'border-[#DDE5EC]'
+                isHigh ? 'border-[#FECDCA] shadow-xs' : 'border-[#DCE5EA]'
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -191,34 +191,34 @@ export default function AttentionView({
                     )}
                     <span>{statusLabel}</span>
                   </span>
-                  <h4 className="text-[14.5px] font-semibold text-[#132238]">
+                  <h4 className="text-[14.5px] font-semibold text-[#182B3D]">
                     {sig.title.replace('Rising Exception Pressure on ', '')}
                   </h4>
                 </div>
 
-                <div className="flex items-center gap-3 text-[12px] text-[#8190A0]">
-                  <span>Impact: <strong className="text-[#132238] font-medium">{isHigh ? 'High' : 'Moderate'}</strong></span>
-                  <span>Confidence: <strong className="text-[#132238] font-medium capitalize">{sig.confidence.toLowerCase()}</strong></span>
+                <div className="flex items-center gap-3 text-[12px] text-[#637587]">
+                  <span>Impact: <strong className="text-[#182B3D] font-medium">{isHigh ? 'High' : 'Moderate'}</strong></span>
+                  <span>Evidence strength: <strong className="text-[#182B3D] font-medium capitalize">{sig.confidence.toLowerCase()}</strong></span>
                 </div>
               </div>
 
-              <div className="mt-2 text-[13px] text-[#526377] space-y-1 leading-relaxed">
+              <div className="mt-2 text-[13px] text-[#526679] space-y-1 leading-relaxed">
                 <p>
                   This policy is experiencing higher exception pressure. {sig.fact}
                 </p>
-                <p className="text-[12.5px] text-[#8190A0]">
+                <p className="text-[12.5px] text-[#637587]">
                   {sig.pattern}
                 </p>
               </div>
 
-              <div className="mt-3 pt-2.5 border-t border-[#EAF0F4] flex items-center justify-between text-[12px]">
-                <span className="text-[#8190A0]">
-                  Basis: {sig.confidenceBasis?.sampleSize || 0} decisions sampled across {sig.confidenceBasis?.comparablePeriodsCount || 1} comparable period(s)
+              <div className="mt-3 pt-2.5 border-t border-[#EAF0F2] flex items-center justify-between text-[12px]">
+                <span className="text-[#637587]">
+                  Observed samples: {sig.confidenceBasis?.sampleSize || 0} current and {sig.confidenceBasis?.baselineSampleSize || 0} comparator decisions · {sig.confidenceBasis?.comparablePeriodsCount || 0} comparable period(s)
                 </span>
                 <button
                   type="button"
                   onClick={() => onOpenEvidence('signal', sig.id)}
-                  className="text-[12px] font-medium text-[#078899] hover:text-[#012F6B] inline-flex items-center gap-1"
+                  className="text-[12px] font-medium text-[#096A72] hover:text-[#17324D] inline-flex items-center gap-1"
                 >
                   <span>View evidence</span>
                   <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />

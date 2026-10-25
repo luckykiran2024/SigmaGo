@@ -139,10 +139,10 @@ export default function WorkflowsConsole({
 
   const validateWorkflow = () => {
     if (!name.trim()) return "Workflow name is required.";
-    
+
     const filledSteps = steps.filter(s => s.userId);
     if (filledSteps.length === 0) return "At least one step is required.";
-    
+
     const hasDirect = filledSteps.some(s => s.role === 'GENERAL');
     if (!hasDirect) return "At least one Direct Approver is required.";
 
@@ -244,14 +244,14 @@ export default function WorkflowsConsole({
           {/* Header Action */}
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-bold text-[#012F6B]">Workflow Rules</h2>
-              <p className="text-xs text-[#526377] font-medium mt-0.5">
+              <h2 className="text-xl font-bold text-[#17324D]">Workflow Rules</h2>
+              <p className="text-xs text-[#526679] font-medium mt-0.5">
                 Manage governance routing slips, approval hierarchies, and policy bounds.
               </p>
             </div>
             <button
               onClick={startNewWorkflow}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#012F6B] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#033E79] transition"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#17324D] px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#224564] transition"
             >
               <Plus className="w-3.5 h-3.5" />
               New Workflow
@@ -260,10 +260,10 @@ export default function WorkflowsConsole({
 
           {/* Workflows List */}
           {workflows.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-[#DDE5EC] rounded-xl bg-white shadow-xs">
-              <Settings className="w-10 h-10 text-[#8190A0] mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-[#132238]">No workflows defined</h3>
-              <p className="text-xs text-[#526377] mt-1 max-w-sm mx-auto">
+            <div className="text-center py-12 border-2 border-dashed border-[#DCE5EA] rounded-xl bg-white shadow-xs">
+              <Settings className="w-10 h-10 text-[#637587] mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-[#182B3D]">No workflows defined</h3>
+              <p className="text-xs text-[#526679] mt-1 max-w-sm mx-auto">
                 Define reusable approval paths and associate them with request categories to simplify the approval process.
               </p>
             </div>
@@ -274,24 +274,24 @@ export default function WorkflowsConsole({
                 return (
                   <div
                     key={wf.id}
-                    className="bg-white border border-[#DDE5EC] rounded-xl p-5 shadow-xs hover:border-[#059DB0]/40 transition space-y-3.5"
+                    className="bg-white border border-[#DCE5EA] rounded-xl p-5 shadow-xs hover:border-[#0B7780]/40 transition space-y-3.5"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       {/* Left: Metadata */}
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-[#132238]">{wf.name}</h3>
+                          <h3 className="text-base font-bold text-[#182B3D]">{wf.name}</h3>
                           {wf.is_locked ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                               <Lock className="w-3 h-3 text-amber-700" /> Locked
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F1FBFC] text-[#012F6B] border border-[#DDE5EC]">
-                              <Unlock className="w-3 h-3 text-[#059DB0]" /> Editable
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#ECF6F5] text-[#17324D] border border-[#DCE5EA]">
+                              <Unlock className="w-3 h-3 text-[#0B7780]" /> Editable
                             </span>
                           )}
                           {(wf as any).base_step_type && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-[#07508B] border border-blue-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-[#315878] border border-blue-200">
                               {(wf as any).base_step_type}
                             </span>
                           )}
@@ -301,13 +301,13 @@ export default function WorkflowsConsole({
                             </span>
                           )}
                           {(wf as any).governing_policy_id && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#F1FBFC] text-[#078899] border border-[#DDE5EC]">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#ECF6F5] text-[#096A72] border border-[#DCE5EA]">
                               Policy Linked
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-[#526377] font-medium">
-                          Linked Category: <span className="text-[#012F6B] font-semibold">{categoryName}</span>
+                        <p className="text-xs text-[#526679] font-medium">
+                          Linked Category: <span className="text-[#17324D] font-semibold">{categoryName}</span>
                         </p>
                       </div>
 
@@ -315,12 +315,12 @@ export default function WorkflowsConsole({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => startEdit(wf)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] hover:text-[#012F6B] transition shadow-xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DCE5EA] rounded-lg text-xs font-semibold text-[#526679] bg-white hover:bg-[#F6F8F9] hover:text-[#17324D] transition shadow-xs"
                         >
-                          <Edit2 className="w-3 h-3 text-[#059DB0]" />
+                          <Edit2 className="w-3 h-3 text-[#0B7780]" />
                           Edit
                         </button>
-                        
+
                         {confirmDeleteId === wf.id ? (
                           <div className="flex items-center gap-1.5 animate-in fade-in duration-200">
                             <button
@@ -331,7 +331,7 @@ export default function WorkflowsConsole({
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
-                              className="px-2.5 py-1.5 border border-[#DDE5EC] text-[#526377] rounded-lg text-xs font-semibold hover:bg-[#F7FAFC] transition"
+                              className="px-2.5 py-1.5 border border-[#DCE5EA] text-[#526679] rounded-lg text-xs font-semibold hover:bg-[#F6F8F9] transition"
                             >
                               Cancel
                             </button>
@@ -339,7 +339,7 @@ export default function WorkflowsConsole({
                         ) : (
                           <button
                             onClick={() => setConfirmDeleteId(wf.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-rose-600 bg-white hover:bg-rose-50 hover:text-rose-700 transition shadow-xs"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DCE5EA] rounded-lg text-xs font-semibold text-rose-600 bg-white hover:bg-rose-50 hover:text-rose-700 transition shadow-xs"
                           >
                             <Trash2 className="w-3 h-3" />
                             Delete
@@ -349,28 +349,28 @@ export default function WorkflowsConsole({
                     </div>
 
                     {/* Flowchart Visualization */}
-                    <div className="bg-[#F7FAFC] border border-[#DDE5EC] rounded-lg p-3.5 overflow-x-auto">
+                    <div className="bg-[#F6F8F9] border border-[#DCE5EA] rounded-lg p-3.5 overflow-x-auto">
                       <div className="flex items-center gap-2.5 min-w-max py-0.5">
                         {wf.steps.map((step, idx) => {
                           const user = activeUsers.find(u => u.id === step.userId);
-                          const roleLabel = 
+                          const roleLabel =
                             step.role === 'GENERAL' ? 'Direct' :
                             step.role === 'PARALLEL' ? 'Parallel' : 'FYI';
-                          const roleBg = 
-                            step.role === 'GENERAL' ? 'bg-[#F1FBFC] border-[#DDE5EC] text-[#012F6B]' :
+                          const roleBg =
+                            step.role === 'GENERAL' ? 'bg-[#ECF6F5] border-[#DCE5EA] text-[#17324D]' :
                             step.role === 'PARALLEL' ? 'bg-purple-50 border-purple-200 text-purple-800' :
-                            'bg-gray-50 border-gray-200 text-[#526377]';
+                            'bg-gray-50 border-gray-200 text-[#526679]';
 
                           return (
                             <div key={idx} className="flex items-center gap-2.5">
                               {idx > 0 && (
-                                <div className="text-[#8190A0] text-xs font-bold select-none">➔</div>
+                                <div className="text-[#637587] text-xs font-bold select-none">➔</div>
                               )}
-                              <div className="flex flex-col border border-[#DDE5EC] rounded-lg bg-white px-3 py-1.5 shadow-2xs">
-                                <span className="text-xs font-bold text-[#132238] truncate max-w-[150px]">
+                              <div className="flex flex-col border border-[#DCE5EA] rounded-lg bg-white px-3 py-1.5 shadow-2xs">
+                                <span className="text-xs font-bold text-[#182B3D] truncate max-w-[150px]">
                                   {user ? user.name : 'Unknown User'}
                                 </span>
-                                <span className="text-[11px] text-[#8190A0] truncate max-w-[150px]">
+                                <span className="text-[11px] text-[#637587] truncate max-w-[150px]">
                                   {user?.designation || 'Staff'}
                                 </span>
                                 <span className={`mt-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded text-center ${roleBg}`}>
@@ -390,12 +390,12 @@ export default function WorkflowsConsole({
         </div>
       ) : (
         /* Workflow Edit / Create Interface */
-        <form onSubmit={handleSave} className="bg-white border border-[#DDE5EC] rounded-xl p-6 sm:p-7 shadow-xs space-y-6">
-          <div className="border-b border-[#DDE5EC] pb-4">
-            <h2 className="text-xl font-bold text-[#012F6B]">
+        <form onSubmit={handleSave} className="bg-white border border-[#DCE5EA] rounded-xl p-6 sm:p-7 shadow-xs space-y-6">
+          <div className="border-b border-[#DCE5EA] pb-4">
+            <h2 className="text-xl font-bold text-[#17324D]">
               {editingId ? 'Edit Workflow Template' : 'Create Approval Workflow'}
             </h2>
-            <p className="text-xs text-[#526377] mt-1 font-medium">
+            <p className="text-xs text-[#526679] mt-1 font-medium">
               Design a template workflow. Requests in the selected category will automatically inherit this approval path.
             </p>
           </div>
@@ -403,7 +403,7 @@ export default function WorkflowsConsole({
           {/* Name & Category Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1">
-              <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+              <label htmlFor="name" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 Workflow Name
               </label>
               <input
@@ -413,19 +413,19 @@ export default function WorkflowsConsole({
                 onChange={e => setName(e.target.value)}
                 required
                 placeholder="e.g. Budget Procurement Path"
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+              <label htmlFor="category" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 Category Association
               </label>
               <select
                 id="category"
                 value={categoryId}
                 onChange={e => setCategoryId(e.target.value)}
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
               >
                 <option value="">No Category (Stand-alone template)</option>
                 {categories.map(cat => (
@@ -435,14 +435,14 @@ export default function WorkflowsConsole({
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="baseStepType" className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+              <label htmlFor="baseStepType" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 Base STEP Classification
               </label>
               <select
                 id="baseStepType"
                 value={baseStepType}
                 onChange={e => setBaseStepType(e.target.value as any)}
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
               >
                 <option value="STRUCTURAL">Structural (Policy & Org Governance)</option>
                 <option value="TRANSACTIONAL">Transactional (Routine Operational Flow)</option>
@@ -452,7 +452,7 @@ export default function WorkflowsConsole({
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="defaultSlaHours" className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+              <label htmlFor="defaultSlaHours" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 Default SLA Target (Hours)
               </label>
               <input
@@ -463,19 +463,19 @@ export default function WorkflowsConsole({
                 value={defaultSlaHours}
                 onChange={e => setDefaultSlaHours(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
                 placeholder="e.g. 24 (Default target turnaround)"
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="governingPolicy" className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+              <label htmlFor="governingPolicy" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 Governing Policy Association
               </label>
               <select
                 id="governingPolicy"
                 value={governingPolicyId}
                 onChange={e => setGoverningPolicyId(e.target.value)}
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
               >
                 <option value="">No Governing Policy (General Authority)</option>
                 {policies.map(p => (
@@ -487,9 +487,9 @@ export default function WorkflowsConsole({
             </div>
 
             <div className="space-y-1 md:col-span-2">
-              <label htmlFor="rulesJson" className="block text-xs font-bold uppercase tracking-wider text-[#132238] flex items-center justify-between">
+              <label htmlFor="rulesJson" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D] flex items-center justify-between">
                 <span>Classification & Exception Rules (JSON Configuration)</span>
-                <span className="text-[11px] text-[#8190A0] font-normal normal-case">Optional automated routing rules</span>
+                <span className="text-[11px] text-[#637587] font-normal normal-case">Optional automated routing rules</span>
               </label>
               <textarea
                 id="rulesJson"
@@ -497,14 +497,14 @@ export default function WorkflowsConsole({
                 value={rulesJsonStr}
                 onChange={e => setRulesJsonStr(e.target.value)}
                 placeholder='e.g. { "rules": [{ "field": "amount", "operator": "GT", "threshold": 50000, "escalate_to_role": "FINANCE" }] }'
-                className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition"
+                className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition"
               />
             </div>
           </div>
 
           {/* Locked vs Editable Checkboxes */}
           <div className="space-y-2.5 pt-1">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Governance Lock Policy
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -512,22 +512,22 @@ export default function WorkflowsConsole({
               <div
                 onClick={() => setIsLocked(false)}
                 className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
-                  !isLocked 
-                    ? 'border-[#059DB0] bg-[#F1FBFC] shadow-xs' 
-                    : 'border-[#DDE5EC] bg-white hover:border-[#8190A0]'
+                  !isLocked
+                    ? 'border-[#0B7780] bg-[#ECF6F5] shadow-xs'
+                    : 'border-[#DCE5EA] bg-white hover:border-[#637587]'
                 }`}
               >
                 <div className={`mt-0.5 rounded-full w-4 h-4 border flex items-center justify-center ${
-                  !isLocked ? 'border-[#059DB0] bg-[#059DB0] text-white' : 'border-[#DDE5EC]'
+                  !isLocked ? 'border-[#0B7780] bg-[#0B7780] text-white' : 'border-[#DCE5EA]'
                 }`}>
                   {!isLocked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-[#132238] flex items-center gap-1.5">
-                    <Unlock className="w-3.5 h-3.5 text-[#059DB0]" />
+                  <div className="text-xs font-bold text-[#182B3D] flex items-center gap-1.5">
+                    <Unlock className="w-3.5 h-3.5 text-[#0B7780]" />
                     Editable by Requesters
                   </div>
-                  <p className="text-[11px] text-[#526377] font-medium leading-relaxed">
+                  <p className="text-[11px] text-[#526679] font-medium leading-relaxed">
                     Pre-fills the approval path builder. Requesters are allowed to add, remove, or reorder steps as needed.
                   </p>
                 </div>
@@ -537,22 +537,22 @@ export default function WorkflowsConsole({
               <div
                 onClick={() => setIsLocked(true)}
                 className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition ${
-                  isLocked 
-                    ? 'border-[#059DB0] bg-[#F1FBFC] shadow-xs' 
-                    : 'border-[#DDE5EC] bg-white hover:border-[#8190A0]'
+                  isLocked
+                    ? 'border-[#0B7780] bg-[#ECF6F5] shadow-xs'
+                    : 'border-[#DCE5EA] bg-white hover:border-[#637587]'
                 }`}
               >
                 <div className={`mt-0.5 rounded-full w-4 h-4 border flex items-center justify-center ${
-                  isLocked ? 'border-[#059DB0] bg-[#059DB0] text-white' : 'border-[#DDE5EC]'
+                  isLocked ? 'border-[#0B7780] bg-[#0B7780] text-white' : 'border-[#DCE5EA]'
                 }`}>
                   {isLocked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-[#132238] flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-[#182B3D] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-amber-600" />
                     Locked & Enforced
                   </div>
-                  <p className="text-[11px] text-[#526377] font-medium leading-relaxed">
+                  <p className="text-[11px] text-[#526679] font-medium leading-relaxed">
                     Forces the requester to submit using this exact workflow path. Reordering, adding, or deleting steps is locked.
                   </p>
                 </div>
@@ -561,18 +561,18 @@ export default function WorkflowsConsole({
           </div>
 
           {/* Steps Builder */}
-          <div className="space-y-3.5 border-t border-[#DDE5EC] pt-5">
+          <div className="space-y-3.5 border-t border-[#DCE5EA] pt-5">
             <div className="flex items-center justify-between pb-1">
               <div>
-                <h3 className="text-sm font-bold text-[#012F6B]">Approval Steps Definition</h3>
-                <p className="text-xs text-[#526377] mt-0.5 font-medium">
+                <h3 className="text-sm font-bold text-[#17324D]">Approval Steps Definition</h3>
+                <p className="text-xs text-[#526679] mt-0.5 font-medium">
                   Specify the sequence of users and roles that compose this workflow template.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={addStepRow}
-                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#012F6B]/40 rounded-lg text-xs font-bold text-[#012F6B] hover:bg-[#F1FBFC] hover:border-[#059DB0] transition"
+                className="inline-flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#17324D]/40 rounded-lg text-xs font-bold text-[#17324D] hover:bg-[#ECF6F5] hover:border-[#0B7780] transition"
               >
                 <Plus className="w-3 h-3" />
                 Add Approver
@@ -581,7 +581,7 @@ export default function WorkflowsConsole({
 
             <div className="space-y-2.5">
               {/* Headers for larger viewports */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-3 text-[11px] font-bold text-[#526377] uppercase tracking-wider">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-3 text-[11px] font-bold text-[#526679] uppercase tracking-wider">
                 <div className="col-span-6">Approver</div>
                 <div className="col-span-4">Role</div>
                 <div className="col-span-2 text-center">Actions</div>
@@ -591,18 +591,18 @@ export default function WorkflowsConsole({
                 {steps.map((row, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-lg border border-[#DDE5EC] bg-[#F7FAFC]/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:bg-white hover:border-[#059DB0]/40 transition"
+                    className="p-3 rounded-lg border border-[#DCE5EA] bg-[#F6F8F9]/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:bg-white hover:border-[#0B7780]/40 transition"
                   >
                     {/* Approver Select Dropdown */}
                     <div className="col-span-1 md:col-span-6">
-                      <label className="block md:hidden text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">
+                      <label className="block md:hidden text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">
                         Approver
                       </label>
                       <select
                         value={row.userId}
                         onChange={e => updateStep(idx, 'userId', e.target.value)}
                         required
-                        className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                        className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
                       >
                         <option value="">Choose a user...</option>
                         {activeUsers.map(u => (
@@ -615,14 +615,14 @@ export default function WorkflowsConsole({
 
                     {/* Role Selector */}
                     <div className="col-span-1 md:col-span-4">
-                      <label className="block md:hidden text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">
+                      <label className="block md:hidden text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">
                         Role
                       </label>
                       <select
                         value={row.role}
                         onChange={e => updateStep(idx, 'role', e.target.value)}
                         required
-                        className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium"
+                        className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium"
                       >
                         <option value="GENERAL">Direct Approver</option>
                         <option value="PARALLEL">Parallel Approver</option>
@@ -636,7 +636,7 @@ export default function WorkflowsConsole({
                         type="button"
                         onClick={() => moveStepUp(idx)}
                         disabled={idx === 0}
-                        className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-[#F3F6F8]"
+                        className="text-[#637587] hover:text-[#17324D] disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-[#EEF2F4]"
                         title="Move Up"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
@@ -645,7 +645,7 @@ export default function WorkflowsConsole({
                         type="button"
                         onClick={() => moveStepDown(idx)}
                         disabled={idx === steps.length - 1}
-                        className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-[#F3F6F8]"
+                        className="text-[#637587] hover:text-[#17324D] disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-[#EEF2F4]"
                         title="Move Down"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -654,7 +654,7 @@ export default function WorkflowsConsole({
                         type="button"
                         onClick={() => removeStepRow(idx)}
                         disabled={steps.length <= 1}
-                        className="text-[#8190A0] hover:text-rose-600 disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-rose-50"
+                        className="text-[#637587] hover:text-rose-600 disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-rose-50"
                         title="Remove Row"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -667,18 +667,18 @@ export default function WorkflowsConsole({
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 border-t border-[#DDE5EC] pt-5">
+          <div className="flex items-center justify-end gap-3 border-t border-[#DCE5EA] pt-5">
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="inline-flex items-center justify-center px-4 py-2 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] hover:text-[#012F6B] focus:outline-none transition shadow-xs"
+              className="inline-flex items-center justify-center px-4 py-2 border border-[#DCE5EA] rounded-lg text-xs font-semibold text-[#526679] bg-white hover:bg-[#F6F8F9] hover:text-[#17324D] focus:outline-none transition shadow-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center justify-center rounded-lg bg-[#012F6B] hover:bg-[#033E79] px-5 py-2 text-xs font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-[#059DB0] disabled:opacity-50 transition"
+              className="inline-flex items-center justify-center rounded-lg bg-[#17324D] hover:bg-[#224564] px-5 py-2 text-xs font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780] disabled:opacity-50 transition"
             >
               {isSaving ? 'Saving...' : 'Save Workflow'}
             </button>

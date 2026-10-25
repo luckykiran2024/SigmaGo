@@ -6,29 +6,29 @@ const PILOT_EMAIL = 'pilot@sigmago.co';
 const mailtoLink = `mailto:${PILOT_EMAIL}?subject=SigmaGo%20pilot%20conversation`;
 
 export const metadata: Metadata = {
-  title: "SigmaGo — The system of record for company decisions",
-  description: "Every rupee is accounted for. Every decision should be too. SigmaGo keeps the books for your decisions — who approved what, in what order, on what reasoning.",
+  title: "SigmaGo — Decision governance for modern enterprises",
+  description: "Bring approvals, rationale, policy context, and evidence into one governed decision record. Trace decisions today and defend them years later.",
 };
 
 export default function MarketingLandingPage() {
   return (
-    <div className="bg-white text-ink font-sans antialiased selection:bg-brand/20">
+    <div className="bg-white text-ink font-sans antialiased selection:bg-accent/20">
       
 
       <main className="flex-grow">
         {/* 2. HERO */}
-        <section className="pt-20 pb-16 px-6 text-center max-w-[800px] mx-auto space-y-6">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-[20px] bg-brand/10 text-brand border border-brand/20 text-[14px] font-semibold">
-            <span>For companies drowning in Decision Debt</span>
+        <section className="relative pt-24 pb-16 px-6 text-center overflow-hidden bg-[radial-gradient(circle_at_50%_0%,#ECF6F5_0%,#FFFFFF_56%)]">
+          <div className="max-w-[840px] mx-auto space-y-7">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-accent-deep border border-[#D7ECEA] text-[12px] font-semibold uppercase tracking-[0.13em] shadow-xs">
+            <span>Decision governance for complex organisations</span>
           </div>
 
-          <h1 className="text-[34px] sm:text-[52px] font-bold leading-[1.1] tracking-[-0.02em] text-ink">
-            Every rupee is accounted for.<br />
-            Every <span className="text-brand">decision</span> should be too.
+          <h1 className="text-[40px] sm:text-[58px] font-semibold leading-[1.08] tracking-[-0.045em] text-ink text-balance">
+            A definitive record for every <span className="text-brand">consequential decision.</span>
           </h1>
 
-          <p className="text-[18px] text-muted leading-[1.65] max-w-[540px] mx-auto font-normal">
-            Where companies keep books for their money, SigmaGo keeps the books for their decisions. Capture who approved what, in what order, on what reasoning — sealed and provable years later.
+          <p className="text-[18px] text-ink2 leading-[1.7] max-w-[650px] mx-auto font-normal">
+            Bring approvals, rationale, policy context, and evidence into one governed record. Make decisions easier to review today and defensible years later.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
@@ -46,6 +46,10 @@ export default function MarketingLandingPage() {
               See how it works
             </a>
           </div>
+          <p className="text-[12px] font-medium uppercase tracking-[0.1em] text-muted pt-3">
+            Policy-aware workflows <span className="mx-2 text-accent">·</span> Traceable approvals <span className="mx-2 text-accent">·</span> Tamper-evident records
+          </p>
+          </div>
         </section>
 
         {/* 3. PRODUCT VISUAL */}
@@ -58,9 +62,9 @@ export default function MarketingLandingPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
                 <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
               </div>
-              <span className="text-white/70 font-medium">sigmago.co/meridian/decisions</span>
+              <span className="text-white/70 font-medium">DECISION REGISTER · ILLUSTRATIVE WORKSPACE</span>
               <span className="text-emerald-400 font-bold flex items-center gap-1 text-[13px]">
-                <CheckCircle2 className="w-3.5 h-3.5" /> SECURED
+                <CheckCircle2 className="w-3.5 h-3.5" /> CONTROLLED
               </span>
             </div>
 
@@ -124,11 +128,11 @@ export default function MarketingLandingPage() {
           <div className="max-w-[1140px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <span className="text-[14px] font-bold uppercase tracking-wider text-brand font-mono">THE PROBLEM</span>
-              <h2 className="text-[34px] font-bold leading-[1.2] text-ink">
-                Your decisions live in inboxes, threads, and the memory of people who leave.
+              <h2 className="text-[34px] font-semibold leading-[1.2] tracking-[-0.025em] text-ink">
+                Decisions are made everywhere. Accountability is scattered.
               </h2>
               <p className="text-muted leading-[1.65] text-[18px]">
-                When an executive leaves or a dispute arises eighteen months later, companies spend weeks on email archaeology trying to reconstruct why a decision was made.
+                When context lives in inboxes and conversations, teams lose the reasoning, authority, and evidence behind consequential calls.
               </p>
 
               <div className="space-y-5 pt-2">
@@ -137,9 +141,9 @@ export default function MarketingLandingPage() {
                     1
                   </div>
                   <div>
-                    <h4 className="text-[18px] font-bold text-ink">Email archaeology</h4>
+                    <h4 className="text-[18px] font-semibold text-ink">Lost context</h4>
                     <p className="text-[15px] text-muted leading-relaxed mt-0.5">
-                      Searching Slack channels and inbox archives for weeks trying to figure out who agreed to what terms.
+                      Reconstructing who agreed to what across disconnected threads and inboxes.
                     </p>
                   </div>
                 </div>
@@ -149,9 +153,9 @@ export default function MarketingLandingPage() {
                     2
                   </div>
                   <div>
-                    <h4 className="text-[18px] font-bold text-ink">Re-debating settled calls</h4>
+                    <h4 className="text-[18px] font-semibold text-ink">Repeated decisions</h4>
                     <p className="text-[15px] text-muted leading-relaxed mt-0.5">
-                      Every new leader re-litigates decisions made six months ago because no institutional record exists.
+                      Teams revisit settled questions because the original rationale is difficult to find.
                     </p>
                   </div>
                 </div>
@@ -161,9 +165,9 @@ export default function MarketingLandingPage() {
                     3
                   </div>
                   <div>
-                    <h4 className="text-[18px] font-bold text-ink">Unmitigated decision risk</h4>
+                    <h4 className="text-[18px] font-semibold text-ink">Unclear accountability</h4>
                     <p className="text-[15px] text-muted leading-relaxed mt-0.5">
-                      Carrying personal or organizational risk when audits, disputes, or diligence reviews challenge prior calls.
+                      Audits and reviews become slower when approval authority and evidence are dispersed.
                     </p>
                   </div>
                 </div>
@@ -195,7 +199,7 @@ export default function MarketingLandingPage() {
               </div>
 
               <div className="pt-2 text-center text-[14px] font-mono text-muted">
-                The decision happened. The record didn't survive.
+                The decision happened. The evidence did not stay together.
               </div>
             </div>
           </div>
@@ -206,9 +210,9 @@ export default function MarketingLandingPage() {
           <div className="max-w-[1140px] mx-auto space-y-12">
             <div className="text-center space-y-3 max-w-xl mx-auto">
               <span className="text-[14px] font-bold uppercase tracking-wider text-brand font-mono">THE FRAMEWORK</span>
-              <h2 className="text-[34px] font-bold text-ink tracking-tight">Record. Retrieve. Rely. Reuse.</h2>
+              <h2 className="text-[34px] font-semibold text-ink tracking-[-0.025em]">From approval to institutional memory.</h2>
               <p className="text-muted text-[18px] leading-relaxed">
-                The four-step lifecycle that turns chaotic conversations into provable organizational assets.
+                A structured lifecycle for decisions that need to stand up to scrutiny.
               </p>
             </div>
 
@@ -323,10 +327,10 @@ export default function MarketingLandingPage() {
                 <div className="border border-dashed border-border rounded-[6px] p-3.5 bg-section-alt space-y-1">
                   <div className="flex items-center gap-1.5 text-[12px] font-bold text-muted font-mono">
                     <Shield className="w-3.5 h-3.5 text-brand" />
-                    <span>SHA-256 INTEGRITY SEAL</span>
+                    <span>ILLUSTRATIVE INTEGRITY SEAL</span>
                   </div>
                   <div className="font-mono text-[14px] text-muted break-all">
-                    e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                    13592b6c39016bc643cebdafcd31d5120d6665479af95c9c16a2cfbc20bb9694
                   </div>
                 </div>
 
@@ -336,8 +340,8 @@ export default function MarketingLandingPage() {
                       <Check className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="font-mono font-bold text-ink">SigmaGo Verified</div>
-                      <div className="text-[12px] text-muted font-mono">Tamper-evident record</div>
+                      <div className="font-mono font-bold text-ink">Example certificate</div>
+                      <div className="text-[12px] text-muted font-mono">Illustrative record</div>
                     </div>
                   </div>
                 </div>
@@ -364,7 +368,7 @@ export default function MarketingLandingPage() {
             <div className="space-y-1">
               <div className="text-[40px] font-bold text-brand font-mono">1</div>
               <div className="text-[15px] font-medium text-muted max-w-[240px] mx-auto">
-                Tamper-evident Approval Certificate for complete governance peace of mind.
+                Consolidated approval certificate with a traceable decision history.
               </div>
             </div>
           </div>
@@ -376,48 +380,48 @@ export default function MarketingLandingPage() {
             <div className="text-center space-y-3 max-w-xl mx-auto">
               <span className="text-[14px] font-bold uppercase tracking-wider text-brand font-mono">FOR YOUR TEAM</span>
               <h2 className="text-[34px] font-bold text-ink tracking-tight">
-                Four people in every company, one decision object.
+                One decision record. Clear accountability across teams.
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               <div className="bg-white border border-border rounded-[8px] p-6 space-y-3">
                 <div className="w-[36px] h-[36px] rounded-[6px] bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
-                  👔
+                  <Shield className="w-5 h-5" />
                 </div>
-                <h4 className="text-[18px] font-bold text-ink">Leader</h4>
+                <h4 className="text-[18px] font-bold text-ink">Leadership</h4>
                 <p className="text-[15px] text-muted leading-relaxed">
-                  "Inbox stops being your memory."
+                  See ownership, status, and rationale in one reliable view.
                 </p>
               </div>
 
               <div className="bg-white border border-border rounded-[8px] p-6 space-y-3">
                 <div className="w-[36px] h-[36px] rounded-[6px] bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
-                  🏃
+                  <Check className="w-5 h-5" />
                 </div>
-                <h4 className="text-[18px] font-bold text-ink">Employee</h4>
+                <h4 className="text-[18px] font-bold text-ink">Decision owners</h4>
                 <p className="text-[15px] text-muted leading-relaxed">
-                  "Facts, not vibes."
+                  Submit complete requests and move approvals forward with clarity.
                 </p>
               </div>
 
               <div className="bg-white border border-border rounded-[8px] p-6 space-y-3">
                 <div className="w-[36px] h-[36px] rounded-[6px] bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
-                  ⚖️
+                  <ArrowRight className="w-5 h-5" />
                 </div>
-                <h4 className="text-[18px] font-bold text-ink">Cross-functions</h4>
+                <h4 className="text-[18px] font-bold text-ink">Risk and compliance</h4>
                 <p className="text-[15px] text-muted leading-relaxed">
-                  "Stop carrying others' risk."
+                  Review evidence, exceptions, and policy context in one place.
                 </p>
               </div>
 
               <div className="bg-white border border-border rounded-[8px] p-6 space-y-3">
                 <div className="w-[36px] h-[36px] rounded-[6px] bg-brand/10 text-brand flex items-center justify-center font-bold text-lg">
-                  🚀
+                  <Shield className="w-5 h-5" />
                 </div>
-                <h4 className="text-[18px] font-bold text-ink">Founder</h4>
+                <h4 className="text-[18px] font-bold text-ink">Operations</h4>
                 <p className="text-[15px] text-muted leading-relaxed">
-                  "Letting go without losing grip."
+                  Keep work moving while preserving a dependable audit trail.
                 </p>
               </div>
             </div>
@@ -428,10 +432,10 @@ export default function MarketingLandingPage() {
         <section className="py-20 px-6 border-t border-border bg-section-alt">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <h2 className="text-[34px] font-bold text-ink tracking-tight">
-              Start keeping the other books.
+              Make every decision defensible.
             </h2>
             <p className="text-muted text-[18px] max-w-lg mx-auto leading-relaxed">
-              Give your company's decisions the same permanence, clarity, and proof that financial transactions have enjoyed for 500 years.
+              Bring accountability, context, and evidence together in a decision record your teams can trust.
             </p>
             <div>
               <a

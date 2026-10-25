@@ -21,9 +21,9 @@ export interface PolicyHealthAssessment {
 export type PolicyHealthTransition = {
   from: 'HEALTHY' | 'WATCH' | 'DRIFTING';
   to: 'HEALTHY' | 'WATCH' | 'DRIFTING' | 'REVISED' | 'RETIRED';
-  observedProbability: number;
+  observedRate: number;
   sampleSize: number;
-  confidenceLabel?: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
+  evidenceLevel?: 'LOW' | 'DEVELOPING' | 'RELIABLE' | 'HIGH';
   policyId?: string;
   fromPeriodKey?: string;
   toPeriodKey?: string;
