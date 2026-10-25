@@ -296,6 +296,9 @@ export default function AdminSettingsForm({
             <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
               Repeat reminder interval (Hours)
             </label>
+            <p className="text-xs text-slate-500">
+              Overdue approvals are scanned once daily; this interval is the minimum time between reminders.
+            </p>
             <input
               type="number"
               value={reminderInterval}
