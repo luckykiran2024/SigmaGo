@@ -48,20 +48,20 @@ export function validateTenantAccess(userTenantId: string | null | undefined, ta
 }
 
 /**
- * Creates a tenant-scoped Supabase client that guarantees tenant isolation in application space.
- * Prevents unintentional cross-tenant leakage even when service-role credentials are used.
+ * Creates a restricted tenant-scoped data client for known tenant_id tables.
+ * The caller context must come from a verified server session. This is an extra
+ * application guard; database RLS and authorization remain authoritative.
  */
 export function getTenantClient(
   targetTenantId: string,
-  userContext?: UserTenantContext
+  userContext: UserTenantContext
 ): SupabaseClient {
   if (!targetTenantId || typeof targetTenantId !== 'string') {
     throw new Error('getTenantClient requires a valid non-empty targetTenantId');
   }
 
-  if (userContext) {
-    validateTenantAccess(userContext.tenantId, targetTenantId);
-  }
+  if (!userContext?.id) throw new CrossTenantAccessError('Verified user context is required');
+  validateTenantAccess(userContext.tenantId, targetTenantId);
 
   // Wrap adminClient with a Proxy intercepting .from(tableName)
   return new Proxy(adminClient, {
@@ -69,10 +69,8 @@ export function getTenantClient(
       if (prop === 'from') {
         return (tableName: string) => {
           const queryBuilder = (target as any).from(tableName);
-          const isMultiTenant = MULTI_TENANT_TABLES.has(tableName);
-
-          if (!isMultiTenant) {
-            return queryBuilder;
+          if (!MULTI_TENANT_TABLES.has(tableName)) {
+            throw new CrossTenantAccessError(`Table ${tableName} is not available through the tenant client`);
           }
 
           // Proxy the query builder to automatically scope selects, updates, deletes, and inserts
@@ -105,9 +103,13 @@ export function getTenantClient(
                 };
               }
 
+              if (qbProp === 'upsert') {
+                throw new CrossTenantAccessError('Upsert requires a tenant-aware conflict key and is not available through the tenant client');
+              }
+
               if (qbProp === 'update') {
                 return (values: any, ...options: any[]) => {
-                  const updateResult = qbTarget.update(values, ...options);
+                  const updateResult = qbTarget.update({ ...values, tenant_id: targetTenantId }, ...options);
                   return updateResult.eq('tenant_id', targetTenantId);
                 };
               }
@@ -119,28 +121,20 @@ export function getTenantClient(
                 };
               }
 
-              const orig = qbTarget[qbProp];
-              if (typeof orig === 'function') {
-                return orig.bind(qbTarget);
-              }
-              return orig;
+              throw new CrossTenantAccessError(`Unscoped query operation ${String(qbProp)} is not available`);
             },
           });
         };
       }
 
-      const value = (target as any)[prop];
-      if (typeof value === 'function') {
-        return value.bind(target);
-      }
-      return value;
+      throw new CrossTenantAccessError(`Unscoped service operation ${String(prop)} is not available`);
     },
   });
 }
 
 /**
- * Returns an elevated tenant-scoped admin client for workspace administrators.
- * Requires caller identity verification with admin or owner role.
+ * Returns a restricted tenant client for a verified administrator context.
+ * Callers must obtain actorContext from server-side authentication, not input.
  */
 export function getTenantAdminClient(
   targetTenantId: string,

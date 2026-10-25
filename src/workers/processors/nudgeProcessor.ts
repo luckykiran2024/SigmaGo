@@ -78,10 +78,10 @@ export async function processApprovalNudgeJob(data: NudgeJobPayload): Promise<vo
       const subject = `[REMINDER] Action needed on decision request`;
       const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
-          <h2 style="color: #012F6B; font-weight: bold; margin-top: 0;">Decision Approval Reminder</h2>
-          <p style="font-size: 14px; color: #526377;">A decision request is currently awaiting your review and approval in SigmaGo.</p>
+          <h2 style="color: #17324D; font-weight: bold; margin-top: 0;">Decision Approval Reminder</h2>
+          <p style="font-size: 14px; color: #526679;">A decision request is currently awaiting your review and approval in SigmaGo.</p>
           <div style="margin: 25px 0;">
-            <a href="${viewUrl}" style="background-color: #012F6B; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Open Decision Request</a>
+            <a href="${viewUrl}" style="background-color: #17324D; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Open Decision Request</a>
           </div>
         </div>
       `;

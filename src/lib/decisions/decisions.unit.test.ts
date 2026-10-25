@@ -181,7 +181,7 @@ describe('Build Prompt #13 — The Decision Record & Acceptance Criteria', () =>
     const registerPath = path.resolve(__dirname, '../../app/[tenant]/decisions/DecisionRecordRegister.tsx');
     const registerContent = fs.readFileSync(registerPath, 'utf8');
 
-    expect(registerContent).toContain('bg-[#C9A227]');
+    expect(registerContent).toContain('bg-[#0B7780]');
     expect(registerContent).toContain('border-2 border-[#98A2B3]');
     expect(registerContent).toContain('text-[#B42318]');
   });

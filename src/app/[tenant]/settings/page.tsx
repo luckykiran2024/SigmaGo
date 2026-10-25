@@ -31,11 +31,11 @@ export default async function PersonalSettingsPage({
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="border-b border-[#DDE5EC] pb-5 max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold tracking-tight text-[#132238] font-sans">
+      <div className="border-b border-[#DCE5EA] pb-5 max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold tracking-tight text-[#182B3D] font-sans">
           Personal Settings
         </h1>
-        <p className="mt-1 text-xs text-[#526377] font-medium">
+        <p className="mt-1 text-xs text-[#526679] font-medium">
           Manage your personal profile, identity credentials, and system notification preferences.
         </p>
       </div>

@@ -14,7 +14,7 @@ export async function createCategoryAction(
     max_validity_days?: number | null;
     review_only?: boolean;
   }
-): Promise<void> {
+): Promise<{ id: string; name: string; default_sla_hours: number | null }> {
   // C1 & C2 Fix: Authenticate, verify tenant membership, and derive tenantId server-side
   const { tenantId } = await requireTenantAdmin(tenantSubdomain);
 
@@ -32,12 +32,14 @@ export async function createCategoryAction(
     if (validityData.review_only !== undefined) insertPayload.review_only = validityData.review_only;
   }
 
-  const { error } = await adminClient
+  const { data: created, error } = await adminClient
     .from('categories')
     .insert({
       tenant_id: tenantId,
       ...insertPayload
-    });
+    })
+    .select('id, name, default_sla_hours')
+    .single();
 
   if (error) {
     console.error("Error creating category:", error);
@@ -45,4 +47,5 @@ export async function createCategoryAction(
   }
 
   revalidatePath(`/${tenantSubdomain}/admin/categories`);
+  return created;
 }

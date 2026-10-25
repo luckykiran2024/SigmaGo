@@ -18,12 +18,12 @@ export default function LifecycleStrip({ request }: LifecycleStripProps) {
   ];
 
   return (
-    <div className="p-5 bg-white border border-[#DDE5EC] rounded-[10px] shadow-xs space-y-3.5 font-sans">
-      <div className="flex items-center justify-between pb-2 border-b border-[#EAF0F4]">
-        <h4 className="text-[11px] font-semibold text-[#8190A0] uppercase tracking-[0.08em]">
+    <div className="p-5 bg-white border border-[#DCE5EA] rounded-[10px] shadow-xs space-y-3.5 font-sans">
+      <div className="flex items-center justify-between pb-2 border-b border-[#EAF0F2]">
+        <h4 className="text-[11px] font-semibold text-[#637587] uppercase tracking-[0.08em]">
           Decision Lifecycle & Integrity
         </h4>
-        <span className="text-[11.5px] text-[#526377] font-mono font-medium">
+        <span className="text-[11.5px] text-[#526679] font-mono font-medium">
           RRRR Protocol
         </span>
       </div>
@@ -34,12 +34,12 @@ export default function LifecycleStrip({ request }: LifecycleStripProps) {
           const isPartial = item.state === 'partial';
           const isProvableFull = item.label === 'PROVABLE' && isFull;
 
-          let cardStyle = 'bg-[#F7FAFC] border-[#EAF0F4] text-[#526377]';
-          let badgeStyle = 'bg-[#EDF2F6] text-[#8190A0]';
+          let cardStyle = 'bg-[#F6F8F9] border-[#EAF0F2] text-[#526679]';
+          let badgeStyle = 'bg-[#E7EDF0] text-[#637587]';
 
           if (isProvableFull) {
-            cardStyle = 'bg-[#FDF6E3]/60 border-[#E8DDB0] text-[#132238]';
-            badgeStyle = 'bg-[#C9A227] text-white';
+            cardStyle = 'bg-[#E7F4F3]/60 border-[#E8DDB0] text-[#182B3D]';
+            badgeStyle = 'bg-[#0B7780] text-white';
           } else if (isFull) {
             cardStyle = 'bg-[#ECFDF3] border-[#A6F4C5] text-[#027A48]';
             badgeStyle = 'bg-[#0F7548] text-white';
@@ -69,8 +69,8 @@ export default function LifecycleStrip({ request }: LifecycleStripProps) {
                     )}
                   </span>
                   <div className="relative group/tooltip">
-                    <HelpCircle className="w-3.5 h-3.5 text-[#8190A0] cursor-help hover:text-[#132238]" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-52 p-2.5 bg-[#07182F] text-white text-[11px] rounded-[6px] shadow-dropdown z-50 pointer-events-none leading-relaxed font-normal">
+                    <HelpCircle className="w-3.5 h-3.5 text-[#637587] cursor-help hover:text-[#182B3D]" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-52 p-2.5 bg-[#0C1C2D] text-white text-[11px] rounded-[6px] shadow-dropdown z-50 pointer-events-none leading-relaxed font-normal">
                       {item.tooltip}
                     </div>
                   </div>

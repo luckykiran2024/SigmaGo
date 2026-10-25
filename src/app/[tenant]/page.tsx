@@ -39,6 +39,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
       id,
       request_id,
       order_index,
+      stage_index,
       entered_at,
       status,
       approval_requests!inner (
@@ -61,6 +62,14 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   // Deduplicate requests
   const pendingCards: any[] = [];
   const seenReqIds = new Set<string>();
+  const pendingRequestIds = [...new Set((pendingSteps || []).map((step) => step.request_id))];
+  const { data: routeSteps } = pendingRequestIds.length
+    ? await adminClient.from('approval_steps').select('request_id, stage_index').in('request_id', pendingRequestIds)
+    : { data: [] };
+  const stageCountByRequest = new Map<string, number>();
+  for (const routeStep of routeSteps || []) {
+    stageCountByRequest.set(routeStep.request_id, Math.max(stageCountByRequest.get(routeStep.request_id) || 0, (routeStep.stage_index ?? 0) + 1));
+  }
 
   if (pendingSteps) {
     for (const step of pendingSteps) {
@@ -73,7 +82,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         // Fetch inline exception summary if EXCEPTION category
         let exceptionSummary = null;
         if (category?.step_type === 'EXCEPTION' || category?.name?.toLowerCase().includes('exception')) {
-          exceptionSummary = await getInlineExceptionCount(tenantId, req.category_id);
+          exceptionSummary = await getInlineExceptionCount(tenantId, req.id);
         }
 
         pendingCards.push({
@@ -85,8 +94,8 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
           department: owner?.department || 'Operations',
           stepType: (category?.step_type as any) || 'TRANSACTIONAL',
           enteredAt: step.entered_at || req.created_at,
-          currentStageIndex: step.order_index || 0,
-          totalStages: 3,
+          currentStageIndex: step.stage_index ?? 0,
+          totalStages: stageCountByRequest.get(req.id) || 1,
           exceptionSummary,
         });
       }
@@ -102,12 +111,24 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
-  // 4. Fetch Recently Sealed Decisions
+  // 4. Fetch current-month finalized decisions and certificate coverage.
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
+  const [{ count: finalizedThisMonth }, { count: sealedThisMonth }] = await Promise.all([
+    adminClient.from('approval_requests').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).gte('finalized_at', monthStart).lt('finalized_at', nextMonthStart),
+    adminClient.from('approval_requests').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).gte('finalized_at', monthStart).lt('finalized_at', nextMonthStart)
+      .not('checksum_sha256', 'is', null),
+  ]);
   const { data: sealedDecisions } = await adminClient
     .from('approval_requests')
     .select('id, ref, subject, finalized_at, checksum_sha256')
     .eq('tenant_id', tenantId)
-    .not('finalized_at', 'is', null)
+    .gte('finalized_at', monthStart)
+    .lt('finalized_at', nextMonthStart)
+    .not('checksum_sha256', 'is', null)
     .order('finalized_at', { ascending: false })
     .limit(5);
 
@@ -123,19 +144,19 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   let oldestWaitingDays = 0;
   if (pendingCards.length > 0 && pendingCards[0].enteredAt) {
     const diffMs = new Date().getTime() - new Date(pendingCards[0].enteredAt).getTime();
-    oldestWaitingDays = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    oldestWaitingDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   }
 
   return (
     <div className="max-w-[1360px] mx-auto px-6 py-8 space-y-8 font-sans">
       {/* Executive Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DDE5EC] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#DCE5EA] pb-5">
         <div>
-          <h1 className="text-[28px] font-semibold text-[#132238] tracking-tight">
+          <h1 className="text-[28px] font-semibold text-[#182B3D] tracking-tight">
             Decision Intelligence
           </h1>
-          <p className="text-[14px] text-[#526377] mt-1">
-            Welcome back, <strong className="text-[#132238] font-semibold">{userName}</strong>. Active decisions requiring your organizational authority.
+          <p className="text-[14px] text-[#526679] mt-1">
+            Welcome back, <strong className="text-[#182B3D] font-semibold">{userName}</strong>. Active decisions requiring your organizational authority.
           </p>
         </div>
       </div>
@@ -146,11 +167,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         needsApprovalCount={pendingCards.length}
         oldestWaitingDays={oldestWaitingDays}
         inFlightCount={mySubmissions?.length || 0}
-        atFinalStageCount={1}
-        sealedThisMonthCount={sealedItems.length}
-        sealedIncreaseVsLastMonth={2}
-        policiesDriftingCount={1}
-        driftingPolicyNames={['Increment Cap', 'Capex Limit']}
+        sealedThisMonthCount={sealedThisMonth || 0}
       />
 
       {/* Main Content Grid */}
@@ -158,13 +175,13 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
         {/* Left 2 Columns: Requests Needing Your Authority */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[16px] font-semibold text-[#132238] tracking-tight">
+            <h2 className="text-[16px] font-semibold text-[#182B3D] tracking-tight">
               Needs Your Approval ({pendingCards.length})
             </h2>
             {pendingCards.length > 0 && (
               <Link
                 href={`/${resolvedParams.tenant}/approvals`}
-                className="text-[13px] font-medium text-[#059DB0] hover:text-[#012F6B] flex items-center gap-1 transition-colors"
+                className="text-[13px] font-medium text-[#0B7780] hover:text-[#17324D] flex items-center gap-1 transition-colors"
               >
                 View all in approvals
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -173,12 +190,12 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
           </div>
 
           {pendingCards.length === 0 ? (
-            <div className="p-10 bg-white border border-[#DDE5EC] rounded-[10px] text-center space-y-2 shadow-xs">
-              <div className="w-10 h-10 rounded-full bg-[#F1FBFC] text-[#059DB0] flex items-center justify-center mx-auto">
+            <div className="p-10 bg-white border border-[#DCE5EA] rounded-[10px] text-center space-y-2 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-[#ECF6F5] text-[#0B7780] flex items-center justify-center mx-auto">
                 <Inbox className="w-5 h-5" />
               </div>
-              <h3 className="text-[14.5px] font-semibold text-[#132238]">All decision queues are clear</h3>
-              <p className="text-[13px] text-[#526377] max-w-md mx-auto">
+              <h3 className="text-[14.5px] font-semibold text-[#182B3D]">All decision queues are clear</h3>
+              <p className="text-[13px] text-[#526679] max-w-md mx-auto">
                 No decisions are currently awaiting your authority. Once requests enter your approval stage, they will appear here.
               </p>
             </div>
@@ -210,40 +227,43 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
           <RecentlySealedPanel
             tenantSubdomain={resolvedParams.tenant}
             sealedDecisions={sealedItems}
+            sealedRateText={finalizedThisMonth
+              ? `${sealedThisMonth || 0} of ${finalizedThisMonth} decisions finalized this month carry an integrity seal.`
+              : 'No decisions have been finalized this month.'}
           />
 
           {/* In Flight Submissions */}
-          <div className="p-5 bg-white border border-[#DDE5EC] rounded-[10px] space-y-3.5 shadow-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-[#EAF0F4]">
-              <h3 className="text-[14.5px] font-semibold text-[#132238]">
+          <div className="p-5 bg-white border border-[#DCE5EA] rounded-[10px] space-y-3.5 shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[#EAF0F2]">
+              <h3 className="text-[14.5px] font-semibold text-[#182B3D]">
                 Your Submissions in Flight
               </h3>
-              <span className="text-[12px] font-semibold text-[#526377] px-2 py-0.5 rounded-[4px] bg-[#F3F6F8]">
+              <span className="text-[12px] font-semibold text-[#526679] px-2 py-0.5 rounded-[4px] bg-[#EEF2F4]">
                 {mySubmissions?.length || 0}
               </span>
             </div>
 
             {(!mySubmissions || mySubmissions.length === 0) ? (
-              <p className="text-[13px] text-[#8190A0] py-2">You have no open requests in flight.</p>
+              <p className="text-[13px] text-[#637587] py-2">You have no open requests in flight.</p>
             ) : (
               <div className="space-y-2.5">
                 {mySubmissions.map((sub) => (
                   <Link
                     key={sub.id}
                     href={`/${resolvedParams.tenant}/requests/${sub.id}`}
-                    className="block p-3 bg-[#F7FAFC] hover:bg-[#F1FBFC] rounded-[6px] border border-[#EAF0F4] hover:border-[#DDF5F7] space-y-1 transition-all group"
+                    className="block p-3 bg-[#F6F8F9] hover:bg-[#ECF6F5] rounded-[6px] border border-[#EAF0F2] hover:border-[#D7ECEA] space-y-1 transition-all group"
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-[#132238] group-hover:text-[#012F6B] truncate">
+                      <span className="font-semibold text-[#182B3D] group-hover:text-[#17324D] truncate">
                         {sub.subject}
                       </span>
-                      <span className="font-mono text-[11px] text-[#8190A0] shrink-0 ml-2">
+                      <span className="font-mono text-[11px] text-[#637587] shrink-0 ml-2">
                         {sub.ref || 'REQ-001'}
                       </span>
                     </div>
-                    <div className="text-[11.5px] text-[#526377] flex items-center justify-between">
-                      <span>Status: <strong className="text-[#012F6B] font-medium uppercase">{sub.status}</strong></span>
-                      <span className="text-[#8190A0]">
+                    <div className="text-[11.5px] text-[#526679] flex items-center justify-between">
+                      <span>Status: <strong className="text-[#17324D] font-medium uppercase">{sub.status}</strong></span>
+                      <span className="text-[#637587]">
                         {new Date(sub.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
                     </div>

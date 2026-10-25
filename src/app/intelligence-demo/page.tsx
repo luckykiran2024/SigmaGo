@@ -101,7 +101,7 @@ export default function IntelligenceDemoPage() {
       persistence: 2,
       impact: 'HIGH',
       confidence: 'RELIABLE',
-      confidenceBasis: { sampleSize: 48, comparablePeriodsCount: 4, policyCoverage: 0.93 },
+      confidenceBasis: { sampleSize: 48, baselineSampleSize: 41, comparablePeriodsCount: 4, policyCoverage: 0.93 },
     },
     {
       id: 'sig-exp-2',
@@ -115,7 +115,7 @@ export default function IntelligenceDemoPage() {
       persistence: 2,
       impact: 'MEDIUM',
       confidence: 'RELIABLE',
-      confidenceBasis: { sampleSize: 35, comparablePeriodsCount: 4, policyCoverage: 0.91 },
+      confidenceBasis: { sampleSize: 35, baselineSampleSize: 32, comparablePeriodsCount: 4, policyCoverage: 0.91 },
     },
   ];
 
@@ -337,16 +337,16 @@ export default function IntelligenceDemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] p-6 sm:p-8">
+    <div className="min-h-screen bg-[#F6F8F9] p-6 sm:p-8">
       {/* Interactive Scenario Switcher */}
-      <div className="max-w-[1400px] mx-auto mb-6 p-3 rounded-[8px] bg-white border border-[#DDE5EC] flex flex-wrap items-center justify-between gap-3 text-[13px]">
+      <div className="max-w-[1400px] mx-auto mb-6 p-3 rounded-[8px] bg-white border border-[#DCE5EA] flex flex-wrap items-center justify-between gap-3 text-[13px]">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#132238]">Executive Dashboard Scenarios:</span>
-          <div className="inline-flex rounded-[6px] border border-[#DDE5EC] p-0.5 bg-[#F3F6F8]">
+          <span className="font-semibold text-[#182B3D]">Executive Dashboard Scenarios:</span>
+          <div className="inline-flex rounded-[6px] border border-[#DCE5EA] p-0.5 bg-[#EEF2F4]">
             <button
               onClick={() => setScenario('standard')}
               className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                scenario === 'standard' ? 'bg-white text-[#012F6B] shadow-xs' : 'text-[#526377] hover:text-[#132238]'
+                scenario === 'standard' ? 'bg-white text-[#17324D] shadow-xs' : 'text-[#526679] hover:text-[#182B3D]'
               }`}
             >
               Standard (+7.5 pp Attention)
@@ -354,7 +354,7 @@ export default function IntelligenceDemoPage() {
             <button
               onClick={() => setScenario('no-attention')}
               className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                scenario === 'no-attention' ? 'bg-white text-[#012F6B] shadow-xs' : 'text-[#526377] hover:text-[#132238]'
+                scenario === 'no-attention' ? 'bg-white text-[#17324D] shadow-xs' : 'text-[#526679] hover:text-[#182B3D]'
               }`}
             >
               No-Attention (Normal / Quiet)
@@ -362,7 +362,7 @@ export default function IntelligenceDemoPage() {
             <button
               onClick={() => setScenario('low-confidence')}
               className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                scenario === 'low-confidence' ? 'bg-white text-[#012F6B] shadow-xs' : 'text-[#526377] hover:text-[#132238]'
+                scenario === 'low-confidence' ? 'bg-white text-[#17324D] shadow-xs' : 'text-[#526679] hover:text-[#182B3D]'
               }`}
             >
               Low-Confidence (Developing)
@@ -370,7 +370,7 @@ export default function IntelligenceDemoPage() {
             <button
               onClick={() => setScenario('empty')}
               className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                scenario === 'empty' ? 'bg-white text-[#012F6B] shadow-xs' : 'text-[#526377] hover:text-[#132238]'
+                scenario === 'empty' ? 'bg-white text-[#17324D] shadow-xs' : 'text-[#526679] hover:text-[#182B3D]'
               }`}
             >
               Empty State (0 Decisions)
@@ -378,7 +378,7 @@ export default function IntelligenceDemoPage() {
           </div>
         </div>
 
-        <span className="text-[12px] text-[#8190A0]">
+        <span className="text-[12px] text-[#637587]">
           16 metrics · 4 human questions · Zero new metrics
         </span>
       </div>

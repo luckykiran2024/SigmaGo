@@ -24,8 +24,8 @@ export default function PolicyHealthBadge({ status, className = '' }: PolicyHeal
     dotColor = 'bg-[#B93815]';
   } else if (norm === 'REVISED') {
     label = 'Revised';
-    badgeStyle = 'bg-[#EDF2F6] text-[#012F6B] border-[#DDE5EC]';
-    dotColor = 'bg-[#012F6B]';
+    badgeStyle = 'bg-[#E7EDF0] text-[#17324D] border-[#DCE5EA]';
+    dotColor = 'bg-[#17324D]';
   }
 
   return (

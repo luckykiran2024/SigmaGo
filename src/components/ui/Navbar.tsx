@@ -55,7 +55,7 @@ export default function Navbar({
   const userInitial = userName ? userName.charAt(0).toUpperCase() : 'M';
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#DDE5EC] h-[52px]">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#DCE5EA] h-[52px]">
       <div className="max-w-[1440px] mx-auto px-6 h-full flex items-center justify-between font-sans">
         {/* Left: Official Brand & Navigation Tabs */}
         <div className="flex items-center gap-6 h-full">
@@ -67,8 +67,8 @@ export default function Navbar({
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="h-4 w-[1px] bg-[#DDE5EC]" />
-            <span className="text-[12px] font-semibold text-[#132238] tracking-tight truncate max-w-[160px]">
+            <span className="h-4 w-[1px] bg-[#DCE5EA]" />
+            <span className="text-[12px] font-semibold text-[#182B3D] tracking-tight truncate max-w-[160px]">
               {tenantName}
             </span>
           </Link>
@@ -86,8 +86,8 @@ export default function Navbar({
                   href={item.href}
                   className={`relative h-full flex items-center px-3 text-[13px] transition-all ${
                     isActive
-                      ? 'text-[#012F6B] font-semibold bg-[#F1FBFC]/80'
-                      : 'text-[#526377] font-normal hover:text-[#012F6B] hover:bg-[#F7FAFC]'
+                      ? 'text-[#17324D] font-semibold bg-[#ECF6F5]/80'
+                      : 'text-[#526679] font-normal hover:text-[#17324D] hover:bg-[#F6F8F9]'
                   }`}
                 >
                   <span>{item.label}</span>
@@ -101,7 +101,7 @@ export default function Navbar({
                   ) : null}
 
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#059DB0] rounded-t-sm" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0B7780] rounded-t-sm" />
                   )}
                 </Link>
               );
@@ -113,7 +113,7 @@ export default function Navbar({
         <div className="flex items-center gap-3">
           <Link
             href={`/${tenantSubdomain}/requests/new`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#012F6B] hover:bg-[#033E79] active:bg-[#07182F] text-white text-[13px] font-medium transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#17324D] hover:bg-[#224564] active:bg-[#0C1C2D] text-white text-[13px] font-medium transition-colors shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New request</span>
@@ -125,7 +125,7 @@ export default function Navbar({
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="User menu"
               aria-expanded={menuOpen}
-              className="w-[30px] h-[30px] rounded-full bg-[#F3F6F8] text-[#012F6B] border border-[#DDE5EC] hover:border-[#059DB0] font-semibold text-[12px] flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 active:scale-95 overflow-hidden"
+              className="w-[30px] h-[30px] rounded-full bg-[#EEF2F4] text-[#17324D] border border-[#DCE5EA] hover:border-[#0B7780] font-semibold text-[12px] flex items-center justify-center shrink-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 active:scale-95 overflow-hidden"
             >
               {userAvatarUrl ? (
                 <img
@@ -139,11 +139,11 @@ export default function Navbar({
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#DDE5EC] rounded-[8px] shadow-dropdown z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
+              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-[#DCE5EA] rounded-[8px] shadow-dropdown z-50 p-1 space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-150 font-sans">
                 {/* Header info */}
-                <div className="px-3 py-2 border-b border-[#DDE5EC]">
-                  <p className="text-[13px] font-semibold text-[#132238] truncate">{userName}</p>
-                  <p className="text-[11px] font-normal text-[#8190A0] truncate">{tenantName}</p>
+                <div className="px-3 py-2 border-b border-[#DCE5EA]">
+                  <p className="text-[13px] font-semibold text-[#182B3D] truncate">{userName}</p>
+                  <p className="text-[11px] font-normal text-[#637587] truncate">{tenantName}</p>
                 </div>
 
                 {/* Menu items */}
@@ -151,18 +151,18 @@ export default function Navbar({
                   <Link
                     href={`/${tenantSubdomain}`}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526679] rounded-[6px] hover:bg-[#F6F8F9] hover:text-[#17324D] transition-colors"
                   >
-                    <LayoutDashboard className="w-4 h-4 text-[#8190A0]" />
+                    <LayoutDashboard className="w-4 h-4 text-[#637587]" />
                     <span>Dashboard</span>
                   </Link>
 
                   <Link
                     href={`/${tenantSubdomain}/settings`}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-normal text-[#526679] rounded-[6px] hover:bg-[#F6F8F9] hover:text-[#17324D] transition-colors"
                   >
-                    <Settings className="w-4 h-4 text-[#8190A0]" />
+                    <Settings className="w-4 h-4 text-[#637587]" />
                     <span>Settings</span>
                   </Link>
 
@@ -171,18 +171,18 @@ export default function Navbar({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-1.5 text-[13px] font-normal text-[#526377] rounded-[6px] hover:bg-[#F7FAFC] hover:text-[#012F6B] transition-colors group"
+                    className="flex items-center justify-between px-3 py-1.5 text-[13px] font-normal text-[#526679] rounded-[6px] hover:bg-[#F6F8F9] hover:text-[#17324D] transition-colors group"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Globe className="w-4 h-4 text-[#8190A0]" />
+                      <Globe className="w-4 h-4 text-[#637587]" />
                       <span>Landing page</span>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#8190A0] group-hover:text-[#012F6B]" />
+                    <ExternalLink className="w-3.5 h-3.5 text-[#637587] group-hover:text-[#17324D]" />
                   </Link>
                 </div>
 
                 {/* Divider & Logout */}
-                <div className="pt-0.5 border-t border-[#DDE5EC]">
+                <div className="pt-0.5 border-t border-[#DCE5EA]">
                   <form action={signOutAction}>
                     <button
                       type="submit"

@@ -69,30 +69,30 @@ export default function IntelligenceEvidenceDrawer({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-[#07182F]/40 backdrop-blur-[1px] transition-opacity"
+        className="fixed inset-0 bg-[#0C1C2D]/40 backdrop-blur-[1px] transition-opacity"
         aria-hidden="true"
       />
 
       {/* Slide-over panel */}
-      <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-white border-l border-[#DDE5EC] shadow-xl z-50 p-6 overflow-y-auto space-y-6 flex flex-col justify-between font-sans">
+      <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-white border-l border-[#DCE5EA] shadow-xl z-50 p-6 overflow-y-auto space-y-6 flex flex-col justify-between font-sans">
         <div className="space-y-6">
           {/* Drawer Header */}
-          <div className="flex items-start justify-between border-b border-[#DDE5EC] pb-4">
+          <div className="flex items-start justify-between border-b border-[#DCE5EA] pb-4">
             <div>
-              <div className="flex items-center gap-2 text-[12px] text-[#8190A0]">
+              <div className="flex items-center gap-2 text-[12px] text-[#637587]">
                 <span className={`w-2 h-2 rounded-full ${meta.dotClass}`} aria-hidden="true" />
-                <span className="font-semibold text-[#132238]">{meta.label} Evidence</span>
+                <span className="font-semibold text-[#182B3D]">{meta.label} Evidence</span>
                 <span aria-hidden="true">·</span>
                 <span>{periodDisplayName} vs {comparatorDisplayName}</span>
               </div>
-              <h2 id="drawer-title" className="text-[20px] font-semibold text-[#132238] mt-1">
+              <h2 id="drawer-title" className="text-[20px] font-semibold text-[#182B3D] mt-1">
                 {matchedSignal ? matchedSignal.title : `${meta.label} Decision Drivers`}
               </h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-[6px] text-[#8190A0] hover:text-[#132238] hover:bg-[#F3F6F8] transition-colors"
+              className="p-1.5 rounded-[6px] text-[#637587] hover:text-[#182B3D] hover:bg-[#EEF2F4] transition-colors"
               aria-label="Close evidence panel"
             >
               <X className="w-4 h-4" aria-hidden="true" />
@@ -101,20 +101,20 @@ export default function IntelligenceEvidenceDrawer({
 
           {/* Signal Detail (if opened from an attention signal) */}
           {matchedSignal && (
-            <div className="p-4 rounded-[8px] bg-[#F7FAFC] border border-[#DDE5EC] space-y-2 text-[13px]">
+            <div className="p-4 rounded-[8px] bg-[#F6F8F9] border border-[#DCE5EA] space-y-2 text-[13px]">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-[#132238]">Observed Signal Summary</span>
+                <span className="font-semibold text-[#182B3D]">Observed Signal Summary</span>
                 <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${
                   matchedSignal.impact === 'HIGH' ? 'bg-[#FEF3F2] text-[#B42318]' : 'bg-[#FFFAEB] text-[#B54708]'
                 }`}>
                   {matchedSignal.impact} Impact
                 </span>
               </div>
-              <p className="text-[#526377] leading-relaxed">
+              <p className="text-[#526679] leading-relaxed">
                 {matchedSignal.fact} {matchedSignal.pattern}
               </p>
-              <div className="text-[12px] text-[#8190A0] pt-1">
-                Confidence basis: {matchedSignal.confidenceBasis?.sampleSize || 0} decisions across {matchedSignal.confidenceBasis?.comparablePeriodsCount || 1} comparable period(s).
+              <div className="text-[12px] text-[#637587] pt-1">
+                Evidence basis: {matchedSignal.confidenceBasis?.sampleSize || 0} current-period decisions vs {matchedSignal.confidenceBasis?.baselineSampleSize || 0} comparator decisions across {matchedSignal.confidenceBasis?.comparablePeriodsCount || 0} comparable period(s).
               </div>
             </div>
           )}
@@ -122,32 +122,32 @@ export default function IntelligenceEvidenceDrawer({
           {/* Level 3 Methodology: 4-Column Context Grid */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[12.5px]">
-              <span className="font-semibold text-[#132238]">How is this calculated?</span>
-              <span className="text-[#8190A0]">Observed evidence baseline</span>
+              <span className="font-semibold text-[#182B3D]">How is this calculated?</span>
+              <span className="text-[#637587]">Observed evidence baseline</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 rounded-[8px] bg-[#F7FAFC] border border-[#EAF0F4] text-center text-[12.5px]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 rounded-[8px] bg-[#F6F8F9] border border-[#EAF0F2] text-center text-[12.5px]">
               <div>
-                <span className="text-[11px] text-[#8190A0] font-medium block">Current period</span>
-                <p className="text-[17px] font-semibold text-[#132238] tabular-nums mt-0.5">
+                <span className="text-[11px] text-[#637587] font-medium block">Current period</span>
+                <p className="text-[17px] font-semibold text-[#182B3D] tabular-nums mt-0.5">
                   {((stepItem?.currentShare || 0) * 100).toFixed(1)}%
                 </p>
               </div>
               <div>
-                <span className="text-[11px] text-[#8190A0] font-medium block">Comparable period</span>
-                <p className="text-[17px] font-semibold text-[#526377] tabular-nums mt-0.5">
+                <span className="text-[11px] text-[#637587] font-medium block">Comparable period</span>
+                <p className="text-[17px] font-semibold text-[#526679] tabular-nums mt-0.5">
                   {((stepItem?.comparatorShare || 0) * 100).toFixed(1)}%
                 </p>
               </div>
               <div>
-                <span className="text-[11px] text-[#8190A0] font-medium block">Movement</span>
-                <p className="text-[17px] font-semibold text-[#132238] tabular-nums mt-0.5">
+                <span className="text-[11px] text-[#637587] font-medium block">Movement</span>
+                <p className="text-[17px] font-semibold text-[#182B3D] tabular-nums mt-0.5">
                   {formatMovement(stepItem?.movementPp || 0)}
                 </p>
               </div>
               <div>
-                <span className="text-[11px] text-[#8190A0] font-medium block">Observed range</span>
-                <p className="text-[14px] font-semibold text-[#526377] tabular-nums mt-1">
+                <span className="text-[11px] text-[#637587] font-medium block">Observed range</span>
+                <p className="text-[14px] font-semibold text-[#526679] tabular-nums mt-1">
                   {stepItem?.historicalRange?.hasHistoricalRange
                     ? `${(stepItem.historicalRange.minShare * 100).toFixed(1)}%–${(stepItem.historicalRange.maxShare * 100).toFixed(1)}%`
                     : `${((stepItem?.comparatorShare || 0) * 100).toFixed(1)}%`}
@@ -159,15 +159,15 @@ export default function IntelligenceEvidenceDrawer({
           {/* Workflow Contributors Table */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-[13.5px] font-semibold text-[#132238]">
+              <h3 className="text-[13.5px] font-semibold text-[#182B3D]">
                 Workflow Contributions
               </h3>
-              <span className="text-[11.5px] text-[#8190A0]">Mathematical decomposition</span>
+              <span className="text-[11.5px] text-[#637587]">Mathematical decomposition</span>
             </div>
 
-            <div className="border border-[#DDE5EC] rounded-[8px] overflow-hidden">
-              <table className="w-full text-left text-[13px] text-[#132238]">
-                <thead className="bg-[#F7FAFC] text-[#8190A0] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DDE5EC]">
+            <div className="border border-[#DCE5EA] rounded-[8px] overflow-hidden">
+              <table className="w-full text-left text-[13px] text-[#182B3D]">
+                <thead className="bg-[#F6F8F9] text-[#637587] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DCE5EA]">
                   <tr>
                     <th scope="col" className="py-2 px-3">Workflow</th>
                     <th scope="col" className="py-2 px-3 text-center">Current</th>
@@ -175,19 +175,19 @@ export default function IntelligenceEvidenceDrawer({
                     <th scope="col" className="py-2 px-3 text-right">Contribution</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EAF0F4]">
+                <tbody className="divide-y divide-[#EAF0F2]">
                   {(activeAnalysis?.contributors || []).map((c) => (
                     <tr key={c.workflowId} className="hover:bg-[#F9FBFC]">
-                      <td className="py-2 px-3 font-medium text-[#132238]">
+                      <td className="py-2 px-3 font-medium text-[#182B3D]">
                         {c.workflowName}
                       </td>
-                      <td className="py-2 px-3 text-center font-mono tabular-nums text-[#8190A0]">
+                      <td className="py-2 px-3 text-center font-mono tabular-nums text-[#637587]">
                         {c.currentCount}
                       </td>
-                      <td className="py-2 px-3 text-center font-mono tabular-nums text-[#8190A0]">
+                      <td className="py-2 px-3 text-center font-mono tabular-nums text-[#637587]">
                         {c.baselineCount}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono tabular-nums font-semibold text-[#132238]">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums font-semibold text-[#182B3D]">
                         {formatMovement(c.movementContributionPp)}
                       </td>
                     </tr>
@@ -201,22 +201,22 @@ export default function IntelligenceEvidenceDrawer({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-[13.5px] font-semibold text-[#132238]">
+                <h3 className="text-[13.5px] font-semibold text-[#182B3D]">
                   Downstream Reliance
                 </h3>
-                <span className="text-[11px] text-[#8190A0]">
+                <span className="text-[11px] text-[#637587]">
                   Also known as Decision Blast Radius
                 </span>
               </div>
-              <span className="text-[11.5px] text-[#8190A0]">
+              <span className="text-[11.5px] text-[#637587]">
                 Multi-hop graph reach
               </span>
             </div>
 
             {!isAggregateOnly ? (
-              <div className="border border-[#DDE5EC] rounded-[8px] overflow-hidden">
-                <table className="w-full text-left text-[13px] text-[#132238]">
-                  <thead className="bg-[#F7FAFC] text-[#8190A0] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DDE5EC]">
+              <div className="border border-[#DCE5EA] rounded-[8px] overflow-hidden">
+                <table className="w-full text-left text-[13px] text-[#182B3D]">
+                  <thead className="bg-[#F6F8F9] text-[#637587] font-semibold text-[11px] uppercase tracking-wider border-b border-[#DCE5EA]">
                     <tr>
                       <th scope="col" className="py-2 px-3">Ref</th>
                       <th scope="col" className="py-2 px-3">Subject</th>
@@ -226,13 +226,13 @@ export default function IntelligenceEvidenceDrawer({
                       <th scope="col" className="py-2 px-3 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#EAF0F4]">
+                  <tbody className="divide-y divide-[#EAF0F2]">
                     {(activeAnalysis?.topConsequentialDecisions || []).map((d) => (
                       <tr key={d.requestId} className="hover:bg-[#F9FBFC]">
-                        <td className="py-2 px-3 font-mono text-[12px] font-medium text-[#012F6B]">
+                        <td className="py-2 px-3 font-mono text-[12px] font-medium text-[#17324D]">
                           {d.ref}
                         </td>
-                        <td className="py-2 px-3 text-[#132238] font-medium truncate max-w-[180px]">
+                        <td className="py-2 px-3 text-[#182B3D] font-medium truncate max-w-[180px]">
                           {d.subject}
                         </td>
                         <td className="py-2 px-3 text-center font-mono tabular-nums text-[12px]">
@@ -241,7 +241,7 @@ export default function IntelligenceEvidenceDrawer({
                         <td className="py-2 px-3 text-right">
                           <Link
                             href={`/${tenant}/requests/${d.requestId}`}
-                            className="text-[12px] font-medium text-[#078899] hover:text-[#012F6B] inline-flex items-center gap-0.5"
+                            className="text-[12px] font-medium text-[#096A72] hover:text-[#17324D] inline-flex items-center gap-0.5"
                           >
                             <span>Inspect</span>
                             <ExternalLink className="w-3 h-3" aria-hidden="true" />
@@ -252,7 +252,7 @@ export default function IntelligenceEvidenceDrawer({
 
                     {(!activeAnalysis?.topConsequentialDecisions || activeAnalysis.topConsequentialDecisions.length === 0) && (
                       <tr>
-                        <td colSpan={4} className="py-4 text-center text-[12px] text-[#8190A0]">
+                        <td colSpan={4} className="py-4 text-center text-[12px] text-[#637587]">
                           No consequential decisions recorded for this decision type.
                         </td>
                       </tr>
@@ -261,8 +261,8 @@ export default function IntelligenceEvidenceDrawer({
                 </table>
               </div>
             ) : (
-              <div className="p-4 rounded-[8px] bg-[#F7FAFC] border border-[#DDE5EC] text-[12px] text-[#526377] space-y-1">
-                <div className="flex items-center gap-1.5 font-medium text-[#132238]">
+              <div className="p-4 rounded-[8px] bg-[#F6F8F9] border border-[#DCE5EA] text-[12px] text-[#526679] space-y-1">
+                <div className="flex items-center gap-1.5 font-medium text-[#182B3D]">
                   <ShieldAlert className="w-4 h-4 text-[#B54708]" aria-hidden="true" />
                   <span>Privacy Preservation (AGGREGATE_ONLY Scope)</span>
                 </div>
@@ -275,11 +275,11 @@ export default function IntelligenceEvidenceDrawer({
         </div>
 
         {/* Drawer Footer */}
-        <div className="pt-4 border-t border-[#DDE5EC] flex justify-end">
+        <div className="pt-4 border-t border-[#DCE5EA] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-[6px] border border-[#DDE5EC] bg-white hover:bg-[#F7FAFC] text-[13px] font-medium text-[#132238] transition-colors"
+            className="px-4 py-1.5 rounded-[6px] border border-[#DCE5EA] bg-white hover:bg-[#F6F8F9] text-[13px] font-medium text-[#182B3D] transition-colors"
           >
             Close evidence panel
           </button>

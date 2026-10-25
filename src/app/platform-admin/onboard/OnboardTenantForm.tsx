@@ -11,7 +11,7 @@ export default function OnboardTenantForm() {
   const [subdomain, setSubdomain] = useState('');
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
-  const [plan, setPlan] = useState('pro');
+  const [plan, setPlan] = useState('business');
   const [region, setRegion] = useState('ap-south-2');
 
   const [loading, setLoading] = useState(false);
@@ -159,7 +159,7 @@ export default function OnboardTenantForm() {
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F172A] border border-[#334155] text-white text-xs font-bold focus:outline-none"
             >
               <option value="free">Free Starter Plan</option>
-              <option value="pro">Pro Business (Unlimited Workflows)</option>
+              <option value="business">Business</option>
               <option value="enterprise">Enterprise Sealed Governance</option>
             </select>
           </div>

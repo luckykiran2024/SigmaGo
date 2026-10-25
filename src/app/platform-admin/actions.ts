@@ -140,6 +140,11 @@ export async function onboardTenantAction(payload: {
     await assertPlatformAdmin();
 
     const normalizedSubdomain = payload.subdomain.toLowerCase().trim().replace(/[^a-z0-9-]/g, '');
+    const allowedPlans = new Set(['free', 'growth', 'business', 'enterprise']);
+    const plan = payload.plan || 'business';
+    if (!allowedPlans.has(plan)) {
+      return { success: false, error: 'Select a supported subscription plan.' };
+    }
 
     // 1. Create tenant record
     const { data: tenant, error: tenantErr } = await adminClient
@@ -148,7 +153,7 @@ export async function onboardTenantAction(payload: {
         {
           name: payload.name.trim(),
           subdomain: normalizedSubdomain,
-          plan: payload.plan || 'pro',
+          plan,
           region: payload.region || 'ap-south-2',
         },
         { onConflict: 'subdomain' }

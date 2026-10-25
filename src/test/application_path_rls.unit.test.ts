@@ -76,7 +76,7 @@ describe('Application-Path RLS & Cross-Tenant Defence in Depth Suite (Sprint 3)'
 
   it('4. getTenantClient automatically injects tenant_id on insert and scopes queries', async () => {
     const tenantId = '00000000-0000-0000-0000-00000000000a';
-    const client = getTenantClient(tenantId);
+    const client = getTenantClient(tenantId, { id: 'user-a', tenantId });
 
     // Intercepted .from('approval_requests')
     const qb = client.from('approval_requests');
@@ -89,6 +89,14 @@ describe('Application-Path RLS & Cross-Tenant Defence in Depth Suite (Sprint 3)'
     const singleInsertPayload = { subject: 'Test Req' };
     const insertQuery = qb.insert(singleInsertPayload);
     expect(insertQuery).toBeDefined();
+  });
+
+  it('rejects unscoped service operations and tables', () => {
+    const tenantId = '00000000-0000-0000-0000-00000000000a';
+    const client = getTenantClient(tenantId, { id: 'user-a', tenantId });
+    expect(() => client.from('tenants')).toThrow(CrossTenantAccessError);
+    expect(() => client.rpc('unscoped_function')).toThrow(CrossTenantAccessError);
+    expect(() => client.from('users').upsert({ id: 'user-a' })).toThrow(CrossTenantAccessError);
   });
 
   it('5. AGGREGATE_ONLY privacy enforces small cohort suppression (< 5 decisions)', () => {

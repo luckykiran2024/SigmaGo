@@ -66,14 +66,14 @@ export async function runNudgeJob(): Promise<JobExecutionResult> {
           const subject = `[REMINDER] Action needed on request: ${req.subject}`;
           const html = `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px;">
-              <h2 style="color: #012F6B; font-weight: bold; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Overdue Approval Reminder</h2>
-              <p style="font-size: 14px; color: #526377;">This is an automated reminder that a decision request is pending your review.</p>
-              <div style="margin: 20px 0; background-color: #F7FAFC; padding: 15px; border-radius: 8px;">
-                <p style="margin: 0; font-size: 14px; color: #132238; font-weight: bold;">Subject: ${req.subject}</p>
-                <p style="margin: 5px 0 0 0; font-size: 12px; color: #8190A0;">Pending for: ${Math.round(hoursPending)} hours</p>
+              <h2 style="color: #17324D; font-weight: bold; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Overdue Approval Reminder</h2>
+              <p style="font-size: 14px; color: #526679;">This is an automated reminder that a decision request is pending your review.</p>
+              <div style="margin: 20px 0; background-color: #F6F8F9; padding: 15px; border-radius: 8px;">
+                <p style="margin: 0; font-size: 14px; color: #182B3D; font-weight: bold;">Subject: ${req.subject}</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #637587;">Pending for: ${Math.round(hoursPending)} hours</p>
               </div>
               <div style="margin: 25px 0;">
-                <a href="${viewUrl}" style="background-color: #012F6B; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Open in SigmaGo</a>
+                <a href="${viewUrl}" style="background-color: #17324D; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Open in SigmaGo</a>
               </div>
             </div>
           `;

@@ -123,7 +123,7 @@ export function generateOverviewSummaries(params: {
   const compPeriods = coverage?.comparablePeriodsCount ?? 0;
   const isReliable = coverage?.isReliable ?? (covPct >= 80);
 
-  const confidencePrimary = isReliable ? 'Reliable' : 'Evidence developing';
+  const confidencePrimary = isReliable ? 'Coverage supports comparison' : 'More evidence needed';
   const confidenceSub = `${covPct}% coverage · ${compPeriods} comparable period${compPeriods === 1 ? '' : 's'}`;
 
   return {
@@ -146,7 +146,7 @@ export function generateOverviewSummaries(params: {
     confidence: {
       primaryText: confidencePrimary,
       subText: confidenceSub,
-      actionLabel: 'View confidence →',
+      actionLabel: 'View evidence →',
       isReliable,
     },
   };

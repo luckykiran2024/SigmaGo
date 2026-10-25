@@ -34,7 +34,7 @@ export function decisionLifecycle(req: RequestLifecycleInput): {
     recorded: {
       state: hasReasoning ? 'full' : 'partial',
       label: 'RECORDED',
-      copy: hasReasoning ? 'Reasoning attached at approval' : 'Approved without reasoning',
+      copy: hasReasoning ? 'Reasoning attached at approval' : isSealed ? 'Finalized without recorded reasoning' : 'Awaiting a recorded decision',
       tooltip: 'What was weighed, recorded at the time of decision.',
     },
     retrievable: {
@@ -46,7 +46,7 @@ export function decisionLifecycle(req: RequestLifecycleInput): {
     provable: {
       state: isSealed ? 'full' : 'none',
       label: 'PROVABLE',
-      copy: isSealed ? 'Sealed · SHA-256 · unaltered' : 'Not yet sealed — pending finalisation',
+      copy: isSealed ? 'SHA-256 integrity seal on file' : 'Not yet sealed — pending finalisation',
       tooltip: 'Authority, sequence, reasoning and integrity, verifiable by someone who was not present.',
     },
     reusable: {

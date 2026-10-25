@@ -31,7 +31,7 @@ export default async function PlatformAdminLayout({
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-white tracking-tight flex items-center gap-1.5 font-sans">
                   SigmaGo Platform Console
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#059DB0]/20 text-[#05B2C0] border border-[#059DB0]/30 uppercase">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0B7780]/20 text-[#108C94] border border-[#0B7780]/30 uppercase">
                     Super Admin
                   </span>
                 </span>

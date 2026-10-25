@@ -4,6 +4,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { getProfileForAuthUser } from '@/lib/db/users';
 import Link from 'next/link';
 import { ShieldCheck, Key, ShieldAlert, BarChart3, FileText, CheckCircle2, Lock } from 'lucide-react';
+import { collectPages } from '@/lib/intelligence/analytics/pagination';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,11 +95,13 @@ export default async function UserIntelligencePage({
   const comparatorRange = getPeriodDateRange(periodInfo.comparatorPeriodKey);
 
   // Query requests for intelligence analytics
-  const { data: allRequests } = await adminClient
+  const allRequests = await collectPages<any>((from, to) => adminClient
     .from('approval_requests')
     .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .range(from, to));
 
   // Filter requests strictly to selected period (no synthetic fallback to allRequests)
   const currentRequests = (allRequests || []).filter((r: any) => {
@@ -184,16 +187,20 @@ export default async function UserIntelligencePage({
   const distribution = calculateStepDistribution(currentCounts, comparatorCounts, historicalPeriodsCounts);
 
   // Fetch active workflows
-  const { data: workflows } = await adminClient
+  const workflows = await collectPages<any>((from, to) => adminClient
     .from('workflows')
     .select('id, name, category_id, base_step_type, categories(domain)')
-    .eq('tenant_id', tenant.id);
+    .eq('tenant_id', tenant.id)
+    .order('id', { ascending: true })
+    .range(from, to));
 
   // Fetch real decision references for this tenant to compute true graph footprint & policy linkage
-  const { data: tenantReferences } = await adminClient
+  const tenantReferences = await collectPages<any>((from, to) => adminClient
     .from('decision_references')
     .select('id, source_id, target_id, to_policy_id, relationship')
-    .eq('tenant_id', tenant.id);
+    .eq('tenant_id', tenant.id)
+    .order('id', { ascending: true })
+    .range(from, to));
 
   const refsByTarget: Record<string, number> = {};
   const refsBySource: Record<string, number> = {};
@@ -421,10 +428,12 @@ export default async function UserIntelligencePage({
   }
 
   // Query tenant policies to generate dynamic exception pressure signals
-  const { data: tenantPolicies } = await adminClient
+  const tenantPolicies = await collectPages<any>((from, to) => adminClient
     .from('policies')
     .select('id, title')
-    .eq('tenant_id', tenant.id);
+    .eq('tenant_id', tenant.id)
+    .order('id', { ascending: true })
+    .range(from, to));
 
   const dynamicExceptionSignals = (tenantPolicies || []).map((pol: any) => {
     const curPolRequests = currentRequests.filter((r: any) =>
@@ -447,6 +456,9 @@ export default async function UserIntelligencePage({
       exceptionCount: curExceptions,
       currentRate,
       historicalBaselineRate,
+      baselineDecisionCount: compPolRequests.length,
+      baselineExceptionCount: compExceptions,
+      policyCoverage: policyLinkageCoverage,
     };
   }).filter((s: any) => s.totalDecisions >= 5);
 
@@ -464,6 +476,7 @@ export default async function UserIntelligencePage({
         baselineShare: distribution.steps.EXCEPTION.comparatorShare,
         topWorkflowName: topExceptionWf,
         sampleSize: distribution.totalCurrentDecisions,
+        baselineSampleSize: distribution.totalComparatorDecisions,
         comparablePeriodsCount: historicalPeriodsCounts.length,
         policyCoverage: policyLinkageCoverage,
       },
@@ -474,6 +487,7 @@ export default async function UserIntelligencePage({
         baselineShare: distribution.steps.STRUCTURAL.comparatorShare,
         topWorkflowName: topStructuralWf,
         sampleSize: distribution.totalCurrentDecisions,
+        baselineSampleSize: distribution.totalComparatorDecisions,
         comparablePeriodsCount: historicalPeriodsCounts.length,
         policyCoverage: policyLinkageCoverage,
       },

@@ -13,11 +13,11 @@ interface Category {
 
 export default function CategoryManager({
   categories: initialCategories,
-  tenantId,
+  tenantSubdomain,
   prefilledSla
 }: {
   categories: Category[];
-  tenantId: string;
+  tenantSubdomain: string;
   prefilledSla: number;
 }) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function CategoryManager({
     setError(null);
 
     try {
-      await createCategoryAction(tenantId, name.trim(), Number(slaHours), {
+      const created = await createCategoryAction(tenantSubdomain, name.trim(), Number(slaHours), {
         validity_mode: validityMode,
         default_validity_days: defaultValidityDays ? Number(defaultValidityDays) : null,
         max_validity_days: maxValidityDays ? Number(maxValidityDays) : null,
@@ -55,15 +55,7 @@ export default function CategoryManager({
       // Refresh router and state
       router.refresh();
       
-      // Let's optimistic update the local state
-      setCategories(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          name: name.trim(),
-          default_sla_hours: Number(slaHours)
-        }
-      ]);
+      setCategories(prev => [...prev, created]);
     } catch (err: any) {
       setError(err.message || 'Failed to create category');
     } finally {
@@ -74,13 +66,13 @@ export default function CategoryManager({
   return (
     <div className="space-y-6 font-sans">
       {/* Create New Category Form */}
-      <form onSubmit={handleCreate} className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
+      <form onSubmit={handleCreate} className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-            <Plus className="w-4 h-4 text-[#059DB0]" />
+          <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+            <Plus className="w-4 h-4 text-[#0B7780]" />
             Create Request Category
           </h3>
-          <p className="text-xs text-[#526377] mt-0.5">Add a new workflow category with default SLA parameters.</p>
+          <p className="text-xs text-[#526679] mt-0.5">Add a new workflow category with default SLA parameters.</p>
         </div>
 
         {error && (
@@ -91,7 +83,7 @@ export default function CategoryManager({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="block text-xs font-bold text-[#132238] uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[#182B3D] uppercase tracking-wider">
               Category Name
             </label>
             <input
@@ -100,12 +92,12 @@ export default function CategoryManager({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Marketing Budget Approval"
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-bold text-[#132238] uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[#182B3D] uppercase tracking-wider">
               Default SLA (Hours)
             </label>
             <input
@@ -114,27 +106,27 @@ export default function CategoryManager({
               onChange={(e) => setSlaHours(Number(e.target.value))}
               min={1}
               required
-              className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-xs font-medium bg-white"
+              className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-xs font-medium bg-white"
             />
           </div>
         </div>
 
         {/* Validity & Duration Rules */}
-        <div className="border-t border-[#DDE5EC] pt-4 space-y-2.5">
-          <label className="block text-xs font-bold text-[#132238] uppercase tracking-wider">
+        <div className="border-t border-[#DCE5EA] pt-4 space-y-2.5">
+          <label className="block text-xs font-bold text-[#182B3D] uppercase tracking-wider">
             Validity & Duration Settings
           </label>
-          <p className="text-xs text-[#526377] font-medium">
+          <p className="text-xs text-[#526679] font-medium">
             Use Required for exception-type categories — an exception with no end date becomes an unrecorded policy change.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             <div>
-              <label className="block text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">Requirement</label>
+              <label className="block text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">Requirement</label>
               <select
                 value={validityMode}
                 onChange={(e) => setValidityMode(e.target.value as any)}
-                className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] text-xs font-medium bg-white"
+                className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] text-xs font-medium bg-white"
               >
                 <option value="NONE">Not applicable (No end date)</option>
                 <option value="OPTIONAL">Optional duration</option>
@@ -145,24 +137,24 @@ export default function CategoryManager({
             {validityMode !== 'NONE' && (
               <>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">Default (Days)</label>
+                  <label className="block text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">Default (Days)</label>
                   <input
                     type="number"
                     value={defaultValidityDays}
                     onChange={(e) => setDefaultValidityDays(e.target.value)}
                     placeholder="e.g. 90"
-                    className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] text-xs font-medium bg-white"
+                    className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] text-xs font-medium bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">Max Duration (Days)</label>
+                  <label className="block text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">Max Duration (Days)</label>
                   <input
                     type="number"
                     value={maxValidityDays}
                     onChange={(e) => setMaxValidityDays(e.target.value)}
                     placeholder="e.g. 365"
-                    className="appearance-none block w-full px-3 py-2 border border-[#DDE5EC] rounded-lg shadow-xs text-[#132238] placeholder-[#8190A0] focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] text-xs font-medium bg-white"
+                    className="appearance-none block w-full px-3 py-2 border border-[#DCE5EA] rounded-lg shadow-xs text-[#182B3D] placeholder-[#637587] focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] text-xs font-medium bg-white"
                   />
                 </div>
               </>
@@ -175,9 +167,9 @@ export default function CategoryManager({
                 type="checkbox"
                 checked={reviewOnly}
                 onChange={(e) => setReviewOnly(e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-[#DDE5EC] text-[#059DB0] focus:ring-[#059DB0]"
+                className="w-3.5 h-3.5 rounded border-[#DCE5EA] text-[#0B7780] focus:ring-[#0B7780]"
               />
-              <span className="text-xs font-medium text-[#132238]">Review date only (does not expire approval)</span>
+              <span className="text-xs font-medium text-[#182B3D]">Review date only (does not expire approval)</span>
             </label>
           )}
         </div>
@@ -186,7 +178,7 @@ export default function CategoryManager({
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center justify-center px-4 py-2 bg-[#012F6B] hover:bg-[#033E79] text-white text-xs font-bold rounded-lg shadow-xs transition"
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#17324D] hover:bg-[#224564] text-white text-xs font-bold rounded-lg shadow-xs transition"
           >
             {submitting ? 'Creating...' : 'Create Category'}
           </button>
@@ -194,43 +186,43 @@ export default function CategoryManager({
       </form>
 
       {/* Category List */}
-      <div className="bg-white border border-[#DDE5EC] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
+      <div className="bg-white border border-[#DCE5EA] shadow-xs rounded-xl p-5 sm:p-6 space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-            <Tag className="w-4 h-4 text-[#059DB0]" />
+          <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+            <Tag className="w-4 h-4 text-[#0B7780]" />
             Active Categories
           </h3>
-          <p className="text-xs text-[#526377] mt-0.5">List of all active workflow categories configured for this tenant.</p>
+          <p className="text-xs text-[#526679] mt-0.5">List of all active workflow categories configured for this tenant.</p>
         </div>
 
-        <div className="overflow-hidden border border-[#DDE5EC] rounded-lg">
-          <table className="min-w-full divide-y divide-[#DDE5EC]">
-            <thead className="bg-[#F7FAFC]">
+        <div className="overflow-hidden border border-[#DCE5EA] rounded-lg">
+          <table className="min-w-full divide-y divide-[#DCE5EA]">
+            <thead className="bg-[#F6F8F9]">
               <tr>
-                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526377] uppercase tracking-wider">
+                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526679] uppercase tracking-wider">
                   Category Name
                 </th>
-                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526377] uppercase tracking-wider">
+                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526679] uppercase tracking-wider">
                   Slug
                 </th>
-                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526377] uppercase tracking-wider">
+                <th scope="col" className="px-5 py-3 text-left text-[11px] font-bold text-[#526679] uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#059DB0]" />
+                    <Clock className="w-3.5 h-3.5 text-[#0B7780]" />
                     Default SLA
                   </span>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-[#DDE5EC]">
+            <tbody className="bg-white divide-y divide-[#DCE5EA]">
               {categories.map((cat) => (
-                <tr key={cat.id} className="hover:bg-[#F7FAFC] transition">
-                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-bold text-[#132238]">
+                <tr key={cat.id} className="hover:bg-[#F6F8F9] transition">
+                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-bold text-[#182B3D]">
                     {cat.name}
                   </td>
-                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-mono text-[#526377]">
+                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-mono text-[#526679]">
                     {cat.name.toLowerCase().replace(/\s+/g, '-')}
                   </td>
-                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-bold text-[#012F6B] font-mono">
+                  <td className="px-5 py-3.5 whitespace-nowrap text-xs font-bold text-[#17324D] font-mono">
                     {cat.default_sla_hours || prefilledSla} Hours
                   </td>
                 </tr>

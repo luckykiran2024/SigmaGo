@@ -3,24 +3,33 @@
 import { adminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { getCurrentUser } from '@/lib/db/users';
+
+const AVATAR_MIME_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 
 export async function uploadUserAvatarAction(
-  userId: string,
   base64Data: string,
-  mimeType: string,
-  fileName: string
+  mimeType: string
 ): Promise<{ success: boolean; avatarUrl?: string; error?: string }> {
   try {
-    const formattedDataUrl = base64Data.startsWith('data:')
-      ? base64Data
-      : `data:${mimeType};base64,${base64Data}`;
+    const profile = await getCurrentUser();
+    const userId = profile.id;
+    const ext = AVATAR_MIME_TYPES[mimeType];
+    if (!ext) return { success: false, error: 'Unsupported avatar image type' };
+    const base64Content = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+    const buffer = Buffer.from(base64Content, 'base64');
+    if (!buffer.length || buffer.length > 10 * 1024 * 1024) {
+      return { success: false, error: 'Avatar must be a non-empty image under 10MB' };
+    }
+    const formattedDataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
 
     let avatarUrlToSave = formattedDataUrl;
 
     try {
-      const base64Content = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-      const buffer = Buffer.from(base64Content, 'base64');
-      const ext = fileName.split('.').pop() || 'png';
       const filePath = `${userId}/avatar-${Date.now()}.${ext}`;
 
       const { data, error } = await adminClient.storage
@@ -45,7 +54,8 @@ export async function uploadUserAvatarAction(
     const { error: dbErr } = await adminClient
       .from('users')
       .update({ avatar_url: avatarUrlToSave })
-      .eq('id', userId);
+      .eq('id', userId)
+      .eq('tenant_id', profile.tenant_id);
 
     if (dbErr) {
       console.error("DB update error:", dbErr);
@@ -60,11 +70,13 @@ export async function uploadUserAvatarAction(
 }
 
 
-export async function removeUserAvatarAction(userId: string): Promise<void> {
+export async function removeUserAvatarAction(): Promise<void> {
+  const profile = await getCurrentUser();
   const { error } = await adminClient
     .from('users')
     .update({ avatar_url: null })
-    .eq('id', userId);
+    .eq('id', profile.id)
+    .eq('tenant_id', profile.tenant_id);
 
   if (error) {
     console.error("Error removing avatar:", error);
@@ -73,17 +85,32 @@ export async function removeUserAvatarAction(userId: string): Promise<void> {
 }
 
 export async function updateProfileAndSettingsAction(
-  userId: string,
   name: string,
   settings: any
 ): Promise<void> {
+  const profile = await getCurrentUser();
+  if (typeof name !== 'string') throw new Error('Invalid display name');
+  const trimmedName = name.trim();
+  if (!trimmedName || trimmedName.length > 200) throw new Error('Invalid display name');
+  const allowedThemes = new Set(['light', 'dark', 'midnight', 'forest']);
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings) ||
+      (settings.theme !== undefined && !allowedThemes.has(settings.theme))) {
+    throw new Error('Invalid user settings');
+  }
+  const safeSettings = {
+    theme: settings.theme || 'light',
+    action_needed_emails: settings.action_needed_emails !== false,
+    fyi_emails: settings.fyi_emails !== false,
+    overdue_reminders: settings.overdue_reminders !== false,
+  };
   const { error } = await adminClient
     .from('users')
     .update({
-      name: name,
-      user_settings: settings
+      name: trimmedName,
+      user_settings: safeSettings
     })
-    .eq('id', userId);
+    .eq('id', profile.id)
+    .eq('tenant_id', profile.tenant_id);
 
   if (error) {
     console.error("Error updating user settings:", error);

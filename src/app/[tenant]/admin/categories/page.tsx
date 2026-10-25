@@ -39,7 +39,7 @@ export default async function AdminCategoriesPage({
 
       <CategoryManager
         categories={categories || []}
-        tenantId={tenant.id}
+        tenantSubdomain={resolvedParams.tenant}
         prefilledSla={prefilledSla}
       />
     </div>

@@ -88,11 +88,11 @@ export default function ExecutiveIntelligenceConsole({
     { id: 'activity', label: 'Activity', question: 'What is happening?' },
     { id: 'change', label: 'Change', question: 'What changed?' },
     { id: 'attention', label: 'Attention', question: 'Where should I look?' },
-    { id: 'confidence', label: 'Confidence', question: 'How much can I trust this?' },
+    { id: 'confidence', label: 'Evidence', question: 'How strong is the evidence?' },
   ];
 
   return (
-    <div className="space-y-6 font-sans text-[#132238]">
+    <div className="space-y-6 font-sans text-[#182B3D]">
       {/* Header & Filter Context */}
       <IntelligenceHeader
         tenant={tenant}
@@ -113,12 +113,12 @@ export default function ExecutiveIntelligenceConsole({
 
       {/* Level 2: Explore Tabs Navigation */}
       <section aria-label="Analytical Exploration" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DDE5EC] pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DCE5EA] pb-2">
           {/* Segmented Control / Tab Row */}
           <div
             role="tablist"
             aria-label="Intelligence Perspectives"
-            className="inline-flex p-1 rounded-[8px] bg-[#F7FAFC] border border-[#DDE5EC]"
+            className="inline-flex p-1 rounded-[8px] bg-[#F6F8F9] border border-[#DCE5EA]"
           >
             {tabs.map((tab) => {
               const isSelected = activeTab === tab.id;
@@ -131,14 +131,14 @@ export default function ExecutiveIntelligenceConsole({
                   aria-selected={isSelected}
                   aria-controls={`tabpanel-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-1.5 rounded-[6px] text-[13px] font-medium transition-all focus:outline-hidden focus:ring-2 focus:ring-[#059DB0] ${
+                  className={`px-4 py-1.5 rounded-[6px] text-[13px] font-medium transition-all focus:outline-hidden focus:ring-2 focus:ring-[#0B7780] ${
                     isSelected
-                      ? 'bg-white text-[#132238] shadow-xs font-semibold'
-                      : 'text-[#526377] hover:text-[#132238] hover:bg-[#F3F6F8]'
+                      ? 'bg-white text-[#182B3D] shadow-xs font-semibold'
+                      : 'text-[#526679] hover:text-[#182B3D] hover:bg-[#EEF2F4]'
                   }`}
                 >
                   <span className="block leading-snug">{tab.label}</span>
-                  <span className="block text-[11px] text-[#8190A0] font-normal sm:hidden">
+                  <span className="block text-[11px] text-[#637587] font-normal sm:hidden">
                     {tab.question}
                   </span>
                 </button>
@@ -147,9 +147,9 @@ export default function ExecutiveIntelligenceConsole({
           </div>
 
           {/* Context subtitle matching the active tab */}
-          <div className="text-[12.5px] text-[#526377]">
+          <div className="text-[12.5px] text-[#526679]">
             Exploring:{' '}
-            <strong className="text-[#132238] font-medium">
+            <strong className="text-[#182B3D] font-medium">
               {tabs.find((t) => t.id === activeTab)?.question}
             </strong>
           </div>

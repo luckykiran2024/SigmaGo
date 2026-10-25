@@ -124,7 +124,7 @@ describe('SigmaGo Intelligence Redesign — Acceptance Suite', () => {
         persistence: 1,
         impact: 'HIGH',
         confidence: 'RELIABLE',
-        confidenceBasis: { sampleSize: 50, comparablePeriodsCount: 4, policyCoverage: 0.93 },
+        confidenceBasis: { sampleSize: 50, baselineSampleSize: 44, comparablePeriodsCount: 4, policyCoverage: 0.93 },
       },
     ];
 
@@ -156,7 +156,7 @@ describe('SigmaGo Intelligence Redesign — Acceptance Suite', () => {
       expect(summaries.attention.hasAlerts).toBe(true);
 
       // Confidence
-      expect(summaries.confidence.primaryText).toBe('Reliable');
+      expect(summaries.confidence.primaryText).toBe('Coverage supports comparison');
       expect(summaries.confidence.subText).toBe('93% coverage · 4 comparable periods');
     });
 
@@ -204,7 +204,7 @@ describe('SigmaGo Intelligence Redesign — Acceptance Suite', () => {
         },
       });
 
-      expect(summaries.confidence.primaryText).toBe('Evidence developing');
+      expect(summaries.confidence.primaryText).toBe('More evidence needed');
       expect(summaries.confidence.subText).toBe('41% coverage · 1 comparable period');
       expect(summaries.confidence.isReliable).toBe(false);
     });

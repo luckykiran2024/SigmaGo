@@ -317,10 +317,10 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
     <div className="space-y-6 font-sans max-w-4xl mx-auto py-4">
       <div className="md:flex md:items-center md:justify-between">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-[#012F6B]">
+          <h1 className="text-2xl font-bold tracking-tight text-[#17324D]">
             Create Approval Request
           </h1>
-          <p className="mt-1 text-xs text-[#526377] font-medium">
+          <p className="mt-1 text-xs text-[#526679] font-medium">
             Define a custom approval path with Direct approvals, Parallel reviews, and FYI Reference notifications.
           </p>
         </div>
@@ -332,14 +332,14 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-7 bg-white shadow-xs border border-[#DDE5EC] rounded-xl p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="space-y-7 bg-white shadow-xs border border-[#DCE5EA] rounded-xl p-6 sm:p-8">
         
         {/* STEP 0: WORKFLOW SELECTOR */}
         {workflows.length > 0 && (
-          <div className="bg-[#F7FAFC] border border-[#DDE5EC] rounded-xl p-4 sm:p-5">
+          <div className="bg-[#F6F8F9] border border-[#DCE5EA] rounded-xl p-4 sm:p-5">
             <div className="flex items-center justify-between mb-2.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#132238] flex items-center gap-2">
-                <GitBranch className="w-3.5 h-3.5 text-[#059DB0]" />
+              <label className="text-xs font-bold uppercase tracking-wider text-[#182B3D] flex items-center gap-2">
+                <GitBranch className="w-3.5 h-3.5 text-[#0B7780]" />
                 Governance Workflow
               </label>
               {selectedWorkflow && (
@@ -363,7 +363,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
             <select
               value={selectedWorkflowId}
               onChange={(e) => handleSelectWorkflow(e.target.value)}
-              className="block w-full rounded-lg border border-[#DDE5EC] py-2.5 px-3.5 text-sm text-[#132238] bg-white font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition"
+              className="block w-full rounded-lg border border-[#DCE5EA] py-2.5 px-3.5 text-sm text-[#182B3D] bg-white font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition"
             >
               <option value="">Custom Workflow (User-defined path)</option>
               {workflows.map((wf: any) => (
@@ -374,17 +374,17 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
             </select>
 
             {selectedWorkflow && (
-              <div className="mt-3 pt-3 border-t border-[#DDE5EC] flex flex-wrap gap-2.5 text-xs font-semibold">
+              <div className="mt-3 pt-3 border-t border-[#DCE5EA] flex flex-wrap gap-2.5 text-xs font-semibold">
                 {selectedWorkflow.description && (
-                  <div className="text-[#526377] w-full font-normal">{selectedWorkflow.description}</div>
+                  <div className="text-[#526679] w-full font-normal">{selectedWorkflow.description}</div>
                 )}
                 {selectedWorkflow.default_sla_hours && (
-                  <div className="text-[#012F6B] bg-[#F1FBFC] px-2.5 py-1 rounded-md border border-[#DDE5EC]">
+                  <div className="text-[#17324D] bg-[#ECF6F5] px-2.5 py-1 rounded-md border border-[#DCE5EA]">
                     ⏱ Default SLA: {selectedWorkflow.default_sla_hours} hours
                   </div>
                 )}
                 {selectedWorkflow.base_step_type && (
-                  <div className="text-[#07508B] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                  <div className="text-[#315878] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
                     🏷 Base STEP: {selectedWorkflow.base_step_type}
                   </div>
                 )}
@@ -462,7 +462,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
         {/* SUBJECT */}
         <div>
-          <label htmlFor="subject" className="block text-xs font-bold uppercase tracking-wider text-[#132238] mb-1.5">
+          <label htmlFor="subject" className="block text-xs font-bold uppercase tracking-wider text-[#182B3D] mb-1.5">
             Subject
           </label>
           <div className="mt-1">
@@ -471,7 +471,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
               name="subject"
               id="subject"
               required
-              className="block w-full rounded-lg border border-[#DDE5EC] py-2.5 px-3.5 text-[#132238] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-sm font-medium"
+              className="block w-full rounded-lg border border-[#DCE5EA] py-2.5 px-3.5 text-[#182B3D] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-sm font-medium"
               placeholder="e.g. Q3 Marketing Budget Increase"
             />
           </div>
@@ -479,13 +479,13 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
         {/* Flat Approval Path Builder */}
         <div className="space-y-4">
-          <div className="border-b border-[#DDE5EC] pb-3 flex items-center justify-between">
+          <div className="border-b border-[#DCE5EA] pb-3 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-[#012F6B] font-sans flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#059DB0]" />
+              <h3 className="text-sm font-bold text-[#17324D] font-sans flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#0B7780]" />
                 Approval Path Definition
               </h3>
-              <p className="text-xs text-[#526377] font-medium mt-0.5">
+              <p className="text-xs text-[#526679] font-medium mt-0.5">
                 Sequence is derived from row position. Direct gates must approve first, followed by Parallels in the same order level. Reference paths are FYI only.
               </p>
             </div>
@@ -493,7 +493,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
               <button
                 type="button"
                 onClick={addPathRow}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[#012F6B]/40 rounded-lg text-xs font-bold text-[#012F6B] hover:bg-[#F1FBFC] hover:border-[#059DB0] transition"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[#17324D]/40 rounded-lg text-xs font-bold text-[#17324D] hover:bg-[#ECF6F5] hover:border-[#0B7780] transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Approver
@@ -510,7 +510,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
           <div className="space-y-2.5">
             {/* Headers for larger viewports */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-3 text-[11px] font-bold text-[#526377] uppercase tracking-wider">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-3 text-[11px] font-bold text-[#526679] uppercase tracking-wider">
               <div className={isPathLocked ? "col-span-8" : "col-span-6"}>Person</div>
               <div className="col-span-4">Role</div>
               {!isPathLocked && <div className="col-span-2 text-center">Actions</div>}
@@ -520,11 +520,11 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
               {approvalPath.map((row, idx) => (
                 <div 
                   key={idx} 
-                  className="p-3 rounded-lg border border-[#DDE5EC] bg-[#F7FAFC]/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:bg-white hover:border-[#059DB0]/40 transition"
+                  className="p-3 rounded-lg border border-[#DCE5EA] bg-[#F6F8F9]/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:bg-white hover:border-[#0B7780]/40 transition"
                 >
                   {/* Person Picker */}
                   <div className={isPathLocked ? "col-span-1 md:col-span-8" : "col-span-1 md:col-span-6"}>
-                    <label className="block md:hidden text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">
+                    <label className="block md:hidden text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">
                       Person
                     </label>
                     <PersonPicker
@@ -540,7 +540,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
                   {/* Role Selector */}
                   <div className="col-span-1 md:col-span-4">
-                    <label className="block md:hidden text-[11px] font-bold text-[#526377] uppercase tracking-wider mb-1">
+                    <label className="block md:hidden text-[11px] font-bold text-[#526679] uppercase tracking-wider mb-1">
                       Role
                     </label>
                     <select
@@ -548,7 +548,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                       onChange={(e) => updatePathRow(idx, 'role', e.target.value)}
                       required
                       disabled={isPathLocked}
-                      className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition font-medium disabled:bg-gray-50 disabled:text-gray-400"
+                      className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition font-medium disabled:bg-gray-50 disabled:text-gray-400"
                     >
                       <option value="GENERAL">Direct Approver</option>
                       <option value="PARALLEL">Parallel Approver</option>
@@ -563,7 +563,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                         type="button"
                         onClick={() => moveRowUp(idx)}
                         disabled={idx === 0}
-                        className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-[#F3F6F8]"
+                        className="text-[#637587] hover:text-[#17324D] disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-[#EEF2F4]"
                         title="Move Up"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
@@ -572,7 +572,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                         type="button"
                         onClick={() => moveRowDown(idx)}
                         disabled={idx === approvalPath.length - 1}
-                        className="text-[#8190A0] hover:text-[#012F6B] disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-[#F3F6F8]"
+                        className="text-[#637587] hover:text-[#17324D] disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-[#EEF2F4]"
                         title="Move Down"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -581,7 +581,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                         type="button"
                         onClick={() => removePathRow(idx)}
                         disabled={approvalPath.length <= 1}
-                        className="text-[#8190A0] hover:text-rose-600 disabled:opacity-30 disabled:hover:text-[#8190A0] p-1.5 rounded-md transition hover:bg-rose-50"
+                        className="text-[#637587] hover:text-rose-600 disabled:opacity-30 disabled:hover:text-[#637587] p-1.5 rounded-md transition hover:bg-rose-50"
                         title="Remove Row"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -595,11 +595,11 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         </div>
 
         {/* Beneficiary (optional) */}
-        <div className="border-t border-[#DDE5EC] pt-6">
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#132238] mb-1">
-            This request is for <span className="text-[#8190A0] font-normal normal-case">(optional)</span>
+        <div className="border-t border-[#DCE5EA] pt-6">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D] mb-1">
+            This request is for <span className="text-[#637587] font-normal normal-case">(optional)</span>
           </label>
-          <p className="text-xs text-[#526377] font-medium mb-2">
+          <p className="text-xs text-[#526679] font-medium mb-2">
             If this request is about a specific person (e.g. employee leave, equipment for someone), select them here.
           </p>
           <PersonPicker
@@ -633,12 +633,12 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
           const isReview = !!selectedCat.review_only;
 
           return (
-            <div className="border-t border-[#DDE5EC] pt-6 space-y-2.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+            <div className="border-t border-[#DCE5EA] pt-6 space-y-2.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
                 {isReview ? 'Review Date' : 'Validity Duration'}
                 {isRequired && <span className="text-rose-500 ml-1">*</span>}
               </label>
-              <p className="text-xs text-[#526377] font-medium">
+              <p className="text-xs text-[#526679] font-medium">
                 {isReview
                   ? 'Set a review reminder date. This does not automatically expire the approval.'
                   : isRequired
@@ -654,7 +654,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                   value={isReview ? reviewDate : validUntil}
                   onChange={(e) => isReview ? setReviewDate(e.target.value) : setValidUntil(e.target.value)}
                   required={isRequired}
-                  className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-[#132238] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0] transition text-sm font-medium"
+                  className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-[#182B3D] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780] transition text-sm font-medium"
                 />
               </div>
             </div>
@@ -663,11 +663,11 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
         {/* Custom Fields */}
         {visibleCustomFields.length > 0 && (
-          <div className="border-t border-[#DDE5EC] pt-6 space-y-3.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#132238]">Additional Information</h3>
+          <div className="border-t border-[#DCE5EA] pt-6 space-y-3.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#182B3D]">Additional Information</h3>
             {visibleCustomFields.map(field => (
               <div key={field.id}>
-                <label className="block text-xs font-semibold text-[#132238] mb-1">
+                <label className="block text-xs font-semibold text-[#182B3D] mb-1">
                   {field.label}
                   {field.required && <span className="text-rose-500 ml-0.5">*</span>}
                 </label>
@@ -677,7 +677,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                     value={customFieldValues[field.key] || ''}
                     onChange={e => updateCustomFieldValue(field.key, e.target.value)}
                     required={field.required}
-                    className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
+                    className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780]"
                   />
                 )}
                 {field.type === 'NUMBER' && (
@@ -686,7 +686,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                     value={customFieldValues[field.key] || ''}
                     onChange={e => updateCustomFieldValue(field.key, e.target.value)}
                     required={field.required}
-                    className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
+                    className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780]"
                   />
                 )}
                 {field.type === 'DATE' && (
@@ -695,7 +695,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                     value={customFieldValues[field.key] || ''}
                     onChange={e => updateCustomFieldValue(field.key, e.target.value)}
                     required={field.required}
-                    className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
+                    className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780]"
                   />
                 )}
                 {field.type === 'SELECT' && (
@@ -703,7 +703,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                     value={customFieldValues[field.key] || ''}
                     onChange={e => updateCustomFieldValue(field.key, e.target.value)}
                     required={field.required}
-                    className="block w-full rounded-lg border border-[#DDE5EC] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#059DB0]/20 focus:border-[#059DB0]"
+                    className="block w-full rounded-lg border border-[#DCE5EA] py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B7780]/20 focus:border-[#0B7780]"
                   >
                     <option value="">Select...</option>
                     {(field.options || []).map(opt => (
@@ -725,8 +725,8 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         )}
 
         {/* Content rich text editor */}
-        <div className="space-y-2 border-t border-[#DDE5EC] pt-6">
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#132238]">
+        <div className="space-y-2 border-t border-[#DCE5EA] pt-6">
+          <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D]">
             Details & Justification
           </label>
           <div className="prose max-w-none">
@@ -735,21 +735,21 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         </div>
 
         {/* Attachments Section */}
-        <div className="space-y-3.5 border-t border-[#DDE5EC] pt-6">
+        <div className="space-y-3.5 border-t border-[#DCE5EA] pt-6">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#132238] flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#059DB0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#182B3D] flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#0B7780]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
               Attachments (Optional)
             </label>
-            <p className="text-xs text-[#526377] font-medium mt-0.5">
+            <p className="text-xs text-[#526679] font-medium mt-0.5">
               Upload any files supporting your request (e.g. PDFs, images, spreadsheets). Max 50MB per file.
             </p>
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="relative border-2 border-dashed border-[#DDE5EC] hover:border-[#059DB0]/50 rounded-xl p-5 text-center cursor-pointer transition bg-[#F7FAFC]">
+            <div className="relative border-2 border-dashed border-[#DCE5EA] hover:border-[#0B7780]/50 rounded-xl p-5 text-center cursor-pointer transition bg-[#F6F8F9]">
               <input
                 type="file"
                 multiple
@@ -757,8 +757,8 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
-              <div className="text-xs font-semibold text-[#526377] flex flex-col items-center gap-2">
-                <svg className="w-7 h-7 text-[#8190A0]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-xs font-semibold text-[#526679] flex flex-col items-center gap-2">
+                <svg className="w-7 h-7 text-[#637587]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
                 <span>Click or drag files here to attach</span>
@@ -767,20 +767,20 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
 
             {/* Selected Files List */}
             {selectedFiles.length > 0 && (
-              <ul className="divide-y divide-[#DDE5EC] border border-[#DDE5EC] rounded-lg bg-white overflow-hidden shadow-xs">
+              <ul className="divide-y divide-[#DCE5EA] border border-[#DCE5EA] rounded-lg bg-white overflow-hidden shadow-xs">
                 {selectedFiles.map((file, idx) => (
-                  <li key={idx} className="flex items-center justify-between p-3 hover:bg-[#F7FAFC] transition">
+                  <li key={idx} className="flex items-center justify-between p-3 hover:bg-[#F6F8F9] transition">
                     <div className="flex items-center gap-2 min-w-0">
-                      <svg className="w-4 h-4 text-[#8190A0] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-4 h-4 text-[#637587] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="text-xs font-semibold text-[#132238] truncate max-w-xs md:max-w-md">{file.name}</span>
-                      <span className="text-[11px] text-[#8190A0] font-mono shrink-0">({formatBytes(file.size)})</span>
+                      <span className="text-xs font-semibold text-[#182B3D] truncate max-w-xs md:max-w-md">{file.name}</span>
+                      <span className="text-[11px] text-[#637587] font-mono shrink-0">({formatBytes(file.size)})</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(idx)}
-                      className="text-[#8190A0] hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition shrink-0"
+                      className="text-[#637587] hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -792,17 +792,17 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         </div>
 
         {/* Submit Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-[#DDE5EC] pt-6">
+        <div className="flex items-center justify-end gap-3 border-t border-[#DCE5EA] pt-6">
           <Link
             href={`/${tenant}`}
-            className="inline-flex items-center justify-center px-4 py-2 border border-[#DDE5EC] rounded-lg text-xs font-semibold text-[#526377] bg-white hover:bg-[#F7FAFC] hover:text-[#012F6B] focus:outline-none transition shadow-xs"
+            className="inline-flex items-center justify-center px-4 py-2 border border-[#DCE5EA] rounded-lg text-xs font-semibold text-[#526679] bg-white hover:bg-[#F6F8F9] hover:text-[#17324D] focus:outline-none transition shadow-xs"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center rounded-lg bg-[#012F6B] hover:bg-[#033E79] px-5 py-2 text-xs font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-[#059DB0] disabled:opacity-50 transition"
+            className="inline-flex items-center justify-center rounded-lg bg-[#17324D] hover:bg-[#224564] px-5 py-2 text-xs font-bold text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780] disabled:opacity-50 transition"
           >
             {isSubmitting ? (
               <>
