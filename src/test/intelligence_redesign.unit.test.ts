@@ -185,11 +185,29 @@ describe('SigmaGo Intelligence Redesign — Acceptance Suite', () => {
       });
 
       expect(summaries.change.primaryText).toBe('No material change');
-      expect(summaries.attention.primaryText).toBe('Nothing requires attention');
-      expect(summaries.attention.subText).toBe('Within observed historical range');
+      expect(summaries.attention.primaryText).toBe('No elevated signals detected');
+      expect(summaries.attention.subText).toBe('No signals exceed observed thresholds');
       expect(summaries.attention.hasAlerts).toBe(false);
     });
 
+    it('withholds attention and comparison claims when no baseline exists', () => {
+      const summaries = generateOverviewSummaries({
+        distribution: { ...mockDistribution, totalComparatorDecisions: 0 },
+        periodDisplayName: 'OND 2026',
+        comparatorDisplayName: 'OND 2025',
+        signals: [],
+        coverage: {
+          percentage: 100,
+          comparablePeriodsCount: 0,
+          isReliable: true,
+          label: 'Reliable classification coverage (100%)',
+        },
+      });
+
+      expect(summaries.attention.primaryText).toBe('Baseline not available');
+      expect(summaries.confidence.primaryText).toBe('Historical comparison pending');
+      expect(summaries.confidence.isReliable).toBe(false);
+    });
     it('properly qualifies low/developing coverage without manufactured authority', () => {
       const summaries = generateOverviewSummaries({
         distribution: mockDistribution,
@@ -238,3 +256,4 @@ describe('SigmaGo Intelligence Redesign — Acceptance Suite', () => {
     });
   });
 });
+

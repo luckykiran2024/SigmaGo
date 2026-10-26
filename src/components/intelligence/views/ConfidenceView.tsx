@@ -28,7 +28,8 @@ export default function ConfidenceView({
 }: ConfidenceViewProps) {
   const coveragePct = coverage?.percentage ?? 0;
   const comparablePeriods = coverage?.comparablePeriodsCount ?? 0;
-  const isReliable = coverage?.isReliable ?? (coveragePct >= 80);
+  const hasReliableCoverage = coverage?.isReliable ?? (coveragePct >= 80);
+  const isReliable = hasReliableCoverage && comparablePeriods > 0;
 
 
 
@@ -62,12 +63,14 @@ export default function ConfidenceView({
               Evidence Quality
             </span>
             <h3 className="text-[20px] font-semibold text-[#182B3D] tracking-tight">
-              {isReliable ? 'Coverage supports comparison' : 'Coverage is still developing'}
+              {isReliable ? 'Coverage supports comparison' : comparablePeriods === 0 ? 'Historical comparison pending' : 'Coverage is still developing'}
             </h3>
             <p className="text-[13.5px] text-[#526679] max-w-2xl leading-relaxed">
               {isReliable
                 ? `${coveragePct}% of decisions have sufficient classification coverage. The briefing compares recorded data across ${comparablePeriods} comparable period(s); it does not predict future outcomes.`
-                : `Only ${coveragePct}% of decisions have sufficient classification coverage, so comparisons remain limited until more decision history is recorded.`}
+                : comparablePeriods === 0
+                  ? `${coveragePct}% of decisions have classification coverage, but no comparable historical period exists. Current activity can be described; changes and exception pressure cannot yet be assessed.`
+                  : `${coveragePct}% of decisions have classification coverage. Comparisons remain limited until coverage improves.`}
             </p>
           </div>
         </div>
@@ -247,3 +250,4 @@ export default function ConfidenceView({
     </div>
   );
 }
+

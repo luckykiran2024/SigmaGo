@@ -61,6 +61,7 @@ export default function AttentionView({
 
   // Empty state: Nothing requires attention right now
   if (totalAttentionItems === 0) {
+    const hasBaseline = distribution.totalComparatorDecisions > 0;
     return (
       <div className="p-8 rounded-[8px] bg-white border border-[#DCE5EA] text-center space-y-3">
         <div className="w-10 h-10 rounded-full bg-[#ECFDF3] text-[#027A48] flex items-center justify-center mx-auto">
@@ -68,10 +69,12 @@ export default function AttentionView({
         </div>
         <div className="space-y-1">
           <h3 className="text-[16px] font-semibold text-[#182B3D]">
-            Nothing requires attention right now
+            {hasBaseline ? 'No elevated signals detected' : 'Historical baseline not available'}
           </h3>
           <p className="text-[13px] text-[#526679] max-w-md mx-auto leading-relaxed">
-            Current decision behaviour is broadly consistent with the observed historical range. No policies are under elevated exception pressure.
+            {hasBaseline
+              ? 'No signals exceed the observed comparison thresholds in this period.'
+              : 'Decision activity is visible, but there is no comparable historical period yet. Exception pressure and unusual changes cannot be assessed.'}
           </p>
         </div>
       </div>
@@ -231,3 +234,4 @@ export default function AttentionView({
     </div>
   );
 }
+

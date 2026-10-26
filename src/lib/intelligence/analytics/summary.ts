@@ -107,8 +107,9 @@ export function generateOverviewSummaries(params: {
   );
   const attentionCount = attentionSignals.length;
 
-  let attentionPrimary = 'Nothing requires attention';
-  let attentionSub = 'Within observed historical range';
+  const hasBaseline = distribution.totalComparatorDecisions > 0 && (coverage?.comparablePeriodsCount ?? 0) > 0;
+  let attentionPrimary = hasBaseline ? 'No elevated signals detected' : 'Baseline not available';
+  let attentionSub = hasBaseline ? 'No signals exceed observed thresholds' : 'Historical comparison is not yet possible';
   const hasAlerts = attentionCount > 0;
 
   if (attentionCount > 0) {
@@ -121,9 +122,9 @@ export function generateOverviewSummaries(params: {
   // --- 4. Confidence Summary ---
   const covPct = coverage?.percentage ?? 0;
   const compPeriods = coverage?.comparablePeriodsCount ?? 0;
-  const isReliable = coverage?.isReliable ?? (covPct >= 80);
+  const isReliable = (coverage?.isReliable ?? (covPct >= 80)) && compPeriods > 0;
 
-  const confidencePrimary = isReliable ? 'Coverage supports comparison' : 'More evidence needed';
+  const confidencePrimary = isReliable ? 'Coverage supports comparison' : compPeriods === 0 ? 'Historical comparison pending' : 'More evidence needed';
   const confidenceSub = `${covPct}% coverage · ${compPeriods} comparable period${compPeriods === 1 ? '' : 's'}`;
 
   return {
@@ -151,3 +152,4 @@ export function generateOverviewSummaries(params: {
     },
   };
 }
+
