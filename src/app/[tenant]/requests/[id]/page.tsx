@@ -353,8 +353,8 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                       target="_blank"
                       className="inline-flex items-center justify-center rounded-[6px] bg-[#17324D] hover:bg-[#224564] px-3.5 py-2 text-[12.5px] font-medium text-white shadow-xs transition"
                     >
-                      <ShieldCheck className="w-4 h-4 mr-1.5" />
-                      Certificate
+                      {request.checksum_sha256 && <ShieldCheck className="w-4 h-4 mr-1.5" />}
+                      {request.checksum_sha256 ? 'Certificate' : 'Decision record'}
                     </Link>
                   )}
                   {/* Validity Badge */}
@@ -481,9 +481,10 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
                 <div>
                   <textarea
                     name="comment"
+                    required
                     rows={3}
                     className="block w-full rounded-[6px] border border-[#DCE5EA] py-2.5 px-3.5 text-[#182B3D] shadow-xs focus:outline-none focus:ring-2 focus:ring-[#0B7780] transition text-[13.5px]"
-                    placeholder="Add an optional comment or reasoning rationale..."
+                    placeholder="Record the reason for your decision or discussion..."
                   ></textarea>
                 </div>
                 <div className="flex gap-3">
@@ -581,3 +582,4 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     </div>
   );
 }
+

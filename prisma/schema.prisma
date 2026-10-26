@@ -281,6 +281,7 @@ model delegations {
   status                                String           @default("active")
   created_by                            String           @db.Uuid
   created_at                            DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime         @default(now()) @db.Timestamptz(6)
   approval_steps                        approval_steps[]
   users_delegations_created_byTousers   users            @relation("delegations_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_delegations_delegate_idTousers  users            @relation("delegations_delegate_idTousers", fields: [delegate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1041,5 +1042,6 @@ model tenant_ledger_heads {
 
   @@map("tenant_ledger_heads")
 }
+
 
 

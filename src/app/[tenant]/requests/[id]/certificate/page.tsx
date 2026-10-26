@@ -69,7 +69,7 @@ export default async function CertificatePage({
     loggedInPublicUser.role === 'super_admin' ||
     loggedInPublicUser.role === 'ADMIN' ||
     loggedInPublicUser.role === 'SUPER_ADMIN';
-  const isOnPath = request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser.id);
+  const isOnPath = request.approval_steps?.some((s: any) => s.approver_id === loggedInPublicUser.id || s.acted_by?.id === loggedInPublicUser.id);
   const isGrantee = request.view_grants?.some((g: any) => g.grantee_id === loggedInPublicUser.id && g.status === 'active');
 
   const isAuthorized =
@@ -81,6 +81,20 @@ export default async function CertificatePage({
     return <div className="p-8 text-center text-[#B42318] font-bold">Unauthorized to view this certificate.</div>;
   }
 
+  // A rejected request is recorded, but the current finalizer does not seal it.
+  // Do not present a calculated checksum as a stored cryptographic certificate.
+  if (request.status === 'rejected' && !request.checksum_sha256) {
+    const rejection = request.approval_steps?.find((step: any) => step.status === 'rejected');
+    return (
+      <div className="max-w-2xl mx-auto p-8 bg-white border border-[#DCE5EA] rounded-[8px] space-y-4 font-sans">
+        <h1 className="text-xl font-semibold text-[#182B3D]">Rejected decision record</h1>
+        <p className="text-sm text-[#526679]">{request.ref || request.id} · {request.subject}</p>
+        <p className="text-sm text-[#182B3D]">{rejection?.comment || 'No rejection reason recorded.'}</p>
+        <p className="text-sm font-medium text-[#B42318]">This record has no stored cryptographic seal or signature. Its authenticity cannot yet be verified.</p>
+        <Link href={`/${resolvedParams.tenant}/requests/${resolvedParams.id}`} className="inline-flex text-sm font-semibold text-[#096A72]">Back to request details</Link>
+      </div>
+    );
+  }
   // Guard: Only finalized requests
   if (request.status !== 'approved' && request.status !== 'rejected') {
     return (
@@ -321,3 +335,4 @@ export default async function CertificatePage({
     </div>
   );
 }
+
