@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
-import { CheckCircle2, AlertCircle, ShieldCheck, Database, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { CheckCircle2, AlertCircle, ShieldCheck, Database, Calendar, GitFork, Link2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { StepDistributionResult } from '@/lib/intelligence/analytics/distributions';
 import { IntelligenceSignal } from '@/lib/intelligence/analytics/signals';
+import { OrphanMetrics } from '@/lib/intelligence/chain/structure';
 
 interface ConfidenceViewProps {
   distribution: StepDistributionResult;
@@ -16,8 +18,18 @@ interface ConfidenceViewProps {
     comparablePeriodsCount: number;
     isReliable: boolean;
     label: string;
+    orphanScore?: number;
+    orphanCount?: number;
+    connectedCount?: number;
+    connectedRate?: number;
+    orphanStatus?: 'HEALTHY' | 'WATCH' | 'CRITICAL';
+    orphanIds?: string[];
   };
   signals: IntelligenceSignal[];
+  orphanMetrics?: OrphanMetrics;
+  tenant?: string;
+  sealedDecisions?: any[];
+  onOpenEvidence?: (type: 'step' | 'signal', id: string) => void;
 }
 
 export default function ConfidenceView({
@@ -25,15 +37,31 @@ export default function ConfidenceView({
   periodDisplayName,
   coverage,
   signals,
+  orphanMetrics,
+  tenant,
+  sealedDecisions = [],
+  onOpenEvidence,
 }: ConfidenceViewProps) {
+  const [showOrphanDetails, setShowOrphanDetails] = useState(false);
+
   const coveragePct = coverage?.percentage ?? 0;
   const comparablePeriods = coverage?.comparablePeriodsCount ?? 0;
   const isReliable = coverage?.isReliable ?? (coveragePct >= 80);
 
+  // Orphan Score metrics resolution
+  const totalDecisions = orphanMetrics?.totalDecisions ?? distribution.totalCurrentDecisions;
+  const orphanCount = orphanMetrics?.orphanCount ?? coverage?.orphanCount ?? 0;
+  const connectedCount = orphanMetrics?.connectedCount ?? coverage?.connectedCount ?? (totalDecisions - orphanCount);
+  const orphanScore = orphanMetrics?.orphanScore ?? coverage?.orphanScore ?? (totalDecisions > 0 ? Number(((orphanCount / totalDecisions) * 100).toFixed(1)) : 0);
+  const connectedRate = orphanMetrics?.connectedRate ?? coverage?.connectedRate ?? (totalDecisions > 0 ? Number(((connectedCount / totalDecisions) * 100).toFixed(1)) : 100);
+  const orphanStatus = orphanMetrics?.status ?? coverage?.orphanStatus ?? (orphanScore <= 10 ? 'HEALTHY' : orphanScore <= 25 ? 'WATCH' : 'CRITICAL');
+  const orphanIds = orphanMetrics?.orphanIds ?? coverage?.orphanIds ?? [];
 
+  // Match orphan decisions with sealed records
+  const orphanDecisions = (sealedDecisions || []).filter((d: any) => orphanIds.includes(d.id));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Evidence Quality Primary Banner */}
       <div
         className={`p-6 rounded-[8px] border transition-colors ${
@@ -59,22 +87,22 @@ export default function ConfidenceView({
 
           <div className="space-y-1">
             <span className="text-[12px] font-medium text-[#637587] uppercase tracking-wider">
-              Evidence Quality
+              Evidence Quality & Graph Integrity
             </span>
             <h3 className="text-[20px] font-semibold text-[#182B3D] tracking-tight">
-              {isReliable ? 'Coverage supports comparison' : 'Coverage is still developing'}
+              {isReliable ? 'Coverage and Connectivity support verified comparison' : 'Coverage is still developing'}
             </h3>
             <p className="text-[13.5px] text-[#526679] max-w-2xl leading-relaxed">
               {isReliable
-                ? `${coveragePct}% of decisions have sufficient classification coverage. The briefing compares recorded data across ${comparablePeriods} comparable period(s); it does not predict future outcomes.`
+                ? `${coveragePct}% of decisions have verified classification coverage and ${connectedRate}% are anchored to precedent rules or policies (Orphan Score: ${orphanScore}%). Recorded data compares observed history; it does not speculate.`
                 : `Only ${coveragePct}% of decisions have sufficient classification coverage, so comparisons remain limited until more decision history is recorded.`}
             </p>
           </div>
         </div>
       </div>
 
-      {/* 3 Core Evidence Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 4 Core Evidence & Connectivity Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* STEP Resolution Coverage */}
         <div className="p-4 rounded-[8px] bg-white border border-[#DCE5EA] space-y-1">
           <div className="flex items-center gap-1.5 text-[12px] text-[#637587]">
@@ -92,6 +120,34 @@ export default function ConfidenceView({
           </p>
         </div>
 
+        {/* Orphan Score Metric */}
+        <div className="p-4 rounded-[8px] bg-white border border-[#DCE5EA] space-y-1">
+          <div className="flex items-center justify-between text-[12px] text-[#637587]">
+            <div className="flex items-center gap-1.5">
+              <GitFork className="w-3.5 h-3.5 text-[#0B7780]" aria-hidden="true" />
+              <span>Orphan Score</span>
+            </div>
+            <span className={`px-1.5 py-0.5 rounded text-[10.5px] font-semibold uppercase ${
+              orphanStatus === 'HEALTHY'
+                ? 'bg-[#ECFDF3] text-[#027A48]'
+                : orphanStatus === 'WATCH'
+                ? 'bg-[#FFFAEB] text-[#B54708]'
+                : 'bg-[#FEF3F2] text-[#B42318]'
+            }`}>
+              {orphanStatus}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[26px] font-bold text-[#182B3D] tabular-nums">
+              {orphanScore}%
+            </span>
+            <span className="text-[12px] text-[#526679]">({orphanCount} unreferenced)</span>
+          </div>
+          <p className="text-[12px] text-[#526679]">
+            {connectedCount} of {totalDecisions} approvals anchored into organizational decision graph.
+          </p>
+        </div>
+
         {/* Comparable Historical Periods */}
         <div className="p-4 rounded-[8px] bg-white border border-[#DCE5EA] space-y-1">
           <div className="flex items-center gap-1.5 text-[12px] text-[#637587]">
@@ -105,11 +161,11 @@ export default function ConfidenceView({
             <span className="text-[12px] text-[#526679]">periods</span>
           </div>
           <p className="text-[12px] text-[#526679]">
-            Prior same-quarter periods used to construct baseline comparisons and observed ranges.
+            Prior same-quarter periods used to construct baseline comparisons.
           </p>
         </div>
 
-        {/* Signals with observed comparison evidence */}
+        {/* Observed Signals */}
         <div className="p-4 rounded-[8px] bg-white border border-[#DCE5EA] space-y-1">
           <div className="flex items-center gap-1.5 text-[12px] text-[#637587]">
             <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
@@ -120,11 +176,109 @@ export default function ConfidenceView({
             <span className="text-[12px] text-[#526679]">in this period</span>
           </div>
           <p className="text-[12px] text-[#526679]">
-            Each signal below includes current and comparator sample counts.
+            Verified statistical deviations across current and comparator samples.
           </p>
         </div>
       </div>
 
+      {/* DEDICATED GOVERNANCE HYGIENE & ORPHAN SCORE PANEL */}
+      <section aria-labelledby="orphan-score-heading" className="p-5 rounded-[8px] bg-white border border-[#DCE5EA] space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DCE5EA] pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-[#0B7780]" />
+              <h3 id="orphan-score-heading" className="text-[15px] font-semibold text-[#182B3D]">
+                Decision References & Orphan Score Analysis
+              </h3>
+            </div>
+            <p className="text-[12.5px] text-[#526679] mt-0.5">
+              Approvals without a precedent reference are called <strong>orphans</strong>. In sound organizational governance, almost all approvals reference a parent standard operating procedure, strategic policy, or precedent.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="text-right">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#637587]">Hygiene Benchmark</div>
+              <div className="text-[13px] font-bold text-[#182B3D]">{orphanScore}% (Target ≤ 10%)</div>
+            </div>
+            <span className={`px-2 py-1 rounded-[4px] text-[12px] font-semibold uppercase tracking-wider border ${
+              orphanStatus === 'HEALTHY'
+                ? 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]'
+                : orphanStatus === 'WATCH'
+                ? 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]'
+                : 'bg-[#FEF3F2] text-[#B42318] border-[#FECDCA]'
+            }`}>
+              {orphanStatus}
+            </span>
+          </div>
+        </div>
+
+        {/* Arithmetic & Graph Distribution Bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[12.5px]">
+            <span className="text-[#526679]">
+              Connected Approvals: <strong className="text-[#182B3D]">{connectedCount} ({connectedRate}%)</strong>
+            </span>
+            <span className="text-[#526679]">
+              Orphan Approvals: <strong className="text-[#B54708]">{orphanCount} ({orphanScore}%)</strong>
+            </span>
+          </div>
+
+          {/* Visual Connectivity Bar */}
+          <div className="h-3 w-full bg-[#FEF0C7] rounded-full overflow-hidden flex">
+            <div
+              className="bg-[#0B7780] h-full transition-all duration-500 rounded-l-full"
+              style={{ width: `${connectedRate}%` }}
+              title={`${connectedCount} connected decisions (${connectedRate}%)`}
+            />
+            <div
+              className="bg-[#F79009] h-full transition-all duration-500"
+              style={{ width: `${orphanScore}%` }}
+              title={`${orphanCount} orphan decisions (${orphanScore}%)`}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-[#637587]">
+            <span>Formula: <code className="font-mono text-[#182B3D]">Orphan Score = (Orphan Decisions ÷ Total Eligible Decisions) × 100</code></span>
+            <span>Healthy threshold: ≤ 10.0%</span>
+          </div>
+        </div>
+
+        {/* Orphan Decisions Drill-down / Inspection */}
+        {orphanCount > 0 ? (
+          <div className="border border-[#FEDF89] bg-[#FFFAEB]/60 rounded-[8px] p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#B54708]" />
+                <h4 className="text-[13.5px] font-semibold text-[#B54708]">
+                  {orphanCount} Unreferenced Decision{orphanCount > 1 ? 's' : ''} Require Linkage
+                </h4>
+              </div>
+            </div>
+            <div className="pt-2 flex items-center justify-between">
+              <span className="text-[12px] text-[#7A2E0E] font-medium">
+                {orphanCount} approvals lack precedent or SOP parent linkage.
+              </span>
+              {onOpenEvidence && (
+                <button
+                  type="button"
+                  onClick={() => onOpenEvidence('step', 'TRANSACTIONAL')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#FEDF89] rounded-[6px] text-[12px] font-medium text-[#B54708] hover:bg-[#FEF0C7]/50 shadow-2xs transition"
+                >
+                  <span>Review Evidence in Drawer →</span>
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-3.5 bg-[#ECFDF3] border border-[#A6F4C5] rounded-[6px] flex items-center gap-2 text-[13px] text-[#027A48]">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>Complete Precedent Anchor: 100% of approvals in this period have established decision references. Orphan Score is 0.0%.</span>
+          </div>
+        )}
+      </section>
+
+      {/* Signals with observed comparison evidence */}
       <section aria-labelledby="signal-evidence-heading" className="p-5 rounded-[8px] bg-white border border-[#DCE5EA] space-y-3">
         <div className="border-b border-[#DCE5EA] pb-3">
           <h3 id="signal-evidence-heading" className="text-[15px] font-semibold text-[#182B3D]">Evidence behind observed signals</h3>
@@ -164,7 +318,7 @@ export default function ConfidenceView({
             Underlying Data Integrity & Verification
           </h3>
           <p className="text-[12.5px] text-[#526679] mt-0.5">
-            Breakdown of data resolution criteria supporting executive signals.
+            Breakdown of data resolution and graph connectivity criteria supporting executive signals.
           </p>
         </div>
 
@@ -237,6 +391,28 @@ export default function ConfidenceView({
                       : 'bg-[#FFFAEB] text-[#B54708]'
                   }`}>
                     {(coverage?.policyLinkageCoverage ?? 0) >= 0.8 ? 'Verified' : 'Developing'}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td className="py-2.5 px-3.5 font-medium text-[#182B3D]">
+                  Decision Reference Connectivity
+                </td>
+                <td className="py-2.5 px-3.5 text-[12px] text-[#526679]">
+                  Approvals linked to parent rules, SOPs, or precedents (Orphan Score: {orphanScore}%)
+                </td>
+                <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-[#182B3D]">
+                  {connectedRate}% Connected
+                </td>
+                <td className="py-2.5 px-3.5 text-right">
+                  <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${
+                    orphanScore <= 10
+                      ? 'bg-[#ECFDF3] text-[#027A48]'
+                      : orphanScore <= 25
+                      ? 'bg-[#FFFAEB] text-[#B54708]'
+                      : 'bg-[#FEF3F2] text-[#B42318]'
+                  }`}>
+                    {orphanScore <= 10 ? 'Healthy (≤ 10%)' : orphanScore <= 25 ? 'Watch (11-25%)' : 'Critical (> 25%)'}
                   </span>
                 </td>
               </tr>

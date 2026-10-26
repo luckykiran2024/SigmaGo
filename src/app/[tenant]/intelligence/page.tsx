@@ -97,7 +97,7 @@ export default async function UserIntelligencePage({
   // Query requests for intelligence analytics
   const allRequests = await collectPages<any>((from, to) => adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false })
     .order('id', { ascending: true })
@@ -264,6 +264,18 @@ export default async function UserIntelligencePage({
     : 0;
 
   const coveragePercentage = Math.round(stepResolutionCoverage * 100);
+
+  // Compute Orphan Metrics (§ Governance Connectivity & Precedent Tracking)
+  const { calculateOrphanMetrics } = await import('@/lib/intelligence/chain/structure');
+  const orphanMetrics = calculateOrphanMetrics(
+    (currentRequests || []).map((r: any) => ({ id: r.id })),
+    (tenantReferences || []).map((ref: any) => ({
+      sourceId: ref.source_id,
+      targetId: ref.target_id,
+      toPolicyId: ref.to_policy_id,
+    }))
+  );
+
   const coverageMetric = {
     percentage: coveragePercentage,
     stepResolutionCoverage,
@@ -276,6 +288,12 @@ export default async function UserIntelligencePage({
       : coveragePercentage >= 80
       ? `Reliable data coverage (${coveragePercentage}%)`
       : `Partial data coverage (${coveragePercentage}%)`,
+    orphanScore: orphanMetrics.orphanScore,
+    orphanCount: orphanMetrics.orphanCount,
+    connectedCount: orphanMetrics.connectedCount,
+    connectedRate: orphanMetrics.connectedRate,
+    orphanStatus: orphanMetrics.status,
+    orphanIds: orphanMetrics.orphanIds,
   };
 
   // Build workflow category index for strict single-bucket allocation (§ Audit Rule)
@@ -552,6 +570,7 @@ export default async function UserIntelligencePage({
         movementAnalyses={movementAnalyses}
         sealedDecisions={isAggregateOnly ? [] : (allRequests || [])}
         coverage={coverageMetric}
+        orphanMetrics={orphanMetrics}
       />
     </div>
   );

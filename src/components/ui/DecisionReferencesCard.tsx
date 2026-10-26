@@ -156,6 +156,15 @@ export function DecisionReferencesCard({
           <div className="flex items-center gap-2">
             <Link2 className="w-4 h-4 text-[#17324D]" />
             <h3 className="text-[16px] font-semibold text-[#182B3D]">Decision References</h3>
+            {outgoingRefs.length === 0 && incomingRefs.length === 0 ? (
+              <span className="px-2 py-0.5 rounded-[4px] bg-[#FFFAEB] text-[#B54708] border border-[#FEDF89] text-[11px] font-medium uppercase font-mono">
+                Orphan Decision
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-[4px] bg-[#ECFDF3] text-[#027A48] border border-[#A6F4C5] text-[11px] font-medium uppercase font-mono">
+                Connected ({outgoingRefs.length + incomingRefs.length} Ref{outgoingRefs.length + incomingRefs.length > 1 ? 's' : ''})
+              </span>
+            )}
           </div>
           {!isAdding && (
             <button
@@ -167,6 +176,32 @@ export function DecisionReferencesCard({
             </button>
           )}
         </div>
+
+        {/* ORPHAN ALERT BANNER */}
+        {outgoingRefs.length === 0 && incomingRefs.length === 0 && !isAdding && (
+          <div className="p-4 bg-[#FFFAEB] border border-[#FEDF89] rounded-[8px] flex items-start gap-3 text-[13px] text-[#B54708]">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-[#B54708]" />
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-[#182B3D]">Orphan Approval Detected</span>
+                <span className="px-2 py-0.5 rounded-[4px] bg-[#FEF0C7] text-[#B54708] border border-[#FEDF89] font-mono font-medium text-[11px] uppercase tracking-wider">
+                  Orphan
+                </span>
+              </div>
+              <p className="text-[#526679] text-[12.5px] leading-relaxed">
+                Approvals without references are called <strong>orphans</strong>. In sound organizational governance, almost all approvals should have a reference (e.g. parent SOP, policy, or precedent). Orphan approvals elevate the organization&apos;s <strong>Orphan Score</strong>.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsAdding(true)}
+                className="mt-1 text-[12.5px] font-medium text-[#0B7780] hover:underline inline-flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Link a reference now to anchor this approval</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* List of Outgoing References */}
         {outgoingRefs.length > 0 ? (
@@ -233,7 +268,7 @@ export function DecisionReferencesCard({
             ))}
           </div>
         ) : (
-          !isAdding && (
+          !isAdding && outgoingRefs.length > 0 && (
             <p className="text-[13px] text-[#637587] italic">
               No references yet. Link this decision to the ones it&apos;s based on, replaces, or deviates from.
             </p>

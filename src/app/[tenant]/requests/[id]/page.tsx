@@ -81,9 +81,9 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
 
   const tenantUsers = tenantUsersRes.data;
   const customFieldDefs = tenantId ? await getCustomFieldsForTenant(tenantId) : [];
-  const outgoingRefs = tenantId ? await getOutgoingReferences(resolvedParams.id, tenantId) : [];
-  const incomingRefs = tenantId ? await getIncomingReferences(resolvedParams.id, tenantId) : [];
-  const exceptionCount = tenantId ? await getExceptionCount(resolvedParams.id, tenantId) : 0;
+  const outgoingRefs = tenantId ? await getOutgoingReferences(tenantId, resolvedParams.id) : [];
+  const incomingRefs = tenantId ? await getIncomingReferences(tenantId, resolvedParams.id) : [];
+  const exceptionCount = tenantId ? await getExceptionCount(tenantId, resolvedParams.id) : 0;
 
   const userMap = new Map((tenantUsers || []).map(u => [u.id, u.name]));
   const activeTenantUsers = (tenantUsers || []).filter(u => u.status === 'active' || u.status === 'ACTIVE');

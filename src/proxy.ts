@@ -10,6 +10,8 @@ export async function proxy(request: NextRequest) {
     path.startsWith('/product') ||
     path.startsWith('/about') ||
     path.startsWith('/blog') ||
+    path.startsWith('/intelligence-demo') ||
+    path.startsWith('/functional-tests') ||
     path === '/sitemap.xml' ||
     path === '/robots.txt';
 

@@ -13,6 +13,7 @@ import ActivityView from './views/ActivityView';
 import ChangeView from './views/ChangeView';
 import AttentionView from './views/AttentionView';
 import ConfidenceView from './views/ConfidenceView';
+import CategorizedMetricsDashboard from './CategorizedMetricsDashboard';
 import IntelligenceEvidenceDrawer from './IntelligenceEvidenceDrawer';
 
 interface ExecutiveIntelligenceConsoleProps {
@@ -34,7 +35,14 @@ interface ExecutiveIntelligenceConsoleProps {
     comparablePeriodsCount: number;
     isReliable: boolean;
     label: string;
+    orphanScore?: number;
+    orphanCount?: number;
+    connectedCount?: number;
+    connectedRate?: number;
+    orphanStatus?: 'HEALTHY' | 'WATCH' | 'CRITICAL';
+    orphanIds?: string[];
   };
+  orphanMetrics?: import('@/lib/intelligence/chain/structure').OrphanMetrics;
 }
 
 export default function ExecutiveIntelligenceConsole({
@@ -49,21 +57,12 @@ export default function ExecutiveIntelligenceConsole({
   movementAnalyses,
   sealedDecisions,
   coverage,
+  orphanMetrics,
 }: ExecutiveIntelligenceConsoleProps) {
-  // Determine if there is a meaningful alert state justifying opening Attention first
+  // Default to the 4-Category Executive Metric Dashboard per user specification
   const initialTab = useMemo<IntelligenceTab>(() => {
-    const hasHighImpactSignal = (signals || []).some((s) => s.impact === 'HIGH');
-    const exceptionStatus = getStepStatus(
-      'EXCEPTION',
-      distribution.steps.EXCEPTION,
-      distribution.totalComparatorDecisions,
-      comparatorDisplayName
-    );
-    if (hasHighImpactSignal || exceptionStatus.label === 'Attention') {
-      return 'attention';
-    }
-    return 'activity';
-  }, [signals, distribution, comparatorDisplayName]);
+    return 'metrics';
+  }, []);
 
   const [activeTab, setActiveTab] = useState<IntelligenceTab>(initialTab);
 
@@ -85,10 +84,11 @@ export default function ExecutiveIntelligenceConsole({
   }, [distribution, periodDisplayName, comparatorDisplayName, signals, coverage]);
 
   const tabs: Array<{ id: IntelligenceTab; label: string; question: string }> = [
-    { id: 'activity', label: 'Activity', question: 'What is happening?' },
-    { id: 'change', label: 'Change', question: 'What changed?' },
-    { id: 'attention', label: 'Attention', question: 'Where should I look?' },
-    { id: 'confidence', label: 'Evidence', question: 'How strong is the evidence?' },
+    { id: 'metrics', label: 'Metric Dashboard', question: 'Core metrics organized into 4 executive categories' },
+    { id: 'activity', label: 'Activity & Mix', question: 'What is happening?' },
+    { id: 'change', label: 'Comparative Change', question: 'What changed?' },
+    { id: 'attention', label: 'Attention Signals', question: 'Where should I look?' },
+    { id: 'confidence', label: 'Evidence & Integrity', question: 'How strong is the evidence?' },
   ];
 
   return (
@@ -162,6 +162,18 @@ export default function ExecutiveIntelligenceConsole({
           aria-labelledby={`tab-${activeTab}`}
           className="focus:outline-hidden"
         >
+          {activeTab === 'metrics' && (
+            <CategorizedMetricsDashboard
+              distribution={distribution}
+              periodDisplayName={periodDisplayName}
+              comparatorDisplayName={comparatorDisplayName}
+              coverage={coverage}
+              orphanMetrics={orphanMetrics}
+              signals={signals}
+              onOpenEvidence={(type, id) => setEvidenceTarget({ type, id })}
+            />
+          )}
+
           {activeTab === 'activity' && (
             <ActivityView
               distribution={distribution}
@@ -198,6 +210,10 @@ export default function ExecutiveIntelligenceConsole({
               periodDisplayName={periodDisplayName}
               coverage={coverage}
               signals={signals}
+              orphanMetrics={orphanMetrics}
+              tenant={tenant}
+              sealedDecisions={sealedDecisions}
+              onOpenEvidence={(type, id) => setEvidenceTarget({ type, id })}
             />
           )}
         </div>

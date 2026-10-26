@@ -4,7 +4,7 @@ import React from 'react';
 import { ArrowRight, AlertTriangle, CheckCircle, Activity, TrendingUp } from 'lucide-react';
 import { OverviewSummaries } from '@/lib/intelligence/analytics/summary';
 
-export type IntelligenceTab = 'activity' | 'change' | 'attention' | 'confidence';
+export type IntelligenceTab = 'metrics' | 'activity' | 'change' | 'attention' | 'confidence';
 
 interface IntelligenceOverviewProps {
   summaries: OverviewSummaries;
