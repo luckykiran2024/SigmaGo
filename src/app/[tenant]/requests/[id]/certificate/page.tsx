@@ -185,7 +185,7 @@ export default async function CertificatePage({
             </div>
             <div className="space-y-2">
               {certBlocks.authority.map((step) => (
-                <div key={step.stage} className="p-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[6px] flex items-center justify-between text-xs">
+                <div key={`${step.stage}-${step.approverEmail}`} className="p-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[6px] flex items-center justify-between text-xs">
                   <div>
                     <span className="font-bold text-[#101828]">Stage {step.stage}: {step.approverName}</span>
                     <span className="text-[#667085] ml-2">({step.approverEmail})</span>
@@ -206,11 +206,11 @@ export default async function CertificatePage({
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
               {certBlocks.authority.map((step, idx) => (
-                <div key={step.stage} className="flex items-center gap-2">
+                <div key={`${step.stage}-${step.approverEmail}`} className="flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-[4px] bg-[#E8EDF4] text-[#274C77] border border-[#D3DEEB] font-semibold">
                     {step.stage}. {step.approverName} ({step.status.toUpperCase()})
                   </span>
-                  {idx < certBlocks.authority.length - 1 && <span className="text-[#98A2B3]">→</span>}
+                  {idx < certBlocks.authority.length - 1 && <span className="text-[#98A2B3]">{certBlocks.authority[idx + 1].stage === step.stage ? "+" : "→"}</span>}
                 </div>
               ))}
             </div>
@@ -225,11 +225,11 @@ export default async function CertificatePage({
               <p className="text-xs text-[#667085]">What was weighed, recorded at the time</p>
             </div>
             <div className="space-y-2">
-              {request.approval_steps?.map((step: any) => (
-                <div key={step.id} className="p-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[6px] text-xs space-y-1">
+              {certBlocks.authority.filter((step) => step.actedAt || step.comment).map((step) => (
+                <div key={`${step.stage}-${step.approverEmail}-reason`} className="p-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[6px] text-xs space-y-1">
                   <div className="font-bold text-[#101828] flex items-center justify-between">
-                    <span>{step.users?.name || 'Approver'}</span>
-                    <span className="font-mono text-[#667085]">{step.acted_at ? formatDate(step.acted_at) : 'N/A'}</span>
+                    <span>{step.approverName}</span>
+                    <span className="font-mono text-[#667085]">{step.actedAt ? formatDate(step.actedAt) : 'N/A'}</span>
                   </div>
                   <p className="text-[#344054] italic">
                     "{step.comment || 'Approved without additional reasoning commentary.'}"
@@ -249,6 +249,8 @@ export default async function CertificatePage({
               <p className="font-mono text-[11px] text-[#101828] font-bold break-all bg-white p-2 rounded border border-[#E8DDB0]">
                 SHA-256: {sha256Checksum}
               </p>
+              <p className={`text-[11px] font-bold ${verification.isValid ? "text-[#0F7548]" : "text-[#B42318]"}`}>SHA-256 content check: {verification.isValid ? "Verified" : "Failed"}</p>
+              <p className={`text-[11px] font-bold ${verification.isSignatureValid ? "text-[#0F7548]" : "text-[#B42318]"}`}>Ed25519 signature: {verification.isSignatureValid ? "Verified" : "Unverified"}</p>
               <p className="text-[11px] text-[#667085]">Sealed: {formatDate(request.finalized_at)}</p>
             </div>
 

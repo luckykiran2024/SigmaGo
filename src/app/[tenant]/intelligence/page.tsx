@@ -97,7 +97,7 @@ export default async function UserIntelligencePage({
   // Query requests for intelligence analytics
   const allRequests = await collectPages<any>((from, to) => adminClient
     .from('approval_requests')
-    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, blast_at_seal, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
+    .select('id, ref, subject, status, resolved_step_type, baseline_step_type, created_at, finalized_at, workflow_id, workflow_version_id, category_id, checksum_sha256, workflow_snapshot, categories(name, domain, governing_policy_id)')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: false })
     .order('id', { ascending: true })

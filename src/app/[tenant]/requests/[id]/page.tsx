@@ -225,7 +225,7 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     revalidatePath(`/${resolvedParams.tenant}/requests/${resolvedParams.id}`);
   }
 
-  const stepType = request.categories?.step_type || 'TRANSACTIONAL';
+  const stepType = request.resolved_step_type || request.baseline_step_type || request.categories?.step_type || 'TRANSACTIONAL';
 
   return (
     <div className="max-w-[1360px] mx-auto px-6 py-6 font-sans text-[#182B3D] space-y-6">

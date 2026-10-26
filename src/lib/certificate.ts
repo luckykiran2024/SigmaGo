@@ -15,6 +15,7 @@ export interface CertificateAuthorityStep {
   approverEmail: string;
   status: string;
   actedAt?: string | null;
+  comment?: string | null;
   isAuthoritative: true;
 }
 
@@ -635,7 +636,7 @@ export async function getCertificateBlocks(
 ): Promise<CertificateBlocks> {
   const { data: steps, error: stepsErr } = await adminClient
     .from('approval_steps')
-    .select('order_index, status, acted_at, approver:users!approver_id(name, email)')
+    .select('order_index, stage_index, type, status, acted_at, comment, approver:users!approver_id(name, email)')
     .eq('request_id', requestId)
     .order('order_index', { ascending: true });
 
@@ -649,13 +650,25 @@ export async function getCertificateBlocks(
     .eq('request_id', requestId)
     .eq('tenant_id', tenantId);
 
-  const authority: CertificateAuthorityStep[] = (steps || []).map((s: any) => ({
-    stage: (s.order_index ?? 0) + 1,
+  const authority: CertificateAuthorityStep[] = (steps || []).filter((s: any) => s.type !== 'REFERENCE').map((s: any) => ({
+    stage: (s.stage_index ?? s.order_index ?? 0) + 1,
     approverName: s.approver?.name || 'Approver',
     approverEmail: s.approver?.email || '',
     status: s.status,
     actedAt: s.acted_at,
+    comment: s.comment,
     isAuthoritative: true,
+  }));
+
+  const referenceParticipants: CertificateParticipantEntry[] = (steps || []).filter((s: any) => s.type === 'REFERENCE').map((s: any) => ({
+    role: 'FYI / Reference',
+    email: s.approver?.email || '',
+    isExternal: false,
+    state: s.status,
+    respondedAt: s.acted_at,
+    comment: s.comment,
+    isAuthoritative: false,
+    disclaimer: 'Non-authoritative',
   }));
 
   const participation: CertificateParticipantEntry[] = (participants || []).map((p) => ({
@@ -669,5 +682,5 @@ export async function getCertificateBlocks(
     disclaimer: 'Non-authoritative',
   }));
 
-  return { authority, participation };
+  return { authority, participation: [...referenceParticipants, ...participation] };
 }

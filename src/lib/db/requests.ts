@@ -142,7 +142,7 @@ export async function getRequestDetail(requestId: string) {
     .from('approval_requests')
     .select(`
       *,
-      categories ( id, name, default_sla_hours, validity_mode, default_validity_days, max_validity_days, review_only ),
+      categories ( id, name, step_type, default_sla_hours, validity_mode, default_validity_days, max_validity_days, review_only ),
       renewed_from:approval_requests!renewed_from_id ( id, ref, subject ),
       users!owner_id ( id, name, email, designation, employee_id ),
       beneficiary:users!beneficiary_id ( id, name, email, designation, employee_id ),
