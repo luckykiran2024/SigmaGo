@@ -10,6 +10,10 @@ export interface CategoryOption {
   requester_description?: string | null;
   step_type?: string;
   governing_policy_id?: string | null;
+  validity_mode?: 'NONE' | 'OPTIONAL' | 'REQUIRED' | null;
+  default_validity_days?: number | null;
+  max_validity_days?: number | null;
+  review_only?: boolean | null;
 }
 
 interface GroupedCategoryPickerProps {

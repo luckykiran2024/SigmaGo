@@ -194,7 +194,7 @@ export default function WorkflowsConsole({
 
       // Update local state list
       if (editingId) {
-        setWorkflows(prev => prev.map(w => w.id === editingId ? (saved as Workflow) : w));
+        setWorkflows(prev => prev.map(w => w.id === editingId ? { ...w, ...(saved as Workflow) } : w));
         setSuccessMsg(`Workflow "${name}" updated successfully.`);
       } else {
         setWorkflows(prev => [saved as Workflow, ...prev]);

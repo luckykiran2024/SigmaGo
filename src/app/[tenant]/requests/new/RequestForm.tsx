@@ -70,16 +70,9 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
     setCustomFieldValues(prev => ({ ...prev, [key]: value }));
   };
 
-  // Get custom fields for selected category
-  const selectedCategoryId = typeof document !== 'undefined'
-    ? (document.querySelector('select[name="category"]') as HTMLSelectElement)?.value
-    : '';
-  const visibleCustomFields = customFields.filter(f =>
-    !f.category_id || f.category_id === selectedCategoryId
-  );
-
   // Category selection, reference picking, and misclassification state
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(categories.length > 0 ? categories[0] : null);
+  const visibleCustomFields = customFields.filter(f => !f.category_id || f.category_id === selectedCategory?.id);
   const [selectedReference, setSelectedReference] = useState<ReferenceItem | null>(null);
   const [referenceRelationship, setReferenceRelationship] = useState<string>('BASED_ON');
   const [isReferenceSkipped, setIsReferenceSkipped] = useState<boolean>(false);
@@ -263,6 +256,12 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMsg(null);
+
+    if (selectedCategory?.validity_mode === 'REQUIRED' && !validUntil && !reviewDate) {
+      setErrorMsg("This category requires a Valid Until end date.");
+      setIsSubmitting(false);
+      return;
+    }
 
     const validationError = validatePath(approvalPath);
     if (validationError) {
@@ -623,10 +622,7 @@ export default function RequestForm({ tenant, tenantId, categories, activeUsers,
         
         {/* Validity & Expiry / Review Date */}
         {(() => {
-          const selectedCatId = typeof document !== 'undefined'
-            ? (document.querySelector('select[name="category"]') as HTMLSelectElement)?.value
-            : '';
-          const selectedCat = categories.find(c => (c as any).id === selectedCatId) as any;
+          const selectedCat = selectedCategory as any;
           if (!selectedCat || selectedCat.validity_mode === 'NONE') return null;
 
           const isRequired = selectedCat.validity_mode === 'REQUIRED';
