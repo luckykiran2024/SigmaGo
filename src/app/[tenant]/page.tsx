@@ -115,12 +115,14 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
   const now = new Date();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-  const [{ count: finalizedThisMonth }, { count: sealedThisMonth }] = await Promise.all([
+  const [{ count: approvedThisMonth }, { count: sealedThisMonth }, { count: finalizingThisMonth }] = await Promise.all([
     adminClient.from('approval_requests').select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId).gte('finalized_at', monthStart).lt('finalized_at', nextMonthStart),
+      .eq('tenant_id', tenantId).eq('status', 'approved').gte('finalized_at', monthStart).lt('finalized_at', nextMonthStart),
     adminClient.from('approval_requests').select('id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId).gte('finalized_at', monthStart).lt('finalized_at', nextMonthStart)
       .not('checksum_sha256', 'is', null),
+    adminClient.from('approval_requests').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('status', 'FINALIZING').gte('created_at', monthStart).lt('created_at', nextMonthStart),
   ]);
   const { data: sealedDecisions } = await adminClient
     .from('approval_requests')
@@ -227,9 +229,7 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
           <RecentlySealedPanel
             tenantSubdomain={resolvedParams.tenant}
             sealedDecisions={sealedItems}
-            sealedRateText={finalizedThisMonth
-              ? `${sealedThisMonth || 0} of ${finalizedThisMonth} decisions finalized this month carry an integrity seal.`
-              : 'No decisions have been finalized this month.'}
+            sealedRateText={`${sealedThisMonth || 0} of ${approvedThisMonth || 0} approved decisions sealed this month.${finalizingThisMonth ? ` ${finalizingThisMonth} request${finalizingThisMonth === 1 ? '' : 's'} awaiting a seal.` : ''}`}
           />
 
           {/* In Flight Submissions */}
@@ -277,3 +277,4 @@ export default async function TenantDashboard({ params }: { params: Promise<{ te
     </div>
   );
 }
+

@@ -13,6 +13,8 @@ export interface CertificateAuthorityStep {
   stage: number;
   approverName: string;
   approverEmail: string;
+  delegateName?: string | null;
+  delegateEmail?: string | null;
   status: string;
   actedAt?: string | null;
   comment?: string | null;
@@ -636,7 +638,7 @@ export async function getCertificateBlocks(
 ): Promise<CertificateBlocks> {
   const { data: steps, error: stepsErr } = await adminClient
     .from('approval_steps')
-    .select('order_index, stage_index, type, status, acted_at, comment, approver:users!approver_id(name, email)')
+    .select('order_index, stage_index, type, status, acted_at, comment, delegation_id, approver:users!approver_id(name, email), acted_by:users!acted_by_id(name, email)')
     .eq('request_id', requestId)
     .order('order_index', { ascending: true });
 
@@ -654,6 +656,8 @@ export async function getCertificateBlocks(
     stage: (s.stage_index ?? s.order_index ?? 0) + 1,
     approverName: s.approver?.name || 'Approver',
     approverEmail: s.approver?.email || '',
+    delegateName: s.delegation_id ? s.acted_by?.name || 'Delegate' : null,
+    delegateEmail: s.delegation_id ? s.acted_by?.email || '' : null,
     status: s.status,
     actedAt: s.acted_at,
     comment: s.comment,
@@ -684,3 +688,4 @@ export async function getCertificateBlocks(
 
   return { authority, participation: [...referenceParticipants, ...participation] };
 }
+

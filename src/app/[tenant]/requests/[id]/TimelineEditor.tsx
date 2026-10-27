@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Users, AlertTriangle, Plus, Trash2, ArrowUp, ArrowDown, Check, Edit2 } from 'lucide-react';
 import { amendPathAction } from './amendActions';
 import PersonPicker from '@/components/ui/PersonPicker';
@@ -69,6 +69,10 @@ export default function TimelineEditor({
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) setSteps(initialSteps);
+  }, [initialSteps, isEditing]);
 
   // Editable path state
   const [editPendingSteps, setEditPendingSteps] = useState<Array<{ id?: string; approverId: string; type: 'GENERAL' | 'PARALLEL' | 'REFERENCE' }>>([]);
@@ -501,3 +505,4 @@ function Lock({ className }: { className?: string }) {
     </svg>
   );
 }
+

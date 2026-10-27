@@ -203,6 +203,9 @@ export default async function CertificatePage({
                   <div>
                     <span className="font-bold text-[#101828]">Stage {step.stage}: {step.approverName}</span>
                     <span className="text-[#667085] ml-2">({step.approverEmail})</span>
+                    {step.delegateName && (
+                      <div className="text-[#526679] mt-1">Acted by {step.delegateName} ({step.delegateEmail}) on behalf of {step.approverName}</div>
+                    )}
                   </div>
                   <span className="font-mono text-[#0F7548] font-bold uppercase">Verified Authority</span>
                 </div>
@@ -222,7 +225,7 @@ export default async function CertificatePage({
               {certBlocks.authority.map((step, idx) => (
                 <div key={`${step.stage}-${step.approverEmail}`} className="flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-[4px] bg-[#E8EDF4] text-[#274C77] border border-[#D3DEEB] font-semibold">
-                    {step.stage}. {step.approverName} ({step.status.toUpperCase()})
+                    {step.stage}. {step.delegateName ? `${step.delegateName} on behalf of ${step.approverName}` : step.approverName} ({step.status.toUpperCase()})
                   </span>
                   {idx < certBlocks.authority.length - 1 && <span className="text-[#98A2B3]">{certBlocks.authority[idx + 1].stage === step.stage ? "+" : "→"}</span>}
                 </div>
@@ -242,7 +245,7 @@ export default async function CertificatePage({
               {certBlocks.authority.filter((step) => step.actedAt || step.comment).map((step) => (
                 <div key={`${step.stage}-${step.approverEmail}-reason`} className="p-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[6px] text-xs space-y-1">
                   <div className="font-bold text-[#101828] flex items-center justify-between">
-                    <span>{step.approverName}</span>
+                    <span>{step.delegateName ? `${step.delegateName} on behalf of ${step.approverName}` : step.approverName}</span>
                     <span className="font-mono text-[#667085]">{step.actedAt ? formatDate(step.actedAt) : 'N/A'}</span>
                   </div>
                   <p className="text-[#344054] italic">
