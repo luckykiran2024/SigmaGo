@@ -155,7 +155,7 @@ async function main() {
                   ⚡ 100 Enterprise Scenarios Live Functional Test Suite
                 </h1>
                 <p style="font-size: 13px; color: #94a3b8; margin: 4px 0 0 0;">
-                  Live validation across Structural (20), Process (20), Exception (30), and Transactional (30) governance paths with SHA-256 proofs.
+                  Visual QA dataset across Structural (20), Process (20), Exception (30), and Transactional (30) categories. This presentation does not execute approvals or verify cryptographic seals.
                 </p>
               </div>
 
@@ -200,7 +200,7 @@ async function main() {
                 <div style="font-size: 11px; color: #64748b; margin-top: 2px;">SaaS & Infrastructure</div>
               </div>
               <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 10px; padding: 14px;">
-                <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">SHA-256 Seals</div>
+                <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Approved Fixtures</div>
                 <div id="metric-seals" style="font-size: 22px; font-weight: 800; color: #2dd4bf; margin-top: 4px;">0</div>
                 <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Cryptographic Proofs</div>
               </div>
@@ -219,7 +219,7 @@ async function main() {
                 <div>Subject & Capital Amount</div>
                 <div>Requester / Approver</div>
                 <div>Test Status</div>
-                <div style="text-align: right;">SHA-256 Seal Proof</div>
+                <div style="text-align: right;">Evidence Status</div>
               </div>
 
               <div id="test-table-body" style="max-height: 480px; overflow-y: auto;">
@@ -234,7 +234,7 @@ async function main() {
   await sleep(1000);
   await snap('Live 100-Scenario Test Suite Injected on Production');
 
-  // 3. Step-by-step live simulation of all 100 scenarios with real SHA-256 digest computation & visual updates
+  // 3. Step-by-step visual simulation. It deliberately makes no cryptographic claims.
   console.log('--- 3. EXECUTING 100 SCENARIOS LIVE ON PRODUCTION URL ---');
 
   for (let i = 0; i < SCENARIOS_100.length; i++) {
@@ -270,10 +270,7 @@ async function main() {
           document.getElementById('metric-seals').innerText = approvedCount;
           document.getElementById('metric-rejections').innerText = rejectedCount;
 
-          // Compute mock SHA-256 digest
-          const hashSnippet = s.status === 'approved' 
-            ? '0x' + Math.random().toString(16).substring(2, 10) + '...' + Math.random().toString(16).substring(2, 6)
-            : 'Unsealed (Policy Guard)';
+          const hashSnippet = 'Not cryptographically evaluated';
 
           const typeBadgeColor = s.type === 'STRUCTURAL' ? 'rgba(192,132,252,0.15); color: #c084fc; border: 1px solid rgba(192,132,252,0.3);' :
                                  s.type === 'PROCESS' ? 'rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);' :
@@ -323,8 +320,8 @@ async function main() {
           if (index === 100) {
             document.getElementById('test-status-badge').style.background = '#065f46';
             document.getElementById('test-status-badge').style.color = '#34d399';
-            document.getElementById('test-status-badge').innerText = '✓ 100 SCENARIOS VERIFIED';
-            document.getElementById('test-status-text').innerText = 'Complete! All 100 enterprise scenarios verified on https://sigma-go.vercel.app/';
+            document.getElementById('test-status-badge').innerText = '100 QA FIXTURES RENDERED';
+            document.getElementById('test-status-text').innerText = 'Complete: 100 visual QA fixtures rendered. End-to-end approval verification remains separate.';
           }
         })()
       `
@@ -339,9 +336,9 @@ async function main() {
     }
   }
 
-  // 4. Show Complete 100% Verified Suite View
+  // 4. Show the completed visual QA fixture view
   await sleep(1500);
-  await snap('Live 100 Scenarios Completed (100% Verified)');
+  await snap('100 Visual QA Fixtures Rendered');
 
   // Scroll table to show the breadth of scenarios tested
   await cdp.send('Runtime.evaluate', {
@@ -410,3 +407,4 @@ async function main() {
 }
 
 main().catch(console.error);
+
