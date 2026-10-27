@@ -1,46 +1,70 @@
 import { NextResponse } from 'next/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { SCENARIOS_100, ScenarioDefinition } from '@/lib/testing/scenarios100';
+import { requireTenantAdmin } from '@/lib/auth/guards';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { action, scenarioId, tenant = 'meridian' } = body;
-
-    // Resolve tenant
-    const { data: tenantData } = await adminClient
-      .from('tenants')
-      .select('id')
-      .eq('subdomain', tenant)
-      .single();
-
-    if (!tenantData) {
-      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
+    if (process.env.VERCEL_ENV === 'production' || process.env.ENABLE_LIVE_TEST_RUNNER !== 'true') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const tenantId = tenantData.id;
+    const body = await req.json();
+    const { action, scenarioId, tenant, confirmation } = body;
+
+    if (typeof tenant !== 'string' || !tenant.trim()) {
+      return NextResponse.json({ error: 'Tenant is required' }, { status: 400 });
+    }
+
+    const allowedTenants = (process.env.LIVE_TEST_TENANT_ALLOWLIST || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (!allowedTenants.includes(tenant)) {
+      return NextResponse.json({ error: 'Live testing is not enabled for this tenant' }, { status: 403 });
+    }
+
+    const guard = await requireTenantAdmin(tenant);
+
+    const tenantId = guard.tenantId;
 
     // 1. Reset Action
     if (action === 'reset') {
-      await adminClient.from('decision_references').delete().eq('tenant_id', tenantId);
-      
+      if (confirmation !== 'PURGE_SYNTHETIC_QA_DATA') {
+        return NextResponse.json({ error: 'Explicit reset confirmation is required' }, { status: 400 });
+      }
+
       const { data: existingReqs } = await adminClient
         .from('approval_requests')
         .select('id')
-        .eq('tenant_id', tenantId);
+        .eq('tenant_id', tenantId)
+        .like('ref', 'QA-LIVE-%');
 
       const reqIds = (existingReqs || []).map(r => r.id);
       if (reqIds.length > 0) {
-        await adminClient.from('audit_log').delete().in('request_id', reqIds);
-        await adminClient.from('comments').delete().in('request_id', reqIds);
-        await adminClient.from('custom_field_values').delete().in('request_id', reqIds);
-        await adminClient.from('action_tokens').delete().in('request_id', reqIds);
-        await adminClient.from('approval_steps').delete().in('request_id', reqIds);
-        await adminClient.from('approval_requests').delete().eq('tenant_id', tenantId);
+        const deletions = [
+          adminClient.from('decision_references').delete().eq('tenant_id', tenantId).in('source_id', reqIds),
+          adminClient.from('decision_references').delete().eq('tenant_id', tenantId).in('target_id', reqIds),
+          adminClient.from('audit_log').delete().in('request_id', reqIds),
+          adminClient.from('comments').delete().in('request_id', reqIds),
+          adminClient.from('custom_field_values').delete().in('request_id', reqIds),
+          adminClient.from('action_tokens').delete().in('request_id', reqIds),
+          adminClient.from('approval_steps').delete().in('request_id', reqIds),
+        ];
+        for (const deletion of deletions) {
+          const { error } = await deletion;
+          if (error) throw new Error('Synthetic QA cleanup failed');
+        }
+        const { error: requestDeleteError } = await adminClient
+          .from('approval_requests')
+          .delete()
+          .eq('tenant_id', tenantId)
+          .in('id', reqIds);
+        if (requestDeleteError) throw new Error('Synthetic QA cleanup failed');
       }
 
-      return NextResponse.json({ success: true, message: 'All test data purged cleanly.' });
+      return NextResponse.json({ success: true, message: 'Synthetic QA fixtures purged.', deleted: reqIds.length });
     }
 
     // 2. Execute a single scenario or batch
@@ -64,21 +88,15 @@ export async function POST(req: Request) {
       const approver = userMap.get(s.approverEmail.toLowerCase()) || defaultUser;
 
       const reqId = crypto.randomUUID();
-      const checksum = s.status === 'approved'
-        ? crypto.createHash('sha256').update(`${s.ref}-${s.subject}-${tenantId}-canonical-sealed-2026-v2`).digest('hex')
-        : null;
-
-      const isFinalized = s.status === 'approved' || s.status === 'rejected';
       const daysAgo = 10 + Math.floor((s.id / 100) * 80);
       const createdAt = new Date(Date.now() - daysAgo * 86400000).toISOString();
-      const finalizedAt = isFinalized ? new Date(Date.now() - (daysAgo - 2) * 86400000).toISOString() : null;
 
       // Insert Approval Request
       const { error: reqErr } = await adminClient
         .from('approval_requests')
         .insert({
           id: reqId,
-          ref: s.ref,
+          ref: `QA-LIVE-${s.ref}`,
           tenant_id: tenantId,
           owner_id: requester?.id,
           category_id: matchedCat?.id,
@@ -86,8 +104,8 @@ export async function POST(req: Request) {
           status: s.status,
           resolved_step_type: s.type,
           baseline_step_type: s.type,
-          checksum_sha256: checksum,
-          finalized_at: finalizedAt,
+          checksum_sha256: null,
+          finalized_at: null,
           created_at: createdAt
         });
 
@@ -101,7 +119,7 @@ export async function POST(req: Request) {
       const step1EnteredAt = createdAt;
       const step1ActedAt = step1Status !== 'pending' ? new Date(Date.now() - (daysAgo - 1) * 86400000).toISOString() : null;
 
-      await adminClient.from('approval_steps').insert({
+      const { error: step1Error } = await adminClient.from('approval_steps').insert({
         id: step1Id,
         request_id: reqId,
         order_index: 1,
@@ -113,15 +131,19 @@ export async function POST(req: Request) {
         entered_at: step1EnteredAt,
         acted_at: step1ActedAt
       });
+      if (step1Error) {
+        await adminClient.from('approval_requests').delete().eq('id', reqId).eq('tenant_id', tenantId);
+        throw new Error('Synthetic QA step creation failed');
+      }
 
       // Stage 2 Step for Approved Decisions (Executive Authority Seal by CEO Vijay Reddy)
       if (s.status === 'approved') {
         const step2Id = crypto.randomUUID();
         const ceo = (users || []).find(u => u.email === 'vijay.reddy@meridian.com') || defaultUser;
         const step2EnteredAt = new Date(Date.now() - (daysAgo - 1) * 86400000).toISOString();
-        const step2ActedAt = finalizedAt;
+        const step2ActedAt = new Date(Date.now() - (daysAgo - 2) * 86400000).toISOString();
 
-        await adminClient.from('approval_steps').insert({
+        const { error: step2Error } = await adminClient.from('approval_steps').insert({
           id: step2Id,
           request_id: reqId,
           order_index: 2,
@@ -133,10 +155,14 @@ export async function POST(req: Request) {
           entered_at: step2EnteredAt,
           acted_at: step2ActedAt
         });
+        if (step2Error) {
+          await adminClient.from('approval_requests').delete().eq('id', reqId).eq('tenant_id', tenantId);
+          throw new Error('Synthetic QA step creation failed');
+        }
       }
 
       // Audit Log
-      await adminClient.from('audit_log').insert({
+      const { error: auditError } = await adminClient.from('audit_log').insert({
         id: crypto.randomUUID(),
         tenant_id: tenantId,
         request_id: reqId,
@@ -145,6 +171,10 @@ export async function POST(req: Request) {
         details: { ref: s.ref, subject: s.subject, step_type: s.type, amount: s.amount },
         created_at: createdAt
       });
+      if (auditError) {
+        await adminClient.from('approval_requests').delete().eq('id', reqId).eq('tenant_id', tenantId);
+        throw new Error('Synthetic QA audit creation failed');
+      }
 
       const durationMs = Date.now() - startTime;
 
@@ -158,8 +188,9 @@ export async function POST(req: Request) {
         requesterEmail: s.requesterEmail,
         approverEmail: s.approverEmail,
         status: s.status,
-        checksum: checksum ? checksum.substring(0, 16) + '...' : 'N/A',
-        fullChecksum: checksum,
+        checksum: 'UNSEALED SYNTHETIC FIXTURE',
+        fullChecksum: null,
+        evidenceStatus: 'SYNTHETIC_NOT_CRYPTOGRAPHICALLY_VERIFIED',
         requestId: reqId,
         durationMs
       };
@@ -184,8 +215,16 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in live-test-runner API:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : '';
+    if (message.startsWith('Unauthorized')) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (message.startsWith('Forbidden')) {
+      return NextResponse.json({ error: 'Tenant administrator access required' }, { status: 403 });
+    }
+    return NextResponse.json({ error: 'Live test operation failed' }, { status: 500 });
   }
 }
+
