@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { 
   Play, RotateCcw, CheckCircle2, AlertCircle, Clock, ShieldCheck, 
   ExternalLink, Layers, Cpu, FileCheck, ArrowRight, Activity, Database
@@ -25,12 +26,14 @@ interface ScenarioResult {
 }
 
 export default function LiveTestRunnerPage() {
+  const params = useParams<{ tenant: string }>();
+  const tenant = params.tenant;
   const [isRunning, setIsRunning] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [completedResults, setCompletedResults] = useState<ScenarioResult[]>([]);
   const [currentScenarioIndex, setCurrentScenarioIndex] = useState<number>(-1);
   const [filterType, setFilterType] = useState<string>('ALL');
-  const [statusMessage, setStatusMessage] = useState<string>('Ready to start live test.');
+  const [statusMessage, setStatusMessage] = useState<string>('Ready to generate isolated QA fixtures.');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll as new scenarios execute
@@ -42,18 +45,18 @@ export default function LiveTestRunnerPage() {
 
   const handleReset = async () => {
     setIsResetting(true);
-    setStatusMessage('Purging all old test data from database...');
+    setStatusMessage('Purging synthetic QA fixtures only...');
     try {
       const res = await fetch('/api/live-test-runner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reset' })
+        body: JSON.stringify({ action: 'reset', tenant, confirmation: 'PURGE_SYNTHETIC_QA_DATA' })
       });
       const data = await res.json();
       if (data.success) {
         setCompletedResults([]);
         setCurrentScenarioIndex(-1);
-        setStatusMessage('Old test data completely purged. Ready to execute 100 live scenarios.');
+        setStatusMessage('Synthetic QA fixtures purged. Ready to generate 100 isolated QA scenarios.');
       } else {
         setStatusMessage(`Reset error: ${data.error}`);
       }
@@ -71,11 +74,11 @@ export default function LiveTestRunnerPage() {
 
     // First purge fresh
     try {
-      setStatusMessage('Purging old data for a fresh functional test...');
+      setStatusMessage('Purging synthetic fixtures for a fresh QA dataset...');
       await fetch('/api/live-test-runner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reset' })
+        body: JSON.stringify({ action: 'reset', tenant, confirmation: 'PURGE_SYNTHETIC_QA_DATA' })
       });
     } catch (err) {
       console.warn('Reset error before run, continuing...', err);
@@ -95,7 +98,8 @@ export default function LiveTestRunnerPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'execute-scenario',
-            scenarioId: s.id
+            scenarioId: s.id,
+            tenant
           })
         });
 
@@ -114,7 +118,7 @@ export default function LiveTestRunnerPage() {
 
     setCurrentScenarioIndex(-1);
     setIsRunning(false);
-    setStatusMessage(`Completed live functional testing of all ${total} scenarios! 100% verified with SHA-256 seals.`);
+    setStatusMessage(`Generated ${total} synthetic QA scenarios. These fixtures are intentionally unsealed and are not end-to-end approvals.`);
   };
 
   const progressPercent = Math.round((completedResults.length / 100) * 100);
@@ -220,12 +224,12 @@ export default function LiveTestRunnerPage() {
         </div>
 
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sealed Proofs</div>
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">QA Evidence</div>
           <div className="text-2xl font-bold text-teal-400 mt-1 flex items-center gap-1.5">
             <ShieldCheck className="h-5 w-5 text-teal-400" />
             {approvedCount}
           </div>
-          <div className="text-xs text-slate-400 mt-1">SHA-256 Validated</div>
+          <div className="text-xs text-slate-400 mt-1">Synthetic QA Fixtures</div>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
@@ -284,13 +288,13 @@ export default function LiveTestRunnerPage() {
           <div className="col-span-4">Subject & Capital Amount</div>
           <div className="col-span-2">Requester / Approver</div>
           <div className="col-span-1">Status</div>
-          <div className="col-span-2 text-right">SHA-256 Seal Proof</div>
+          <div className="col-span-2 text-right">Evidence Status</div>
         </div>
 
         {completedResults.length === 0 ? (
           <div className="text-center py-20 text-slate-500 space-y-3">
             <Cpu className="h-10 w-10 mx-auto text-slate-600 animate-pulse" />
-            <p className="text-sm">Click "Execute All 100 Scenarios Live" to watch the real-time test run.</p>
+            <p className="text-sm">Generate all 100 isolated scenarios to validate dashboard calculations. Run end-to-end workflow tests separately.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-800/60">
@@ -371,3 +375,4 @@ export default function LiveTestRunnerPage() {
     </div>
   );
 }
+

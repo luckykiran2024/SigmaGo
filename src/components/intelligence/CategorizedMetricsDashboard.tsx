@@ -49,16 +49,27 @@ export default function CategorizedMetricsDashboard({
   // Resolved dynamic values
   const totalCurrent = distribution.totalCurrentDecisions;
   const totalComparator = distribution.totalComparatorDecisions;
-  const orphanScore = orphanMetrics?.orphanScore ?? coverage?.orphanScore ?? 6.0;
-  const connectedRate = orphanMetrics?.connectedRate ?? coverage?.connectedRate ?? 94.0;
-  const orphanCount = orphanMetrics?.orphanCount ?? coverage?.orphanCount ?? 6;
-  const orphanStatus = orphanMetrics?.status ?? coverage?.orphanStatus ?? 'HEALTHY';
+  const orphanScore = orphanMetrics?.orphanScore ?? coverage?.orphanScore ?? 0;
+  const connectedRate = orphanMetrics?.connectedRate ?? coverage?.connectedRate ?? 0;
+  const orphanCount = orphanMetrics?.orphanCount ?? coverage?.orphanCount ?? 0;
+  const orphanStatus = totalCurrent > 0
+    ? (orphanMetrics?.status ?? coverage?.orphanStatus ?? 'CRITICAL')
+    : 'NO DATA';
+  const unavailableClass = 'bg-[#F2F4F7] text-[#475467] border-[#D0D5DD]';
+  const classificationCoverage = totalCurrent > 0
+    ? Math.round((coverage?.stepResolutionCoverage ?? 0) * 1000) / 10
+    : null;
+  const classifiedCount = classificationCoverage === null
+    ? 0
+    : Math.round((classificationCoverage / 100) * totalCurrent);
 
   const curExceptions = distribution.steps.EXCEPTION.currentCount;
-  const curExceptionRate = totalCurrent > 0 ? (curExceptions / totalCurrent) * 100 : 30.0;
+  const curExceptionRate = totalCurrent > 0 ? (curExceptions / totalCurrent) * 100 : null;
   const compExceptions = distribution.steps.EXCEPTION.comparatorCount;
-  const compExceptionRate = totalComparator > 0 ? (compExceptions / totalComparator) * 100 : 24.0;
-  const exceptionPressure = compExceptionRate > 0 ? Number((curExceptionRate / compExceptionRate).toFixed(2)) : 1.25;
+  const compExceptionRate = totalComparator > 0 ? (compExceptions / totalComparator) * 100 : null;
+  const exceptionPressure = curExceptionRate !== null && compExceptionRate !== null && compExceptionRate > 0
+    ? Number((curExceptionRate / compExceptionRate).toFixed(2))
+    : null;
 
   const exceptionMovementPp = distribution.steps.EXCEPTION.movementPp;
   const structuralShare = (distribution.steps.STRUCTURAL.currentShare * 100).toFixed(1);
@@ -78,12 +89,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'blast-radius',
           name: 'Blast Radius',
-          value: '8 decisions',
-          status: 'NORMAL',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Unique transitive downstream decisions',
           answers: 'How far does this decision reach through multi-hop reliance?',
-          benchmark: 'Max single node reach (STR-2026-003)',
+          benchmark: 'Requires transitive reference-graph evidence',
           actionType: 'step' as const,
           actionId: 'STRUCTURAL',
           actionText: 'View Drivers →',
@@ -91,12 +102,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'impact-factor',
           name: 'Impact Factor',
-          value: '4.0%',
-          status: 'NORMAL',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Blast Radius ÷ eligible downstream population × 100',
           answers: 'What % of the relevant decision system is influenced?',
-          benchmark: '8 out of 200 total organizational decisions',
+          benchmark: 'Requires blast-radius and eligible-population evidence',
           actionType: 'step' as const,
           actionId: 'STRUCTURAL',
           actionText: 'Review Evidence →',
@@ -104,12 +115,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'cross-domain-reach',
           name: 'Cross-Domain Reach',
-          value: '100%',
-          status: 'COMPLETE',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Affected domains ÷ relevant domains × 100',
           answers: 'How widely does it spread organisationally across departments?',
-          benchmark: 'Reaches Governance, People, and Operations domains',
+          benchmark: 'Requires affected-domain evidence',
           actionType: 'step' as const,
           actionId: 'STRUCTURAL',
           actionText: 'View Drivers →',
@@ -122,7 +133,7 @@ export default function CategorizedMetricsDashboard({
           statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
           arithmetic: 'Decisions referencing precedent ÷ eligible decisions × 100',
           answers: 'How frequently do decisions anchor to prior approved standards?',
-          benchmark: '94 of 100 approvals anchored to rules or SOPs',
+          benchmark: `${Math.max(0, totalCurrent - orphanCount)} of ${totalCurrent} decisions have a recorded reference`,
           actionType: 'step' as const,
           actionId: 'PROCESS',
           actionText: 'Review Evidence →',
@@ -152,12 +163,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'governance-rate',
           name: 'Governance Rate',
-          value: '76.2%',
-          status: 'HEALTHY',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Governance-compliant decisions ÷ eligible decisions × 100',
           answers: 'What % of decisions execute strictly within approved policy boundaries?',
-          benchmark: 'Benchmark > 70% · 76 compliant of 100 decisions',
+          benchmark: 'Requires policy-bound evaluation evidence',
           actionType: 'step' as const,
           actionId: 'TRANSACTIONAL',
           actionText: 'View Drivers →',
@@ -165,9 +176,9 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'deviation-factor',
           name: 'Deviation Factor',
-          value: `${curExceptionRate.toFixed(1)}%`,
-          status: 'MONITOR',
-          statusClass: 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]',
+          value: curExceptionRate === null ? 'No data' : `${curExceptionRate.toFixed(1)}%`,
+          status: curExceptionRate === null ? 'NO DATA' : 'MONITOR',
+          statusClass: curExceptionRate === null ? unavailableClass : 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]',
           arithmetic: 'Decisions outside expected boundary ÷ comparable eligible × 100',
           answers: 'How often is the expected standard rule or procedure bypassed?',
           benchmark: 'Operating within tolerance threshold',
@@ -178,9 +189,9 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'exception-rate',
           name: 'Exception Rate',
-          value: `${curExceptionRate.toFixed(1)}%`,
-          status: 'ELEVATED',
-          statusClass: 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]',
+          value: curExceptionRate === null ? 'No data' : `${curExceptionRate.toFixed(1)}%`,
+          status: curExceptionRate === null ? 'NO DATA' : 'MONITOR',
+          statusClass: curExceptionRate === null ? unavailableClass : 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]',
           arithmetic: 'Exceptions ÷ comparable eligible decisions × 100',
           answers: 'How frequently are explicit exceptions requested and approved?',
           benchmark: `${curExceptions} of ${totalCurrent} decisions in this period`,
@@ -191,12 +202,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'exception-pressure',
           name: 'Exception Pressure',
-          value: `${exceptionPressure}x`,
-          status: exceptionPressure > 1.2 ? 'WATCH' : 'NORMAL',
-          statusClass: exceptionPressure > 1.2 ? 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]' : 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: exceptionPressure === null ? 'Baseline unavailable' : `${exceptionPressure}x`,
+          status: exceptionPressure === null ? 'NO BASELINE' : exceptionPressure > 1.2 ? 'WATCH' : 'NORMAL',
+          statusClass: exceptionPressure === null ? unavailableClass : exceptionPressure > 1.2 ? 'bg-[#FFFAEB] text-[#B54708] border-[#FEDF89]' : 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
           arithmetic: 'Current exception rate ÷ historical comparable exception rate',
           answers: 'How abnormal is today’s exception activity compared to last year?',
-          benchmark: `${curExceptionRate.toFixed(1)}% vs ${compExceptionRate.toFixed(1)}% in ${comparatorDisplayName}`,
+          benchmark: exceptionPressure === null ? `No comparable evidence in ${comparatorDisplayName}` : `${curExceptionRate!.toFixed(1)}% vs ${compExceptionRate!.toFixed(1)}% in ${comparatorDisplayName}`,
           actionType: 'step' as const,
           actionId: 'EXCEPTION',
           actionText: 'Review Evidence →',
@@ -204,12 +215,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'policy-health',
           name: 'Policy Health Index',
-          value: 'NORMAL',
-          status: 'STABLE',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Deviation + persistence + volume load + reason concentration',
           answers: 'Is the governing policy framework performing within stable parameters?',
-          benchmark: 'Procurement & Travel policies evaluated',
+          benchmark: 'Requires policy-level deviation evidence',
           actionType: 'step' as const,
           actionId: 'PROCESS',
           actionText: 'View Drivers →',
@@ -226,12 +237,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'confidence-alignment',
           name: 'Confidence / Alignment',
-          value: '97.2%',
-          status: 'HIGH ALIGNMENT',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: '(Approvals + 0.5 × Reservations) ÷ total stances × 100',
           answers: 'How aligned are decision makers across all approval tiers?',
-          benchmark: 'Strong consensus across executive approvers',
+          benchmark: 'Requires recorded approver stances',
           actionType: 'step' as const,
           actionId: 'STRUCTURAL',
           actionText: 'Review Evidence →',
@@ -239,12 +250,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'reservation-rate',
           name: 'Reservation Rate',
-          value: '5.6%',
-          status: 'HEALTHY',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Reservations ÷ approval stances × 100',
           answers: 'How often do approvers record caveats, friction, or reservations?',
-          benchmark: 'Low conditional friction across stages',
+          benchmark: 'Requires reservation and dissent evidence',
           actionType: 'step' as const,
           actionId: 'PROCESS',
           actionText: 'View Drivers →',
@@ -252,12 +263,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'decision-friction',
           name: 'Decision Friction',
-          value: '3.2 days',
-          status: 'OPTIMAL',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Cycle time + stage dwell + rework + SLA deviation',
           answers: 'How fast do decisions progress from creation to sealing?',
-          benchmark: 'Average 3.2 days turnaround dwell time',
+          benchmark: 'Requires cycle-time and stage-dwell evidence',
           actionType: 'step' as const,
           actionId: 'TRANSACTIONAL',
           actionText: 'Review Evidence →',
@@ -265,12 +276,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'signal-persistence',
           name: 'Signal Persistence',
-          value: '100%',
-          status: 'PERSISTENT',
-          statusClass: 'bg-[#E7EDF0] text-[#17324D] border-[#DCE5EA]',
+          value: totalComparator > 0 ? 'Not measured' : 'Baseline unavailable',
+          status: totalComparator > 0 ? 'DATA REQUIRED' : 'NO BASELINE',
+          statusClass: unavailableClass,
           arithmetic: 'Periods signal persists ÷ comparable periods × 100',
           answers: 'Is observed variance a transient blip or an established multi-quarter trend?',
-          benchmark: 'Observed consistently across comparable period',
+          benchmark: totalComparator > 0 ? 'Requires multi-period signal evidence' : `No comparable evidence in ${comparatorDisplayName}`,
           actionType: 'step' as const,
           actionId: 'EXCEPTION',
           actionText: 'Review Evidence →',
@@ -313,12 +324,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'decision-concentration',
           name: 'Decision Concentration (HHI)',
-          value: '28.4%',
-          status: 'HEALTHY',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: 'Not measured',
+          status: 'DATA REQUIRED',
+          statusClass: unavailableClass,
           arithmetic: 'Top-N workflow volume share / Herfindahl-Hirschman Index',
           answers: 'Are decisions concentrated in a single bottleneck workflow or dispersed?',
-          benchmark: 'Top workflow contributes 28.4% of total volume',
+          benchmark: 'Requires per-workflow volume evidence',
           actionType: 'step' as const,
           actionId: 'TRANSACTIONAL',
           actionText: 'View Drivers →',
@@ -326,12 +337,12 @@ export default function CategorizedMetricsDashboard({
         {
           id: 'classification-coverage',
           name: 'Classification Coverage',
-          value: '100.0%',
-          status: 'VERIFIED',
-          statusClass: 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]',
+          value: classificationCoverage === null ? 'No data' : `${classificationCoverage.toFixed(1)}%`,
+          status: classificationCoverage === null ? 'NO DATA' : classificationCoverage === 100 ? 'VERIFIED' : 'PARTIAL',
+          statusClass: classificationCoverage === 100 ? 'bg-[#ECFDF3] text-[#027A48] border-[#A6F4C5]' : unavailableClass,
           arithmetic: 'Classified STEP decisions ÷ total period decisions × 100',
           answers: 'How complete is the underlying STEP classification data?',
-          benchmark: '100 of 100 decisions have verified schema pinning',
+          benchmark: `${classifiedCount} of ${totalCurrent} decisions have a resolved STEP classification`,
           actionType: 'step' as const,
           actionId: 'STRUCTURAL',
           actionText: 'Review Evidence →',
@@ -471,3 +482,4 @@ export default function CategorizedMetricsDashboard({
     </div>
   );
 }
+
