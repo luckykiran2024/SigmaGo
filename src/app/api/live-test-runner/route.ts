@@ -6,7 +6,12 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    if (process.env.VERCEL_ENV === 'production' || process.env.ENABLE_LIVE_TEST_RUNNER !== 'true') {
+    // Only an explicitly enabled local or Vercel Preview environment may run QA fixtures.
+    // A production build outside Vercel must also fail closed.
+    const isAllowedEnvironment =
+      process.env.VERCEL_ENV === 'preview' ||
+      (process.env.NODE_ENV !== 'production' && !process.env.VERCEL_ENV);
+    if (!isAllowedEnvironment || process.env.ENABLE_LIVE_TEST_RUNNER !== 'true') {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 

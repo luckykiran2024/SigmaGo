@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
-const url = 'https://mawiqviucthalwyfvmfr.supabase.co';
-const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hd2lxdml1Y3RoYWx3eWZ2bWZyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTYyMzEzOSwiZXhwIjoyMDk3MTk5MTM5fQ.MoVXbld1BV1-tnDWRjlKZTc_ZVsBS1GkS0VxcWNfElQ';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !key) throw new Error("Supabase environment variables are required");
 const supabase = createClient(url, key);
 
 async function test() {

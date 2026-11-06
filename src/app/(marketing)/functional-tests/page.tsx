@@ -19,7 +19,7 @@ import {
   FileCheck2 
 } from 'lucide-react';
 
-export interface TestScenario {
+interface TestScenario {
   id: string;
   category: 'Tenant Isolation' | 'Cryptographic Seal' | 'Authority Guard' | 'Participants' | 'Intelligence & Exceptions' | 'Action Tokens';
   title: string;
@@ -32,7 +32,7 @@ export interface TestScenario {
   payload?: Record<string, any>;
 }
 
-export const SCENARIOS: TestScenario[] = [
+const SCENARIOS: TestScenario[] = [
   // 1. Tenant Isolation (Scenarios 1–6)
   {
     id: 'SG-ISO-01',

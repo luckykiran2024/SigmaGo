@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { tenantFromHostname } from '@/lib/tenancy/host'
 
 export async function proxy(request: NextRequest) {
   const startTime = performance.now();
@@ -12,6 +13,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith('/blog') ||
     path.startsWith('/intelligence-demo') ||
     path.startsWith('/functional-tests') ||
+    path === '/.well-known/jwks.json' ||
     path === '/sitemap.xml' ||
     path === '/robots.txt';
 
@@ -24,31 +26,6 @@ export async function proxy(request: NextRequest) {
 
   // --- Fast path for public and auth pages ---
   if (isPublicPage || isAuthPage) {
-    const url = request.nextUrl;
-    const hostname = request.headers.get('host') || '';
-    const isLocalhost = hostname.includes('localhost');
-    const domainParts = hostname.split('.');
-    
-    let tenant = '';
-    if (isLocalhost) {
-      if (domainParts.length > 1) {
-        tenant = domainParts[0];
-      }
-    } else {
-      if (hostname.endsWith('.sigmago.app')) {
-        tenant = hostname.replace('.sigmago.app', '');
-      } else if (hostname === 'sigmago.app' || hostname.endsWith('.vercel.app')) {
-        tenant = '';
-      } else {
-        tenant = hostname;
-      }
-    }
-
-    if (tenant && !isPublicPage && !isAuthPage && !url.pathname.startsWith('/' + tenant) && !path.startsWith('/api')) {
-      const newUrl = new URL('/' + tenant + url.pathname, request.url)
-      return withServerTiming(NextResponse.rewrite(newUrl))
-    }
-
     return withServerTiming(NextResponse.next())
   }
 
@@ -90,25 +67,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const url = request.nextUrl;
-  const hostname = request.headers.get('host') || '';
-  const isLocalhost = hostname.includes('localhost');
-  const domainParts = hostname.split('.');
-  
-  let tenant = '';
-  
-  if (isLocalhost) {
-    if (domainParts.length > 1) {
-      tenant = domainParts[0];
-    }
-  } else {
-    if (hostname.endsWith('.sigmago.app')) {
-      tenant = hostname.replace('.sigmago.app', '');
-    } else if (hostname === 'sigmago.app' || hostname.endsWith('.vercel.app')) {
-      tenant = '';
-    } else {
-      tenant = hostname;
-    }
-  }
+  const tenant = tenantFromHostname(request.nextUrl.hostname);
 
   if (tenant && !url.pathname.startsWith('/' + tenant) && !path.startsWith('/api')) {
     const newUrl = new URL('/' + tenant + url.pathname, request.url)
